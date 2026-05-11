@@ -1,0 +1,185 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+/* ============================================================
+   FARMALERT DESIGN TOKENS
+   Edit here to restyle the entire product.
+   Brand: Deep agricultural green — intentional for a
+   government livestock monitoring system.
+   ============================================================ */
+:root {
+  /* Brand — 10% accent (agricultural green) */
+  --color-brand:        hsl(152, 58%, 28%);
+  --color-brand-hover:  hsl(152, 58%, 22%);
+  --color-brand-light:  hsl(152, 55%, 94%);
+  --color-brand-mid:    hsl(152, 45%, 50%);
+
+  /* Surfaces — 60% canvas, 30% secondary */
+  --color-canvas:   hsl(140, 12%, 97%);   /* Page background */
+  --color-surface:  hsl(0, 0%, 100%);     /* Cards / panels */
+  --color-overlay:  hsl(140, 10%, 95%);   /* Sidebar, input bg */
+
+  /* Text */
+  --color-text-primary:   hsl(160, 20%, 10%);
+  --color-text-secondary: hsl(160, 10%, 38%);
+  --color-text-muted:     hsl(160,  8%, 58%);
+  --color-text-inverse:   hsl(0, 0%, 100%);
+
+  /* Borders */
+  --color-border:        hsl(150, 14%, 84%);
+  --color-border-strong: hsl(150, 14%, 68%);
+
+  /* Semantic */
+  --color-danger:       hsl(4, 74%, 49%);
+  --color-danger-light: hsl(4, 74%, 96%);
+  --color-success:      hsl(145, 63%, 40%);
+
+  /* Shadows (subtle — never dark) */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.09), 0 4px 8px rgba(0, 0, 0, 0.05);
+
+  /* Border radius scale */
+  --radius-xs:   4px;
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   14px;
+  --radius-xl:   18px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 100ms ease;
+  --transition-base: 180ms ease;
+  --transition-slow: 320ms ease;
+
+  /* Type scale */
+  --text-xs:   11px;
+  --text-sm:   13px;
+  --text-base: 15px;
+  --text-md:   17px;
+  --text-lg:   20px;
+  --text-xl:   24px;
+  --text-2xl:  30px;
+  --text-3xl:  40px;
+
+  /* Font families */
+  --font-body:    'Inter', system-ui, sans-serif;
+  --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+/* ============================================================
+   GLOBAL BASE STYLES & RESET
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Re-set margins, padding, and block sizing */
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+img, picture, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+}
+
+input, button, textarea, select {
+  font: inherit;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-text-primary);
+  background-color: var(--color-canvas);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Global interactive transitions */
+button, a, [role="button"], input, select, textarea {
+  transition:
+    color          var(--transition-base),
+    background-color var(--transition-base),
+    border-color   var(--transition-base),
+    box-shadow     var(--transition-base),
+    transform      var(--transition-base),
+    opacity        var(--transition-base);
+}
+
+/* ============================================================
+   UTILITY CLASSES
+   ============================================================ */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border);
+}
+
+.glass-panel-dark {
+  background: rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* ============================================================
+   LOGIN PAGE — LOCAL ANIMATIONS
+   ============================================================ */
+@keyframes fa-fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fa-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+
+.fa-animate-in {
+  animation: fa-fade-up var(--transition-slow) ease both;
+}
+
+.fa-animate-in-delay-1 { animation-delay: 60ms; }
+.fa-animate-in-delay-2 { animation-delay: 120ms; }
+.fa-animate-in-delay-3 { animation-delay: 180ms; }
+.fa-animate-in-delay-4 { animation-delay: 240ms; }
+
+/* ============================================================
+   GLOBAL KEYFRAMES (referenced by JS inline styles)
+   ============================================================ */
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}

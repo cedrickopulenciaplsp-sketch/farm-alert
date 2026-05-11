@@ -1,0 +1,381 @@
+/* ============================================================
+   ReportDetail.module.css
+   ============================================================ */
+
+/* ── Page Shell ─────────────────────────────────────────── */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.75rem 2rem;
+  min-height: 100%;
+}
+
+/* ── Back nav ────────────────────────────────────────────── */
+.backNav {
+  display: flex;
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  padding: 0.25rem 0;
+  border-radius: var(--radius-xs);
+  transition: color var(--transition-fast);
+}
+
+.backBtn:hover {
+  color: var(--color-brand);
+}
+
+/* ── Page Header ─────────────────────────────────────────── */
+.pageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.titleGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.reportIconWrap {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  background: hsl(4, 74%, 96%);
+  color: var(--color-danger);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pageTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.4px;
+}
+
+.pageSubtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-top: 0.15rem;
+}
+
+/* ── Grid layout ─────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.leftColumn,
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ── Cards ───────────────────────────────────────────────── */
+.infoCard,
+.notesCard,
+.statusCard,
+.summaryCard {
+  border: 1px solid var(--color-border);
+}
+
+.cardHeader {
+  border-bottom: 1px solid var(--color-border);
+  padding: 0.875rem 1.125rem !important;
+  font-size: var(--text-sm) !important;
+  font-weight: 600 !important;
+  color: var(--color-text-primary) !important;
+}
+
+.cardHeaderInner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.headerIcon {
+  color: var(--color-brand);
+}
+
+.infoBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0 !important;
+}
+
+/* ── Info rows ───────────────────────────────────────────── */
+.infoRow {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 0.5rem;
+  padding: 0.75rem 1.125rem;
+  border-bottom: 1px solid var(--color-border);
+  align-items: start;
+}
+
+.infoRow:last-child {
+  border-bottom: none;
+}
+
+.infoLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  padding-top: 1px;
+}
+
+.infoIcon {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.infoValue {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.valueText {
+  font-weight: 500;
+  color: var(--color-text-primary);
+  display: block;
+}
+
+.valueSub {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  display: block;
+  margin-top: 2px;
+}
+
+/* ── Clinical notes ──────────────────────────────────────── */
+.clinicalNotes {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+/* ── Badges ──────────────────────────────────────────────── */
+.severityBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badgeDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.statusActive {
+  background: hsl(4, 74%, 94%);
+  color: hsl(4, 74%, 40%);
+}
+
+.statusResolved {
+  background: hsl(145, 55%, 92%);
+  color: hsl(145, 60%, 28%);
+}
+
+.statusMonitor {
+  background: hsl(48, 90%, 92%);
+  color: hsl(38, 80%, 32%);
+}
+
+/* ── Status management card ──────────────────────────────── */
+.statusBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.statusHelp {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+.statusActions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.statusBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    background   var(--transition-fast),
+    color        var(--transition-fast),
+    transform    var(--transition-fast);
+}
+
+.statusBtn:hover:not(:disabled) {
+  border-color: var(--color-border-strong);
+  background: var(--color-overlay);
+  transform: translateY(-1px);
+}
+
+.statusBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.statusBtnActive {
+  border-color: hsl(4, 74%, 60%);
+  color: hsl(4, 74%, 40%);
+  background: hsl(4, 74%, 96%);
+  font-weight: 600;
+}
+
+.statusBtnMonitor {
+  border-color: hsl(38, 80%, 55%);
+  color: hsl(38, 80%, 32%);
+  background: hsl(48, 90%, 94%);
+  font-weight: 600;
+}
+
+.statusBtnResolved {
+  border-color: hsl(145, 55%, 50%);
+  color: hsl(145, 60%, 28%);
+  background: hsl(145, 55%, 94%);
+  font-weight: 600;
+}
+
+/* Error / updating feedback */
+.updateError {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: var(--text-xs);
+  color: var(--color-danger);
+}
+
+.updatingMsg {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* ── Summary card ────────────────────────────────────────── */
+.summaryBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0 !important;
+}
+
+.summaryItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.125rem;
+}
+
+.summaryDivider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 0;
+}
+
+.summaryLabel {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.summaryValue {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* ── Loading / Error states ──────────────────────────────── */
+.loadingWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem;
+}
+
+.errorWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 4rem;
+  text-align: center;
+}
+
+.errorIcon {
+  color: var(--color-danger);
+}
+
+.errorText {
+  font-size: var(--text-sm);
+  color: var(--color-danger);
+  max-width: 380px;
+}

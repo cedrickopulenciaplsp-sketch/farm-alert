@@ -1,0 +1,446 @@
+/* ============================================================
+   DiseaseLibrary.module.css
+   ============================================================ */
+
+/* ── Page Shell ─────────────────────────────────────────── */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.75rem 2rem;
+  min-height: 100%;
+}
+
+/* ── Page Header ────────────────────────────────────────── */
+.pageHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.pageTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.4px;
+  margin-bottom: 0.2rem;
+}
+
+.pageSubtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.headerBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: var(--color-overlay);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  padding: 0.35rem 0.75rem;
+  white-space: nowrap;
+  align-self: flex-start;
+  margin-top: 0.25rem;
+}
+
+/* ── Filters ────────────────────────────────────────────── */
+.filtersCard {
+  border: 1px solid var(--color-border);
+}
+
+.filtersBody {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.875rem 1rem !important;
+}
+
+.searchWrapper {
+  position: relative;
+  flex: 1;
+  min-width: 240px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  height: 38px;
+  padding: 0 0.875rem 0 2.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-overlay);
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  outline: none;
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+.searchInput::placeholder { color: var(--color-text-muted); }
+.searchInput:focus {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px rgba(34, 139, 87, 0.12);
+}
+
+.filterSelect {
+  min-width: 180px;
+  height: 38px !important;
+  font-size: var(--text-sm) !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.clearBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--color-brand);
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-xs);
+  transition: background var(--transition-fast);
+}
+.clearBtn:hover { background: var(--color-brand-light); }
+
+/* ── Disease List ───────────────────────────────────────── */
+.diseaseList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+/* ── Disease Card (accordion) ───────────────────────────── */
+.diseaseCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-xs);
+  transition: box-shadow var(--transition-base), border-color var(--transition-base);
+}
+
+.diseaseCard:focus-within {
+  border-color: var(--color-brand);
+}
+
+/* Card header button */
+.cardHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--transition-fast);
+}
+
+.cardHeader:hover {
+  background: var(--color-brand-light);
+}
+
+.cardHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.diseaseIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  background: var(--color-brand-light);
+  color: var(--color-brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cardTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.diseaseName {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.viewFull {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--color-brand);
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-xs);
+  transition: background var(--transition-fast);
+}
+.viewFull:hover { background: var(--color-brand-light); }
+
+.chevron {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+/* Accordion body */
+.cardBody {
+  padding: 0 1.25rem 1.25rem;
+  border-top: 1px solid var(--color-border);
+  animation: slideDown 180ms ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.description {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.snippetGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 640px) {
+  .snippetGrid { grid-template-columns: 1fr; }
+}
+
+.snippet {
+  background: var(--color-overlay);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+}
+
+.snippetLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  margin-bottom: 0.4rem;
+}
+
+.snippetText {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.viewFullBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--text-sm);
+  color: var(--color-brand);
+  font-weight: 500;
+  padding: 0;
+  transition: opacity var(--transition-fast);
+}
+.viewFullBtn:hover { opacity: 0.75; }
+
+/* ── Livestock type badges ───────────────────────────────── */
+.typeBadge {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.typeBadgeSwine {
+  background: hsl(30, 80%, 93%);
+  color: hsl(30, 70%, 35%);
+}
+
+.typeBadgePoultry {
+  background: hsl(48, 90%, 92%);
+  color: hsl(48, 80%, 32%);
+}
+
+.typeBadgeBoth {
+  background: hsl(220, 60%, 93%);
+  color: hsl(220, 60%, 38%);
+}
+
+/* ── Full detail Modal styles ───────────────────────────── */
+.modalLoading {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.modalError {
+  font-size: var(--text-sm);
+  color: var(--color-danger);
+}
+
+.modalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modalMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modalDesc {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.8;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.detailGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.detailSection {
+  background: var(--color-overlay);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.875rem 1rem;
+}
+
+.detailHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.detailIcon {
+  color: var(--color-brand);
+}
+
+.detailLabel {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-text-muted);
+}
+
+.detailContent {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
+
+/* ── Loading / Empty / Error ────────────────────────────── */
+.loadingWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.emptyIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-lg);
+  background: var(--color-brand-light);
+  color: var(--color-brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.emptyTitle {
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.emptyDesc {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  max-width: 340px;
+  line-height: 1.6;
+}
+
+.errorCard {
+  border: 1px solid hsl(4, 74%, 88%);
+  background: hsl(4, 74%, 98%);
+}
+
+.errorBody {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem !important;
+  flex-wrap: wrap;
+}
+
+.errorIcon { color: var(--color-danger); flex-shrink: 0; }
+.errorText { flex: 1; font-size: var(--text-sm); color: var(--color-danger); }

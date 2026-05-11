@@ -1,0 +1,209 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  animation: fa-animate-in var(--transition-slow);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.pageTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
+}
+
+.pageSubtitle {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  margin-top: 0.25rem;
+}
+
+.headerActions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+/* Metrics Grid */
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.metricCard {
+  display: flex;
+  align-items: center;
+  padding: 1.5rem;
+  gap: 1rem;
+}
+
+.metricIconBox {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.metricContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.metricValue {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.metricLabel {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+@keyframes pulseRed {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.pulseDanger {
+  animation: pulseRed 2s infinite;
+  border-color: var(--color-danger);
+}
+
+/* Activity Feed */
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  margin-bottom: -1rem;
+}
+
+.activityCard {
+  overflow: hidden;
+}
+
+.emptyState {
+  padding: 3rem;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.activityList {
+  display: flex;
+  flex-direction: column;
+}
+
+.activityItem {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+  gap: 1rem;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.activityItem:last-child {
+  border-bottom: none;
+}
+
+.activityItem:hover {
+  background-color: var(--color-overlay);
+}
+
+.activityIconWrapper {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: var(--color-canvas);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.activityDetails {
+  flex: 1;
+}
+
+.activityTitle {
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+}
+
+.activitySubtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin-top: 0.15rem;
+}
+
+.activityDate {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: 0.25rem;
+}
+
+.activityStatus {
+  flex-shrink: 0;
+}
+
+.statusBadge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.active {
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+}
+
+.acknowledged, .under\ monitoring {
+  background: hsl(38, 92%, 95%);
+  color: hsl(38, 92%, 40%);
+}
+
+.resolved {
+  background: hsl(145, 63%, 95%);
+  color: var(--color-success);
+}
+
+.defaultStatus {
+  background: var(--color-overlay);
+  color: var(--color-text-secondary);
+}
+
+.centeredPage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  gap: 1rem;
+}
+
+.errorIcon {
+  color: var(--color-danger);
+}
+
+.errorText {
+  color: var(--color-text-secondary);
+}
