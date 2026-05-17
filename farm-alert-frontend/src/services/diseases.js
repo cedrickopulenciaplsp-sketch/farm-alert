@@ -67,3 +67,52 @@ export async function getDiseaseById(id) {
 
   return { data, error };
 }
+
+/**
+ * Create a new disease entry in the library.
+ * Requires admin role (enforced by RLS policy diseases_write_admin).
+ *
+ * @param {object} fields - { disease_name, livestock_type_id, description, common_symptoms, causes, control_prevention }
+ * @returns {Promise<{ data, error }>}
+ */
+export async function createDisease(fields) {
+  const { data, error } = await supabase
+    .from('diseases')
+    .insert(fields)
+    .select()
+    .single();
+  return { data, error };
+}
+
+/**
+ * Update an existing disease entry.
+ * Requires admin role (enforced by RLS policy diseases_write_admin).
+ *
+ * @param {string} id - disease_id (UUID)
+ * @param {object} fields - Partial update fields
+ * @returns {Promise<{ data, error }>}
+ */
+export async function updateDisease(id, fields) {
+  const { data, error } = await supabase
+    .from('diseases')
+    .update(fields)
+    .eq('disease_id', id)
+    .select()
+    .single();
+  return { data, error };
+}
+
+/**
+ * Delete a disease entry from the library.
+ * Requires admin role (enforced by RLS policy diseases_write_admin).
+ *
+ * @param {string} id - disease_id (UUID)
+ * @returns {Promise<{ error }>}
+ */
+export async function deleteDisease(id) {
+  const { error } = await supabase
+    .from('diseases')
+    .delete()
+    .eq('disease_id', id);
+  return { error };
+}

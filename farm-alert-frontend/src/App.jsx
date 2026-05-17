@@ -13,6 +13,14 @@ import OutbreakAlerts from './pages/outbreaks/OutbreakAlerts';
 import Dashboard from './pages/Dashboard/Dashboard';
 import DiseaseMap from './pages/Map/DiseaseMap';
 import Analytics from './pages/Analytics/Analytics';
+import PestControlLog from './pages/pestControl/PestControlLog';
+import PestControlForm from './pages/pestControl/PestControlForm';
+import PestLibrary from './pages/pestControl/PestLibrary';
+import SetupPassword from './pages/auth/SetupPassword';
+import AdminLayout from './pages/admin/AdminLayout';
+import UserManagement from './pages/admin/UserManagement';
+import SystemSettings from './pages/admin/SystemSettings';
+import AuditLogs from './pages/admin/AuditLogs';
 
 // ---------------------------------------------------------------------------
 // Temporary placeholder pages — replaced in Phase 5+ with real components
@@ -48,6 +56,9 @@ function App() {
 
           {/* Protected routes — any authenticated user */}
           <Route element={<ProtectedRoute />}>
+            {/* Password-change gate — full-screen, no Layout */}
+            <Route path="/setup-password" element={<SetupPassword />} />
+
             {/* Layout wraps all inner protected pages with Sidebar + Navbar */}
             <Route element={<Layout />}>
               <Route path="/dashboard"      element={<Dashboard />} />
@@ -59,7 +70,11 @@ function App() {
               <Route path="/reports/:id"    element={<ReportDetail />} />
               <Route path="/outbreaks"      element={<OutbreakAlerts />} />
               <Route path="/map"            element={<DiseaseMap />} />
-              <Route path="/analytics"      element={<Analytics />} />
+              <Route path="/pest-control"          element={<PestControlLog />} />
+              <Route path="/pest-control/new"      element={<PestControlForm />} />
+              <Route path="/pest-control/:id/edit" element={<PestControlForm />} />
+              <Route path="/pest-library"           element={<PestLibrary />} />
+              <Route path="/analytics"             element={<Analytics />} />
               {/* Phase 4 sandbox — remove after verification */}
               <Route path="/ui-sandbox" element={<UiSandbox />} />
             </Route>
@@ -68,7 +83,12 @@ function App() {
           {/* Admin-only routes */}
           <Route element={<ProtectedRoute requiredRole="admin" />}>
             <Route element={<Layout />}>
-              <Route path="/admin" element={<PlaceholderPage name="Admin Settings" />} />
+              <Route element={<AdminLayout />}>
+                <Route index path="/admin" element={<Navigate to="/admin/users" replace />} />
+                <Route path="/admin/users"    element={<UserManagement />} />
+                <Route path="/admin/settings" element={<SystemSettings />} />
+                <Route path="/admin/logs"     element={<AuditLogs />} />
+              </Route>
             </Route>
           </Route>
 

@@ -1,0 +1,183 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.hint {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  max-width: 520px;
+}
+
+/* ── Settings card ───────────────────────────────────────────────────────── */
+.settingsCard { overflow: hidden; }
+
+.settingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 16px 20px;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 0;
+}
+
+.settingInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.settingKey {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-family: 'Courier New', monospace;
+  margin: 0 0 3px;
+}
+
+.settingMeta {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.settingError {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--text-xs);
+  color: var(--color-danger);
+  margin: 4px 0 0;
+}
+
+/* ── View area ───────────────────────────────────────────────────────────── */
+.viewArea {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settingValue {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  background: var(--color-overlay);
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  min-width: 140px;
+  text-align: right;
+}
+
+/* ── Edit area ───────────────────────────────────────────────────────────── */
+.editArea {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.settingInput {
+  font-size: var(--text-sm);
+  font-family: var(--font-body);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-brand);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  outline: none;
+  min-width: 160px;
+  box-shadow: 0 0 0 3px hsla(152, 58%, 28%, 0.1);
+}
+
+/* ── Icon buttons ────────────────────────────────────────────────────────── */
+.iconBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-base);
+  flex-shrink: 0;
+}
+
+.iconBtn:hover {
+  background: var(--color-overlay);
+  color: var(--color-text-secondary);
+  border-color: var(--color-border-strong);
+}
+
+.iconBtnSave:hover {
+  background: hsla(152, 58%, 28%, 0.08);
+  color: var(--color-brand);
+  border-color: hsla(152, 58%, 28%, 0.3);
+}
+
+/* ── Empty / error / loading states ─────────────────────────────────────── */
+.emptyBody, .errorBody {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.emptyHint {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.errorBody { color: var(--color-danger); }
+
+.loadingWrapper {
+  display: flex;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+/* ── Toast ───────────────────────────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  background: hsl(145, 58%, 24%);
+  color: #fff;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.25s ease;
+}
+.toastError { background: var(--color-danger); }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.spin { animation: spinAnim 0.7s linear infinite; }
+@keyframes spinAnim { to { transform: rotate(360deg); } }

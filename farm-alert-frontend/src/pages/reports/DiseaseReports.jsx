@@ -24,9 +24,9 @@ import styles from './DiseaseReports.module.css';
 // Severity badge — colour-coded per level
 // ---------------------------------------------------------------------------
 const SEVERITY_COLORS = {
-  Low:      { bg: 'hsl(145, 55%, 92%)', color: 'hsl(145, 60%, 28%)' },
-  Medium:   { bg: 'hsl(48,  90%, 92%)', color: 'hsl(38,  80%, 32%)' },
-  High:     { bg: 'hsl(25,  90%, 92%)', color: 'hsl(25,  80%, 35%)' },
+  Mild:     { bg: 'hsl(145, 55%, 92%)', color: 'hsl(145, 60%, 28%)' },
+  Moderate: { bg: 'hsl(48,  90%, 92%)', color: 'hsl(38,  80%, 32%)' },
+  Severe:   { bg: 'hsl(25,  90%, 92%)', color: 'hsl(25,  80%, 35%)' },
   Critical: { bg: 'hsl(4,   74%, 94%)', color: 'hsl(4,   74%, 40%)' },
 };
 
@@ -101,6 +101,19 @@ function ReportRow({ report }) {
           <MapPin size={13} className={styles.cellIcon} aria-hidden="true" />
           <span>{report.barangay_name}</span>
         </div>
+      </td>
+
+      {/* Animals affected */}
+      <td className={styles.cell}>
+        <span className={styles.statPrimary}>{report.animals_affected ?? '—'}</span>
+      </td>
+
+      {/* Mortalities */}
+      <td className={styles.cell}>
+        {Number(report.mortalities) > 0
+          ? <span className={styles.statDanger}>{report.mortalities}</span>
+          : <span className={styles.statMuted}>0</span>
+        }
       </td>
 
       {/* Severity */}
@@ -299,9 +312,9 @@ export default function DiseaseReports() {
             className={styles.filterSelect}
           >
             <option value="">All Severities</option>
-            <option value="Low">Low</option>
-            <option value="Medium">Medium</option>
-            <option value="High">High</option>
+            <option value="Mild">Mild</option>
+            <option value="Moderate">Moderate</option>
+            <option value="Severe">Severe</option>
             <option value="Critical">Critical</option>
           </Select>
 
@@ -347,6 +360,8 @@ export default function DiseaseReports() {
                 <tr>
                   <th className={styles.th}>Disease / Farm</th>
                   <th className={styles.th}>Barangay</th>
+                  <th className={styles.th}>Affected</th>
+                  <th className={styles.th}>Deaths</th>
                   <th className={styles.th}>Severity</th>
                   <th className={styles.th}>Status</th>
                   <th className={styles.th}>Date Reported</th>

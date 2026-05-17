@@ -85,3 +85,10 @@
   padding-right: 2.5rem;
   cursor: pointer;
 }
+
+/* Textarea */
+.textarea {
+  min-height: 5rem;
+  resize: vertical;
+  line-height: 1.5;
+}

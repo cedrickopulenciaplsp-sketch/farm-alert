@@ -5,6 +5,7 @@ import {
   Bug,
   Calendar,
   Users,
+  Skull,
   CheckCircle2,
   AlertCircle,
   RefreshCw,
@@ -138,6 +139,12 @@ function OutbreakCard({ outbreak, onAction }) {
             <Users size={12} aria-hidden="true" className={styles.metaIcon} />
             <span>{outbreak.farms_affected_count ?? '—'} farm{outbreak.farms_affected_count !== 1 ? 's' : ''} affected</span>
           </div>
+          {Number(outbreak.total_mortalities) > 0 && (
+            <div className={styles.metaItem} style={{ color: 'var(--color-danger)', fontWeight: 600 }}>
+              <Skull size={12} aria-hidden="true" className={styles.metaIcon} />
+              <span>{outbreak.total_mortalities} death{outbreak.total_mortalities !== 1 ? 's' : ''} recorded</span>
+            </div>
+          )}
           {outbreak.acknowledged_by_name && (
             <div className={styles.metaItem}>
               <Eye size={12} aria-hidden="true" className={styles.metaIcon} />

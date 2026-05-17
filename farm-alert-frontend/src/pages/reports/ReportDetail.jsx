@@ -5,6 +5,8 @@ import {
   Bug,
   MapPin,
   User,
+  Users,
+  Skull,
   Calendar,
   ClipboardList,
   AlertCircle,
@@ -210,6 +212,17 @@ export default function ReportDetail() {
               <InfoRow icon={Activity} label="Severity">
                 <SeverityBadge severity={report.severity} />
               </InfoRow>
+              <InfoRow icon={Users} label="Animals Affected">
+                <span className={styles.valueText}>{report.animals_affected ?? '—'}</span>
+              </InfoRow>
+              <InfoRow icon={Skull} label="Mortalities">
+                <span
+                  className={styles.valueText}
+                  style={Number(report.mortalities) > 0 ? { color: 'var(--color-danger)' } : undefined}
+                >
+                  {report.mortalities ?? 0}
+                </span>
+              </InfoRow>
               <InfoRow icon={Calendar} label="Date Reported">
                 <span className={styles.valueText}>{fmtDate(report.date_reported)}</span>
               </InfoRow>
@@ -307,6 +320,21 @@ export default function ReportDetail() {
               <div className={styles.summaryItem}>
                 <span className={styles.summaryLabel}>Livestock Type</span>
                 <span className={styles.summaryValue}>{report.livestock_type_name ?? '—'}</span>
+              </div>
+              <div className={styles.summaryDivider} />
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryLabel}>Animals Affected</span>
+                <span className={styles.summaryValue}>{report.animals_affected ?? '—'}</span>
+              </div>
+              <div className={styles.summaryDivider} />
+              <div className={styles.summaryItem}>
+                <span className={styles.summaryLabel}>Mortalities</span>
+                <span
+                  className={styles.summaryValue}
+                  style={Number(report.mortalities) > 0 ? { color: 'var(--color-danger)' } : undefined}
+                >
+                  {report.mortalities ?? 0}
+                </span>
               </div>
               <div className={styles.summaryDivider} />
               <div className={styles.summaryItem}>

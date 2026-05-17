@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   Tractor,
@@ -10,33 +11,96 @@ import {
   Settings,
   LogOut,
   Leaf,
+  Bug,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { signOut } from '../../services/auth';
+import { getActiveOutbreakCount } from '../../services/outbreaks';
 import styles from './Sidebar.module.css';
 
 // ---------------------------------------------------------------------------
-// Navigation items — extend when new pages are added in later phases
+// Navigation items
 // ---------------------------------------------------------------------------
-const NAV_ITEMS = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/farms',     icon: Tractor,         label: 'Farms' },
-  { to: '/diseases',  icon: BookOpen,         label: 'Disease Library' },
-  { to: '/reports',   icon: FileText,         label: 'Disease Reports' },
-  { to: '/outbreaks', icon: AlertTriangle,    label: 'Outbreak Alerts' },
-  { to: '/map',       icon: Map,              label: 'Disease Map' },
-  { to: '/analytics', icon: BarChart2,        label: 'Analytics' },
+const CVO_ITEMS = [
+  { to: '/dashboard',   icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/farms',       icon: Tractor,         label: 'Farms' },
+  { to: '/diseases',    icon: BookOpen,         label: 'Disease Library' },
+  { to: '/reports',     icon: FileText,         label: 'Disease Reports' },
+  { to: '/outbreaks',   icon: AlertTriangle,    label: 'Outbreak Alerts' },
+  { to: '/map',         icon: Map,              label: 'Disease Map' },
+  { to: '/pest-control', icon: Bug,        label: 'Pest Control' },
+  { to: '/pest-library', icon: BookOpen,   label: 'Pest Library' },
+  { to: '/analytics',   icon: BarChart2,   label: 'Analytics' },
 ];
 
-const ADMIN_ITEMS = [
+// Exclusive admin-only tools — shown below a divider for admins only
+const ADMIN_TOOLS = [
   { to: '/admin', icon: Settings, label: 'Admin Settings' },
 ];
+
+// ---------------------------------------------------------------------------
+// NavItem — standard nav link
+// ---------------------------------------------------------------------------
+function NavItem({ to, icon: Icon, label }) {
+  return (
+    <li>
+      <NavLink
+        to={to}
+        className={({ isActive }) =>
+          `${styles.navItem}${isActive ? ` ${styles.active}` : ''}`
+        }
+      >
+        <Icon size={18} className={styles.navIcon} aria-hidden="true" />
+        {label}
+      </NavLink>
+    </li>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// OutbreakNavItem — special nav item with live active-outbreak badge
+// ---------------------------------------------------------------------------
+function OutbreakNavItem() {
+  const [activeCount, setActiveCount] = useState(0);
+
+  useEffect(() => {
+    // Fetch immediately on mount, then poll every 60 seconds
+    async function fetchCount() {
+      const { count } = await getActiveOutbreakCount();
+      setActiveCount(count);
+    }
+    fetchCount();
+    const interval = setInterval(fetchCount, 60_000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <li>
+      <NavLink
+        to="/outbreaks"
+        className={({ isActive }) =>
+          `${styles.navItem}${isActive ? ` ${styles.active}` : ''}`
+        }
+        aria-label={`Outbreak Alerts${activeCount > 0 ? ` — ${activeCount} active` : ''}`}
+      >
+        <AlertTriangle size={18} className={styles.navIcon} aria-hidden="true" />
+        Outbreak Alerts
+        {activeCount > 0 && (
+          <span className={styles.outbreakBadge} aria-hidden="true">
+            {activeCount > 9 ? '9+' : activeCount}
+          </span>
+        )}
+      </NavLink>
+    </li>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Sidebar component
 // ---------------------------------------------------------------------------
 export default function Sidebar() {
   const { role } = useAuth();
+  const isAdmin = role === 'admin';
 
   const handleLogout = async () => {
     await signOut();
@@ -50,37 +114,43 @@ export default function Sidebar() {
         FarmAlert
       </NavLink>
 
-      {/* Primary nav links */}
+      {/* Primary nav links — same for both roles */}
       <nav>
         <ul className={styles.navList}>
-          {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
-            <li key={to}>
-              <NavLink
-                to={to}
-                className={({ isActive }) =>
-                  `${styles.navItem}${isActive ? ` ${styles.active}` : ''}`
-                }
-              >
-                <Icon size={18} className={styles.navIcon} aria-hidden="true" />
-                {label}
-              </NavLink>
-            </li>
-          ))}
+          {CVO_ITEMS.map(item =>
+            item.to === '/outbreaks'
+              ? <OutbreakNavItem key="/outbreaks" />
+              : <NavItem key={item.to} {...item} />
+          )}
 
-          {/* Admin-only section */}
-          {role === 'admin' && ADMIN_ITEMS.map(({ to, icon: Icon, label }) => (
-            <li key={to}>
-              <NavLink
-                to={to}
-                className={({ isActive }) =>
-                  `${styles.navItem}${isActive ? ` ${styles.active}` : ''}`
-                }
-              >
-                <Icon size={18} className={styles.navIcon} aria-hidden="true" />
-                {label}
-              </NavLink>
-            </li>
-          ))}
+          {/* Admin-only tools section — shown below a divider */}
+          {isAdmin && (
+            <>
+              <li aria-hidden="true">
+                <div style={{
+                  height: '1px',
+                  background: 'var(--color-border)',
+                  margin: '8px 12px',
+                }} />
+              </li>
+              <li>
+                <span style={{
+                  display: 'block',
+                  padding: '4px 16px',
+                  fontSize: '0.68rem',
+                  fontWeight: 600,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  color: 'var(--color-text-muted)',
+                }}>
+                  Admin Tools
+                </span>
+              </li>
+              {ADMIN_TOOLS.map(item => (
+                <NavItem key={item.to} {...item} />
+              ))}
+            </>
+          )}
         </ul>
       </nav>
 
@@ -99,3 +169,4 @@ export default function Sidebar() {
     </aside>
   );
 }
+

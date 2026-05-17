@@ -10,18 +10,24 @@ import {
   Bug,
   ShieldCheck,
   FileText,
+  Plus,
+  Edit2,
+  Trash2,
+  X,
+  Save,
 } from 'lucide-react';
-import { getDiseases, getDiseaseById } from '../../services/diseases';
+import { getDiseases, getDiseaseById, createDisease, updateDisease, deleteDisease } from '../../services/diseases';
 import { getLivestockTypes } from '../../services/farms';
+import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/shared/Button';
 import Card from '../../components/shared/Card';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import Modal from '../../components/shared/Modal';
-import { Select } from '../../components/shared/FormElements';
+import { Input, Select } from '../../components/shared/FormElements';
 import styles from './DiseaseLibrary.module.css';
 
 // ---------------------------------------------------------------------------
-// Severity badge — maps livestock_type to a colour tag
+// Badges
 // ---------------------------------------------------------------------------
 function TypeBadge({ typeName }) {
   const isPoultry = typeName?.toLowerCase().includes('poultry');
@@ -38,7 +44,7 @@ function TypeBadge({ typeName }) {
 }
 
 // ---------------------------------------------------------------------------
-// Detail section row inside the modal
+// Detail section row inside the view modal
 // ---------------------------------------------------------------------------
 function DetailSection({ icon: Icon, label, content }) {
   if (!content) return null;
@@ -54,15 +60,14 @@ function DetailSection({ icon: Icon, label, content }) {
 }
 
 // ---------------------------------------------------------------------------
-// Disease Card — accordion style with expand/collapse
+// Disease Card — accordion with optional admin action buttons
 // ---------------------------------------------------------------------------
-function DiseaseCard({ disease, onViewFull }) {
+function DiseaseCard({ disease, isAdmin, onViewFull, onEdit, onDelete }) {
   const [open, setOpen] = useState(false);
   const typeName = disease.livestock_types?.type_name ?? '—';
 
   return (
     <article className={styles.diseaseCard} aria-label={disease.disease_name}>
-      {/* Card header — always visible */}
       <button
         id={`toggle-disease-${disease.disease_id}`}
         className={styles.cardHeader}
@@ -79,7 +84,30 @@ function DiseaseCard({ disease, onViewFull }) {
           </div>
         </div>
         <div className={styles.cardHeaderRight}>
-          <span className={styles.viewFull}
+          {isAdmin && (
+            <div style={{ display: 'flex', gap: 4 }} onClick={e => e.stopPropagation()}>
+              <button
+                id={`edit-disease-${disease.disease_id}`}
+                className={styles.iconBtn}
+                onClick={() => onEdit(disease)}
+                title="Edit disease"
+                aria-label={`Edit ${disease.disease_name}`}
+              >
+                <Edit2 size={14} />
+              </button>
+              <button
+                id={`delete-disease-${disease.disease_id}`}
+                className={`${styles.iconBtn} ${styles.iconBtnDanger}`}
+                onClick={() => onDelete(disease)}
+                title="Delete disease"
+                aria-label={`Delete ${disease.disease_name}`}
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          )}
+          <span
+            className={styles.viewFull}
             onClick={(e) => { e.stopPropagation(); onViewFull(disease.disease_id); }}
             role="button"
             tabIndex={0}
@@ -94,7 +122,6 @@ function DiseaseCard({ disease, onViewFull }) {
         </div>
       </button>
 
-      {/* Accordion body */}
       {open && (
         <div className={styles.cardBody}>
           {disease.description && (
@@ -132,12 +159,12 @@ function DiseaseCard({ disease, onViewFull }) {
 }
 
 // ---------------------------------------------------------------------------
-// Full detail modal
+// Full detail modal (read-only view)
 // ---------------------------------------------------------------------------
 function DiseaseDetailModal({ diseaseId, onClose }) {
-  const [disease, setDisease]   = useState(null);
-  const [loading, setLoading]   = useState(true);
-  const [error,   setError]     = useState(null);
+  const [disease, setDisease] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState(null);
 
   useEffect(() => {
     if (!diseaseId) return;
@@ -159,9 +186,7 @@ function DiseaseDetailModal({ diseaseId, onClose }) {
       size="lg"
     >
       {loading ? (
-        <div className={styles.modalLoading}>
-          <LoadingSpinner size={24} />
-        </div>
+        <div className={styles.modalLoading}><LoadingSpinner size={24} /></div>
       ) : error ? (
         <p className={styles.modalError}>{error}</p>
       ) : disease ? (
@@ -173,21 +198,9 @@ function DiseaseDetailModal({ diseaseId, onClose }) {
             <p className={styles.modalDesc}>{disease.description}</p>
           )}
           <div className={styles.detailGrid}>
-            <DetailSection
-              icon={Bug}
-              label="Common Symptoms"
-              content={disease.common_symptoms}
-            />
-            <DetailSection
-              icon={FileText}
-              label="Causes"
-              content={disease.causes}
-            />
-            <DetailSection
-              icon={ShieldCheck}
-              label="Control & Prevention"
-              content={disease.control_prevention}
-            />
+            <DetailSection icon={Bug}        label="Common Symptoms"    content={disease.common_symptoms} />
+            <DetailSection icon={FileText}   label="Causes"             content={disease.causes} />
+            <DetailSection icon={ShieldCheck}label="Control & Prevention" content={disease.control_prevention} />
           </div>
         </div>
       ) : null}
@@ -196,9 +209,158 @@ function DiseaseDetailModal({ diseaseId, onClose }) {
 }
 
 // ---------------------------------------------------------------------------
+// Add / Edit Disease Modal (Admin only)
+// ---------------------------------------------------------------------------
+function DiseaseFormModal({ disease, livestockTypes, onSave, onClose }) {
+  const isEdit = !!disease;
+  const [name,        setName]        = useState(disease?.disease_name       ?? '');
+  const [typeId,      setTypeId]      = useState(String(disease?.livestock_type_id ?? ''));
+  const [description, setDescription] = useState(disease?.description        ?? '');
+  const [symptoms,    setSymptoms]    = useState(disease?.common_symptoms     ?? '');
+  const [causes,      setCauses]      = useState(disease?.causes              ?? '');
+  const [prevention,  setPrevention]  = useState(disease?.control_prevention  ?? '');
+  const [saving,      setSaving]      = useState(false);
+  const [error,       setError]       = useState('');
+
+  async function handleSave() {
+    if (!name.trim() || !typeId) {
+      setError('Disease name and livestock type are required.');
+      return;
+    }
+    setSaving(true);
+    setError('');
+    const fields = {
+      disease_name:       name.trim(),
+      livestock_type_id:  Number(typeId),
+      description:        description.trim() || null,
+      common_symptoms:    symptoms.trim()    || null,
+      causes:             causes.trim()      || null,
+      control_prevention: prevention.trim()  || null,
+    };
+    const { error: saveErr } = isEdit
+      ? await updateDisease(disease.disease_id, fields)
+      : await createDisease(fields);
+    setSaving(false);
+    if (saveErr) { setError(saveErr.message); return; }
+    onSave();
+  }
+
+  return (
+    <Modal
+      isOpen
+      onClose={onClose}
+      title={isEdit ? `Edit — ${disease.disease_name}` : 'Add New Disease'}
+      size="lg"
+      footer={
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+          <Button id="disease-form-cancel" variant="ghost" size="sm" onClick={onClose}>
+            <X size={14} /> Cancel
+          </Button>
+          <Button id="disease-form-save" variant="primary" size="sm" onClick={handleSave} disabled={saving}>
+            {saving ? <RefreshCw size={14} /> : <Save size={14} />}
+            {isEdit ? 'Save Changes' : 'Add Disease'}
+          </Button>
+        </div>
+      }
+    >
+      {error && (
+        <div className={styles.modalError} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 16 }}>
+          <AlertCircle size={14} /><span>{error}</span>
+        </div>
+      )}
+      <div className={styles.formGrid}>
+        <Input
+          id="disease-name"
+          label="Disease Name"
+          required
+          value={name}
+          placeholder="e.g. Avian Influenza"
+          onChange={e => setName(e.target.value)}
+        />
+        <Select
+          id="disease-livestock-type"
+          label="Livestock Type"
+          value={typeId}
+          onChange={e => setTypeId(e.target.value)}
+        >
+          <option value="">Select livestock type…</option>
+          {livestockTypes.map(lt => (
+            <option key={lt.livestock_type_id} value={lt.livestock_type_id}>
+              {lt.type_name}
+            </option>
+          ))}
+        </Select>
+        <div style={{ gridColumn: '1 / -1' }}>
+          <Input
+            id="disease-description"
+            label="Description"
+            value={description}
+            placeholder="Brief overview of the disease…"
+            onChange={e => setDescription(e.target.value)}
+          />
+        </div>
+        <Input
+          id="disease-symptoms"
+          label="Common Symptoms"
+          value={symptoms}
+          placeholder="e.g. Fever, lethargy, loss of appetite…"
+          onChange={e => setSymptoms(e.target.value)}
+        />
+        <Input
+          id="disease-causes"
+          label="Causes"
+          value={causes}
+          placeholder="e.g. Virus, bacteria, parasite…"
+          onChange={e => setCauses(e.target.value)}
+        />
+        <div style={{ gridColumn: '1 / -1' }}>
+          <Input
+            id="disease-prevention"
+            label="Control & Prevention"
+            value={prevention}
+            placeholder="e.g. Vaccination, quarantine, sanitation…"
+            onChange={e => setPrevention(e.target.value)}
+          />
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Delete confirmation modal
+// ---------------------------------------------------------------------------
+function DeleteDiseaseModal({ disease, onConfirm, onClose, loading }) {
+  return (
+    <Modal
+      isOpen
+      onClose={onClose}
+      title="Delete Disease"
+      size="sm"
+      footer={
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+          <Button id="delete-disease-cancel" variant="ghost" size="sm" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button id="delete-disease-confirm" variant="danger" size="sm" onClick={onConfirm} disabled={loading}>
+            {loading ? <RefreshCw size={14} /> : <Trash2 size={14} />}
+            Yes, Delete
+          </Button>
+        </div>
+      }
+    >
+      <p style={{ color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
+        Are you sure you want to delete <strong>{disease?.disease_name}</strong>?
+        This cannot be undone and may affect existing disease reports that reference it.
+      </p>
+    </Modal>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Empty state
 // ---------------------------------------------------------------------------
-function EmptyState({ hasFilters, onClear }) {
+function EmptyState({ hasFilters, onClear, isAdmin, onAdd }) {
   return (
     <div className={styles.emptyState}>
       <div className={styles.emptyIcon}>
@@ -210,11 +372,18 @@ function EmptyState({ hasFilters, onClear }) {
       <p className={styles.emptyDesc}>
         {hasFilters
           ? 'Try clearing your search or changing the livestock type filter.'
-          : 'Diseases can be added by an administrator.'}
+          : isAdmin
+            ? 'Click "Add Disease" to add the first entry.'
+            : 'Diseases can be added by an administrator.'}
       </p>
       {hasFilters && (
         <Button variant="ghost" size="sm" id="clear-disease-filters-btn" onClick={onClear}>
           Clear filters
+        </Button>
+      )}
+      {!hasFilters && isAdmin && (
+        <Button variant="primary" size="sm" id="empty-add-disease-btn" onClick={onAdd}>
+          <Plus size={14} /> Add Disease
         </Button>
       )}
     </div>
@@ -225,47 +394,47 @@ function EmptyState({ hasFilters, onClear }) {
 // DiseaseLibrary — main page
 // ---------------------------------------------------------------------------
 export default function DiseaseLibrary() {
-  const [diseases, setDiseases]             = useState([]);
-  const [livestockTypes, setLivestockTypes] = useState([]);
-  const [loading, setLoading]               = useState(true);
-  const [error, setError]                   = useState(null);
+  const { role } = useAuth();
+  const isAdmin  = role === 'admin';
+
+  const [diseases,      setDiseases]      = useState([]);
+  const [livestockTypes,setLivestockTypes]= useState([]);
+  const [loading,       setLoading]       = useState(true);
+  const [error,         setError]         = useState(null);
 
   // Filters
-  const [search, setSearch]               = useState('');
+  const [search,          setSearch]          = useState('');
   const [livestockTypeId, setLivestockTypeId] = useState('');
 
-  // Detail modal
-  const [activeDiseaseId, setActiveDiseaseId] = useState(null);
+  // Modals
+  const [activeDiseaseId, setActiveDiseaseId] = useState(null); // view full
+  const [editTarget,      setEditTarget]      = useState(null); // add/edit form
+  const [deleteTarget,    setDeleteTarget]    = useState(null); // delete confirm
+  const [showForm,        setShowForm]        = useState(false);
+  const [deleteLoading,   setDeleteLoading]   = useState(false);
 
-  // ---------------------------------------------------------------------------
-  // Load livestock types once
-  // ---------------------------------------------------------------------------
+  // Toast
+  const [toast, setToast] = useState(null);
+  function showToast(msg) {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  }
+
   useEffect(() => {
     getLivestockTypes().then(({ data }) => setLivestockTypes(data ?? []));
   }, []);
 
-  // ---------------------------------------------------------------------------
-  // Load (and re-load on filter change)
-  // ---------------------------------------------------------------------------
   async function load() {
     setLoading(true);
     setError(null);
-    const { data, error: e } = await getDiseases({
-      livestockTypeId: livestockTypeId || null,
-    });
-    if (e) {
-      setError(e.message);
-    } else {
-      setDiseases(data ?? []);
-    }
+    const { data, error: e } = await getDiseases({ livestockTypeId: livestockTypeId || null });
+    if (e) setError(e.message);
+    else   setDiseases(data ?? []);
     setLoading(false);
   }
 
   useEffect(() => { load(); }, [livestockTypeId]); // eslint-disable-line
 
-  // ---------------------------------------------------------------------------
-  // Client-side search filter (avoids extra Supabase calls on every keystroke)
-  // ---------------------------------------------------------------------------
   const displayed = search
     ? diseases.filter(d =>
         d.disease_name.toLowerCase().includes(search.toLowerCase()) ||
@@ -275,17 +444,43 @@ export default function DiseaseLibrary() {
 
   const hasFilters = !!(search || livestockTypeId);
 
-  const handleClear = () => {
-    setSearch('');
-    setLivestockTypeId('');
-  };
+  async function handleDeleteConfirm() {
+    if (!deleteTarget) return;
+    setDeleteLoading(true);
+    const { error: delErr } = await deleteDisease(deleteTarget.disease_id);
+    setDeleteLoading(false);
+    if (delErr) { showToast(`Error: ${delErr.message}`); return; }
+    setDeleteTarget(null);
+    showToast(`"${deleteTarget.disease_name}" deleted.`);
+    load();
+  }
 
-  // ---------------------------------------------------------------------------
-  // Render
-  // ---------------------------------------------------------------------------
+  function handleOpenAdd() {
+    setEditTarget(null);
+    setShowForm(true);
+  }
+
+  function handleOpenEdit(disease) {
+    setEditTarget(disease);
+    setShowForm(true);
+  }
+
   return (
     <div className={styles.page}>
-      {/* ── Page Header ─────────────────────────────────────────────────── */}
+      {/* Toast */}
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: 24, right: 24, zIndex: 9999,
+          background: 'var(--color-surface)', border: '1px solid var(--color-border)',
+          borderRadius: 'var(--radius-md)', padding: '12px 18px',
+          boxShadow: 'var(--shadow-md)', fontSize: 'var(--text-sm)',
+          color: 'var(--color-text-primary)',
+        }}>
+          {toast}
+        </div>
+      )}
+
+      {/* Page Header */}
       <header className={styles.pageHeader}>
         <div>
           <h1 className={styles.pageTitle}>Disease Library</h1>
@@ -295,13 +490,21 @@ export default function DiseaseLibrary() {
               : `${displayed.length} disease${displayed.length !== 1 ? 's' : ''} in reference`}
           </p>
         </div>
-        <div className={styles.headerBadge}>
-          <BookOpen size={15} aria-hidden="true" />
-          Read-only reference
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {isAdmin ? (
+            <Button id="add-disease-btn" variant="primary" size="sm" onClick={handleOpenAdd}>
+              <Plus size={14} /> Add Disease
+            </Button>
+          ) : (
+            <div className={styles.headerBadge}>
+              <BookOpen size={15} aria-hidden="true" />
+              Read-only reference
+            </div>
+          )}
         </div>
       </header>
 
-      {/* ── Filters Bar ─────────────────────────────────────────────────── */}
+      {/* Filters Bar */}
       <Card className={styles.filtersCard}>
         <Card.Body className={styles.filtersBody}>
           <div className={styles.searchWrapper}>
@@ -335,7 +538,7 @@ export default function DiseaseLibrary() {
             <button
               id="clear-disease-filters-btn"
               className={styles.clearBtn}
-              onClick={handleClear}
+              onClick={() => { setSearch(''); setLivestockTypeId(''); }}
             >
               Clear
             </button>
@@ -343,7 +546,7 @@ export default function DiseaseLibrary() {
         </Card.Body>
       </Card>
 
-      {/* ── Content ─────────────────────────────────────────────────────── */}
+      {/* Content */}
       {error ? (
         <Card className={styles.errorCard}>
           <Card.Body className={styles.errorBody}>
@@ -355,28 +558,58 @@ export default function DiseaseLibrary() {
           </Card.Body>
         </Card>
       ) : loading ? (
-        <div className={styles.loadingWrapper}>
-          <LoadingSpinner size={36} />
-        </div>
+        <div className={styles.loadingWrapper}><LoadingSpinner size={36} /></div>
       ) : displayed.length === 0 ? (
-        <EmptyState hasFilters={hasFilters} onClear={handleClear} />
+        <EmptyState
+          hasFilters={hasFilters}
+          onClear={() => { setSearch(''); setLivestockTypeId(''); }}
+          isAdmin={isAdmin}
+          onAdd={handleOpenAdd}
+        />
       ) : (
         <div className={styles.diseaseList} role="list" aria-label="Disease reference list">
           {displayed.map(disease => (
             <DiseaseCard
               key={disease.disease_id}
               disease={disease}
+              isAdmin={isAdmin}
               onViewFull={setActiveDiseaseId}
+              onEdit={handleOpenEdit}
+              onDelete={setDeleteTarget}
             />
           ))}
         </div>
       )}
 
-      {/* ── Detail Modal ─────────────────────────────────────────────────── */}
+      {/* View detail modal */}
       <DiseaseDetailModal
         diseaseId={activeDiseaseId}
         onClose={() => setActiveDiseaseId(null)}
       />
+
+      {/* Add/Edit form modal (Admin only) */}
+      {showForm && (
+        <DiseaseFormModal
+          disease={editTarget}
+          livestockTypes={livestockTypes}
+          onClose={() => setShowForm(false)}
+          onSave={() => {
+            setShowForm(false);
+            showToast(editTarget ? 'Disease updated!' : 'New disease added!');
+            load();
+          }}
+        />
+      )}
+
+      {/* Delete confirm modal (Admin only) */}
+      {deleteTarget && (
+        <DeleteDiseaseModal
+          disease={deleteTarget}
+          loading={deleteLoading}
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={handleDeleteConfirm}
+        />
+      )}
     </div>
   );
 }

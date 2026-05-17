@@ -61,3 +61,19 @@ export async function updateOutbreak(id, outbreakData) {
 
   return { data, error };
 }
+
+/**
+ * Returns the count of currently Active outbreaks.
+ * Used by the Sidebar badge — avoids fetching full records for a simple count.
+ *
+ * @returns {Promise<{ count: number, error: object|null }>}
+ */
+export async function getActiveOutbreakCount() {
+  const { count, error } = await supabase
+    .from('outbreak_alerts')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'Active');
+
+  return { count: count ?? 0, error };
+}
+

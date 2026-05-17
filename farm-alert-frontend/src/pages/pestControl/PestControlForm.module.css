@@ -1,5 +1,5 @@
 /* ============================================================
-   FarmForm.module.css — styles for create/edit farm form
+   PestControlForm.module.css — mirrors FarmForm conventions
    ============================================================ */
 
 /* ── Page shell ─────────────────────────────────────────── */
@@ -68,7 +68,6 @@
 }
 
 /* ── Banners ────────────────────────────────────────────── */
-.successBanner,
 .errorBanner {
   display: flex;
   align-items: center;
@@ -78,18 +77,23 @@
   font-size: var(--text-sm);
   font-weight: 500;
   border: 1px solid;
-}
-
-.successBanner {
-  background: hsl(145, 55%, 94%);
-  color: hsl(145, 60%, 25%);
-  border-color: hsl(145, 50%, 80%);
-}
-
-.errorBanner {
   background: var(--color-danger-light);
   color: var(--color-danger);
   border-color: hsl(4, 74%, 82%);
+}
+
+.successBanner {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  border: 1px solid;
+  background: hsl(145, 55%, 94%);
+  color: hsl(145, 60%, 25%);
+  border-color: hsl(145, 50%, 80%);
 }
 
 /* ── Form grid ──────────────────────────────────────────── */
@@ -110,25 +114,14 @@
   padding: 1.25rem 1.25rem 1.5rem !important;
 }
 
-/* Coordinates row – full width with side-by-side inputs */
 .fullWidth {
   grid-column: 1 / -1;
 }
 
-.coordsBody {
-  gap: 1rem !important;
-}
-
-.coordsHint {
+.sectionHint {
   font-size: var(--text-sm);
   color: var(--color-text-muted);
   line-height: 1.5;
-}
-
-.coordsRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
 }
 
 /* ── Form footer ────────────────────────────────────────── */
@@ -195,45 +188,6 @@
   color: var(--color-danger);
 }
 
-/* Pest Control History Table Additions */
-.tableWrapper {
-  overflow-x: auto;
-  margin-top: var(--spacing-sm);
-  border: 1px solid var(--color-gray-200);
-  border-radius: var(--radius-md);
-}
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-}
-
-.th {
-  padding: var(--spacing-md);
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  text-transform: uppercase;
-  color: var(--color-gray-500);
-  border-bottom: 1px solid var(--color-gray-200);
-  background: var(--color-gray-50);
-}
-
-.row {
-  border-bottom: 1px solid var(--color-gray-100);
-  transition: background-color var(--transition-fast);
-}
-
-.row:last-child {
-  border-bottom: none;
-}
-
-.cell {
-  padding: var(--spacing-md);
-  font-size: var(--font-size-sm);
-  color: var(--color-gray-700);
-}
-
 .pageErrorText {
   font-size: var(--text-sm);
   color: var(--color-danger);
@@ -243,9 +197,6 @@
 /* ── Responsive collapse ────────────────────────────────── */
 @media (max-width: 768px) {
   .formGrid {
-    grid-template-columns: 1fr;
-  }
-  .coordsRow {
     grid-template-columns: 1fr;
   }
 }

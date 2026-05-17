@@ -118,3 +118,60 @@ export function Select({
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Textarea
+// ---------------------------------------------------------------------------
+/**
+ * Textarea
+ *
+ * @param {string}     id
+ * @param {string}     error
+ * @param {string}     hint
+ * @param {string}     label
+ * @param {boolean}    required
+ * @param {number}     rows
+ */
+export function Textarea({
+  id,
+  error,
+  hint,
+  label,
+  required = false,
+  className = '',
+  rows = 3,
+  ...rest
+}) {
+  const textareaClass = [
+    styles.inputBase,
+    styles.textarea,
+    error ? styles.error : '',
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <div className={styles.field}>
+      {label && <Label htmlFor={id} required={required}>{label}</Label>}
+      <textarea
+        id={id}
+        rows={rows}
+        className={textareaClass}
+        aria-invalid={!!error}
+        aria-describedby={error ? `${id}-error` : hint ? `${id}-hint` : undefined}
+        {...rest}
+      />
+      {error && (
+        <span id={`${id}-error`} className={styles.errorMsg} role="alert">
+          {error}
+        </span>
+      )}
+      {!error && hint && (
+        <span id={`${id}-hint`} className={styles.hint}>
+          {hint}
+        </span>
+      )}
+    </div>
+  );
+}

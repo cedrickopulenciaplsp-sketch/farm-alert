@@ -16,6 +16,7 @@ import {
   getBarangays,
   getLivestockTypes,
 } from '../../services/farms';
+import { getPestControlLogs } from '../../services/pestControl';
 import Button from '../../components/shared/Button';
 import Card from '../../components/shared/Card';
 import { Input, Select } from '../../components/shared/FormElements';
@@ -98,6 +99,7 @@ export default function FarmForm() {
   // Reference data
   const [barangays, setBarangays]           = useState([]);
   const [livestockTypes, setLivestockTypes] = useState([]);
+  const [pestLogs, setPestLogs]             = useState([]);
 
   // Page state
   const [loading, setLoading]         = useState(false);
@@ -138,6 +140,10 @@ export default function FarmForm() {
             status:            data.status            ?? 'Active',
           });
         }
+        
+        const { data: logsData } = await getPestControlLogs({ farmId: id });
+        if (logsData) setPestLogs(logsData);
+        
         setPageLoading(false);
       }
     }
@@ -425,7 +431,7 @@ export default function FarmForm() {
             <Card.Header title="Map Coordinates" />
             <Card.Body className={`${styles.cardBody} ${styles.coordsBody}`}>
               <p className={styles.coordsHint}>
-                Optional. Click on the map to pin the exact location of the farm.
+                Optional. Type the latitude &amp; longitude directly to auto-pin the location, or click anywhere on the map below.
               </p>
               <LocationPicker
                 latitude={fields.latitude !== '' ? Number(fields.latitude) : null}
@@ -448,6 +454,51 @@ export default function FarmForm() {
               )}
             </Card.Body>
           </Card>
+
+          {/* ── Pest Control History (Edit Mode Only) ────────────────── */}
+          {isEdit && (
+            <Card className={`${styles.formCard} ${styles.fullWidth}`}>
+              <Card.Header title="Pest Control History" />
+              <Card.Body className={styles.cardBody}>
+                {pestLogs.length === 0 ? (
+                  <p className={styles.coordsHint}>No pest control interventions recorded for this farm.</p>
+                ) : (
+                  <div className={styles.tableWrapper}>
+                    <table className={styles.table}>
+                      <thead>
+                        <tr>
+                          <th className={styles.th}>Date</th>
+                          <th className={styles.th}>Pest Type</th>
+                          <th className={styles.th}>Treatment</th>
+                          <th className={styles.th}>Encoder</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pestLogs.map(log => (
+                          <tr key={log.log_id} className={styles.row}>
+                            <td className={styles.cell}>{new Date(log.date_of_intervention).toLocaleDateString()}</td>
+                            <td className={styles.cell}>{log.pest_type}</td>
+                            <td className={styles.cell}>{log.treatment_applied}</td>
+                            <td className={styles.cell}>{log.users?.full_name}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                <div style={{ marginTop: '1rem' }}>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => navigate('/pest-control')}
+                  >
+                    Manage Pest Control Logs
+                  </Button>
+                </div>
+              </Card.Body>
+            </Card>
+          )}
         </div>
 
         {/* ── Footer Actions ─────────────────────────────────────────── */}

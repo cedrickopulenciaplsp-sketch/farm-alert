@@ -1,5 +1,6 @@
 /* ============================================================
-   DiseaseLibrary.module.css
+   PestLibrary.module.css
+   Mirrors DiseaseLibrary styles with amber/orange pest accent.
    ============================================================ */
 
 /* ── Page Shell ─────────────────────────────────────────── */
@@ -51,9 +52,7 @@
 }
 
 /* ── Filters ────────────────────────────────────────────── */
-.filtersCard {
-  border: 1px solid var(--color-border);
-}
+.filtersCard { border: 1px solid var(--color-border); }
 
 .filtersBody {
   display: flex;
@@ -93,16 +92,8 @@
 
 .searchInput::placeholder { color: var(--color-text-muted); }
 .searchInput:focus {
-  border-color: var(--color-brand);
-  box-shadow: 0 0 0 3px rgba(34, 139, 87, 0.12);
-}
-
-.filterSelect {
-  min-width: 180px;
-  height: 38px !important;
-  font-size: var(--text-sm) !important;
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
+  border-color: hsl(30, 80%, 55%);
+  box-shadow: 0 0 0 3px hsl(30, 80%, 93%);
 }
 
 .clearBtn {
@@ -110,23 +101,23 @@
   border: none;
   cursor: pointer;
   font-size: var(--text-sm);
-  color: var(--color-brand);
+  color: hsl(30, 70%, 40%);
   font-weight: 500;
   padding: 0.25rem 0.5rem;
   border-radius: var(--radius-xs);
   transition: background var(--transition-fast);
 }
-.clearBtn:hover { background: var(--color-brand-light); }
+.clearBtn:hover { background: hsl(30, 80%, 93%); }
 
-/* ── Disease List ───────────────────────────────────────── */
-.diseaseList {
+/* ── Pest List ──────────────────────────────────────────── */
+.pestList {
   display: flex;
   flex-direction: column;
   gap: 0.625rem;
 }
 
-/* ── Disease Card (accordion) ───────────────────────────── */
-.diseaseCard {
+/* ── Pest Card (accordion) ──────────────────────────────── */
+.pestCard {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -135,11 +126,10 @@
   transition: box-shadow var(--transition-base), border-color var(--transition-base);
 }
 
-.diseaseCard:focus-within {
-  border-color: var(--color-brand);
+.pestCard:focus-within {
+  border-color: hsl(30, 80%, 55%);
 }
 
-/* Card header button */
 .cardHeader {
   width: 100%;
   display: flex;
@@ -154,9 +144,7 @@
   transition: background var(--transition-fast);
 }
 
-.cardHeader:hover {
-  background: var(--color-brand-light);
-}
+.cardHeader:hover { background: hsl(30, 80%, 97%); }
 
 .cardHeaderLeft {
   display: flex;
@@ -166,27 +154,20 @@
   min-width: 0;
 }
 
-.diseaseIcon {
+/* Amber-toned icon box for pest theme */
+.pestIcon {
   width: 34px;
   height: 34px;
   border-radius: var(--radius-sm);
-  background: var(--color-brand-light);
-  color: var(--color-brand);
+  background: hsl(30, 80%, 93%);
+  color: hsl(30, 70%, 40%);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.cardTitleGroup {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  flex-wrap: wrap;
-  min-width: 0;
-}
-
-.diseaseName {
+.pestName {
   font-size: var(--text-base);
   font-weight: 600;
   color: var(--color-text-primary);
@@ -205,13 +186,13 @@
 .viewFull {
   font-size: var(--text-xs);
   font-weight: 500;
-  color: var(--color-brand);
+  color: hsl(30, 70%, 40%);
   cursor: pointer;
   padding: 0.25rem 0.5rem;
   border-radius: var(--radius-xs);
   transition: background var(--transition-fast);
 }
-.viewFull:hover { background: var(--color-brand-light); }
+.viewFull:hover { background: hsl(30, 80%, 93%); }
 
 .chevron {
   color: var(--color-text-muted);
@@ -283,39 +264,14 @@
   border: none;
   cursor: pointer;
   font-size: var(--text-sm);
-  color: var(--color-brand);
+  color: hsl(30, 70%, 40%);
   font-weight: 500;
   padding: 0;
   transition: opacity var(--transition-fast);
 }
 .viewFullBtn:hover { opacity: 0.75; }
 
-/* ── Livestock type badges ───────────────────────────────── */
-.typeBadge {
-  display: inline-block;
-  padding: 0.15rem 0.6rem;
-  border-radius: var(--radius-full);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.typeBadgeSwine {
-  background: hsl(30, 80%, 93%);
-  color: hsl(30, 70%, 35%);
-}
-
-.typeBadgePoultry {
-  background: hsl(48, 90%, 92%);
-  color: hsl(48, 80%, 32%);
-}
-
-.typeBadgeBoth {
-  background: hsl(220, 60%, 93%);
-  color: hsl(220, 60%, 38%);
-}
-
-/* ── Full detail Modal styles ───────────────────────────── */
+/* ── Full detail Modal ──────────────────────────────────── */
 .modalLoading {
   display: flex;
   justify-content: center;
@@ -331,12 +287,6 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
-}
-
-.modalMeta {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 .modalDesc {
@@ -367,9 +317,7 @@
   margin-bottom: 0.5rem;
 }
 
-.detailIcon {
-  color: var(--color-brand);
-}
+.detailIcon { color: hsl(30, 70%, 40%); }
 
 .detailLabel {
   font-size: var(--text-xs);
@@ -408,8 +356,8 @@
   width: 56px;
   height: 56px;
   border-radius: var(--radius-lg);
-  background: var(--color-brand-light);
-  color: var(--color-brand);
+  background: hsl(30, 80%, 93%);
+  color: hsl(30, 70%, 40%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -445,7 +393,7 @@
 .errorIcon { color: var(--color-danger); flex-shrink: 0; }
 .errorText { flex: 1; font-size: var(--text-sm); color: var(--color-danger); }
 
-/* ── Admin action icon buttons ──────────────────────────── */
+/* ── Admin icon buttons ─────────────────────────────────── */
 .iconBtn {
   display: inline-flex;
   align-items: center;
@@ -460,9 +408,9 @@
   transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
 }
 .iconBtn:hover {
-  background: var(--color-overlay);
-  color: var(--color-brand);
-  border-color: var(--color-brand);
+  background: hsl(30, 80%, 93%);
+  color: hsl(30, 70%, 40%);
+  border-color: hsl(30, 80%, 55%);
 }
 
 .iconBtnDanger:hover {

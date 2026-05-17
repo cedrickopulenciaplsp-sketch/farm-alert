@@ -23,6 +23,7 @@ const INITIAL_FORM = {
   disease_id:       '',
   severity:         '',
   animals_affected: '',
+  mortalities:      '0',
   date_reported:    new Date().toISOString().slice(0, 10), // today
   additional_notes: '',
   status:           'Active',
@@ -33,6 +34,7 @@ const INITIAL_ERRORS = {
   disease_id:       '',
   severity:         '',
   animals_affected: '',
+  mortalities:      '',
   date_reported:    '',
 };
 
@@ -101,6 +103,19 @@ export default function ReportForm({ onSuccess, onCancel }) {
       valid = false;
     } else if (selectedFarm && Number(form.animals_affected) > selectedFarm.head_count) {
       newErrors.animals_affected = `Cannot exceed the farm's total head count (${selectedFarm.head_count}).`;
+      valid = false;
+    }
+
+    // Validate mortalities — cannot exceed animals_affected
+    if (form.mortalities !== '' && Number(form.mortalities) < 0) {
+      newErrors.mortalities = 'Mortalities cannot be a negative number.';
+      valid = false;
+    } else if (
+      form.animals_affected !== '' &&
+      form.mortalities !== '' &&
+      Number(form.mortalities) > Number(form.animals_affected)
+    ) {
+      newErrors.mortalities = 'Mortalities cannot exceed the number of animals affected.';
       valid = false;
     }
 
@@ -251,6 +266,20 @@ export default function ReportForm({ onSuccess, onCancel }) {
         error={errors.animals_affected}
         disabled={submit}
         placeholder="E.g., 10"
+      />
+
+      {/* Mortalities (deaths) */}
+      <Input
+        id="report-mortalities"
+        name="mortalities"
+        type="number"
+        min="0"
+        label="Mortalities (Deaths)"
+        value={form.mortalities}
+        onChange={handleChange}
+        error={errors.mortalities}
+        disabled={submit}
+        placeholder="E.g., 2  (0 if none)"
       />
 
       {/* Date reported */}

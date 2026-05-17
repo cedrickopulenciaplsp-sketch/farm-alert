@@ -1,4 +1,4 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 /**
@@ -20,10 +20,10 @@ import { useAuth } from '../context/AuthContext';
  *                                  If omitted, any authenticated user can access.
  */
 export default function ProtectedRoute({ requiredRole }) {
-  const { session, role, loading } = useAuth();
+  const { session, role, loading, profileLoaded, requiresPasswordChange } = useAuth();
+  const location = useLocation();
 
   // While the initial session check is still running, render nothing.
-  // This prevents a redirect flash before we know if the user is logged in.
   if (loading) {
     return null;
   }
@@ -33,7 +33,18 @@ export default function ProtectedRoute({ requiredRole }) {
     return <Navigate to="/login" replace />;
   }
 
-  // Logged in but wrong role → send back to dashboard (access denied)
+  // Logged in but password change required → force to setup page
+  if (requiresPasswordChange && location.pathname !== '/setup-password') {
+    return <Navigate to="/setup-password" replace />;
+  }
+
+  // If this is a role-restricted route and the profile hasn't loaded yet,
+  // wait silently — prevents premature redirect before DB role is known.
+  if (requiredRole && !profileLoaded) {
+    return null;
+  }
+
+  // Logged in but wrong role → send back to dashboard
   if (requiredRole && role !== requiredRole) {
     return <Navigate to="/dashboard" replace />;
   }

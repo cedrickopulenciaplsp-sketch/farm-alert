@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { Eye, EyeOff, Leaf, AlertCircle, LogIn } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import { login } from '../../services/auth';
 
 // ---------------------------------------------------------------------------
@@ -195,6 +196,12 @@ function BrandPanel() {
 // ---------------------------------------------------------------------------
 export default function Login() {
   const navigate = useNavigate();
+  const { session, role, loading, profileLoaded } = useAuth();
+
+  // If already logged in and profile is loaded, redirect to dashboard
+  if (!loading && session && profileLoaded) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const [email, setEmail]             = useState('');
   const [password, setPassword]       = useState('');

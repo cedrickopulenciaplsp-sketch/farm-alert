@@ -1,13 +1,12 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.75rem;
   animation: fa-fade-up var(--transition-slow) ease both;
 }
 
-.header {
-  flex-shrink: 0;
-}
+/* ── Page Header ─────────────────────────────────────────────────────────── */
+.header { flex-shrink: 0; }
 
 .pageTitle {
   font-family: var(--font-display);
@@ -33,9 +32,7 @@
 }
 
 /* ── Filter Bar ──────────────────────────────────────────────────────────── */
-.filterBar {
-  flex-shrink: 0;
-}
+.filterBar { flex-shrink: 0; }
 
 .filterBarInner {
   display: flex;
@@ -52,10 +49,7 @@
   flex-wrap: wrap;
 }
 
-.filterIcon {
-  color: var(--color-text-muted);
-  flex-shrink: 0;
-}
+.filterIcon { color: var(--color-text-muted); flex-shrink: 0; }
 
 .filterLabel {
   font-size: var(--text-sm);
@@ -75,12 +69,10 @@
   cursor: pointer;
   transition: all var(--transition-fast);
 }
-
 .filterPill:hover {
   border-color: var(--color-brand);
   color: var(--color-brand);
 }
-
 .filterPillActive {
   background: var(--color-brand);
   border-color: var(--color-brand);
@@ -98,16 +90,17 @@
   outline: none;
   transition: border-color var(--transition-fast);
 }
-
-.filterSelect:focus {
-  border-color: var(--color-brand);
-}
+.filterSelect:focus { border-color: var(--color-brand); }
 
 /* ── Summary Stat Cards ──────────────────────────────────────────────────── */
 .statsRow {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
+}
+
+@media (max-width: 1100px) {
+  .statsRow { grid-template-columns: repeat(2, 1fr); }
 }
 
 .statCard {
@@ -115,7 +108,11 @@
   align-items: center;
   gap: 1rem;
   padding: 1.25rem;
+  border-top: 3px solid transparent;
+  transition: border-color var(--transition-base);
 }
+
+.statCard:hover { border-top-color: var(--color-brand-mid); }
 
 .statIconBox {
   width: 44px;
@@ -151,17 +148,52 @@
   margin-top: 0.1rem;
 }
 
-/* ── Main Grid ───────────────────────────────────────────────────────────── */
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
+/* ── Section Dividers ────────────────────────────────────────────────────── */
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
 }
 
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.sectionLine {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
+}
+
+/* ── Main Chart Grid ─────────────────────────────────────────────────────── */
+/* 3-column grid, cards span as needed */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+}
+
+/* Full-width (all 3 columns) */
 .fullCard {
   grid-column: 1 / -1;
 }
 
+/* Two-thirds width (columns 1–2) */
+.twoThirdCard {
+  grid-column: span 2;
+}
+
+/* One-third width */
+.thirdCard {
+  grid-column: span 1;
+}
+
+/* Half: spans 1.5 columns — achieved via 2-col sub-grid */
 .halfCard {
   grid-column: span 1;
 }
@@ -172,11 +204,17 @@
   width: 100%;
 }
 
+.chartWrapTall {
+  height: 340px;
+  width: 100%;
+}
+
 /* ── Chart Titles ────────────────────────────────────────────────────────── */
 .chartTitle {
   display: flex;
   align-items: center;
   gap: 0.4rem;
+  color: var(--color-text-primary);
 }
 
 .trendBadge {
@@ -194,7 +232,6 @@
   background: hsl(4, 74%, 96%);
   color: var(--color-danger);
 }
-
 .trendDown {
   background: hsl(145, 63%, 95%);
   color: var(--color-success);
@@ -216,14 +253,8 @@
   margin-bottom: 0.2rem;
 }
 
-.tooltipValue {
-  color: var(--color-text-primary);
-}
-
-.tooltipPct {
-  color: var(--color-text-muted);
-  font-size: var(--text-xs);
-}
+.tooltipValue { color: var(--color-text-primary); }
+.tooltipPct   { color: var(--color-text-muted); font-size: var(--text-xs); }
 
 /* ── Skeleton ────────────────────────────────────────────────────────────── */
 .skeleton {
@@ -255,7 +286,7 @@
 
 /* ── Empty State ─────────────────────────────────────────────────────────── */
 .emptyChart {
-  height: 280px;
+  height: 260px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -274,11 +305,13 @@
 }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
-@media (max-width: 900px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
-  .halfCard {
-    grid-column: 1 / -1;
-  }
+@media (max-width: 1100px) {
+  .grid { grid-template-columns: repeat(2, 1fr); }
+  .twoThirdCard { grid-column: span 2; }
+  .thirdCard, .halfCard { grid-column: span 1; }
+}
+
+@media (max-width: 700px) {
+  .grid { grid-template-columns: 1fr; }
+  .fullCard, .twoThirdCard, .thirdCard, .halfCard { grid-column: 1 / -1; }
 }
