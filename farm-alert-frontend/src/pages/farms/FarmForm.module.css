@@ -115,6 +115,19 @@
   grid-column: 1 / -1;
 }
 
+/* ── Livestock-type accent cards ────────────────────────── */
+.swineCard {
+  border: 1.5px solid hsl(24, 70%, 78%);
+  background: hsl(24, 70%, 98%);
+  box-shadow: 0 0 0 1px hsl(24, 60%, 92%) inset;
+}
+
+.poultryCard {
+  border: 1.5px solid hsl(200, 65%, 78%);
+  background: hsl(200, 65%, 98%);
+  box-shadow: 0 0 0 1px hsl(200, 55%, 92%) inset;
+}
+
 .coordsBody {
   gap: 1rem !important;
 }

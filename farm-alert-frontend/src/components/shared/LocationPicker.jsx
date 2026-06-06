@@ -172,7 +172,7 @@ export default function LocationPicker({ latitude, longitude, onChange, disabled
             ? <>
                 <span className={styles.pinned}>📍 Pinned at:</span>
                 <span className={styles.coords}>
-                  {latitude.toFixed(6)}, {longitude.toFixed(6)}
+                  {position[0].toFixed(6)}, {position[1].toFixed(6)}
                 </span>
                 <span className={styles.hint}> — type new coordinates above or click the map to move the pin.</span>
               </>

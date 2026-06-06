@@ -1,15 +1,19 @@
 import { supabase } from '../lib/supabase';
 
 /**
- * Log in a user with email and password.
- * @param {string} email
- * @param {string} password
+ * Initiate Google OAuth sign-in flow.
+ * Redirects the browser to Google's consent screen.
+ * On success, Supabase redirects back to /dashboard with a valid session.
+ * On failure (e.g., unauthorized email blocked by DB trigger), Supabase
+ * redirects back to the login page with ?error=... query params.
  * @returns {Promise<{ data, error }>}
  */
-export async function login(email, password) {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
+export async function loginWithGoogle() {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${window.location.origin}/dashboard`,
+    },
   });
   return { data, error };
 }
@@ -38,7 +42,6 @@ export async function getSession() {
 
 /**
  * Fetch the application user profile row for the currently signed-in user.
- * Includes the requires_password_change flag.
  * @param {string} authId - The auth.users UUID (session.user.id)
  * @returns {Promise<{ profile, error }>}
  */
@@ -49,29 +52,5 @@ export async function getUserProfile(authId) {
     .eq('auth_id', authId)
     .single();
   return { profile: data ?? null, error };
-}
-
-/**
- * Update the user's password in Supabase Auth and clear the
- * requires_password_change flag in the users table.
- * @param {string} newPassword
- * @returns {Promise<{ error }>}
- */
-export async function updatePassword(newPassword) {
-  // 1. Update Auth password
-  const { error: authError } = await supabase.auth.updateUser({ password: newPassword });
-  if (authError) return { error: authError };
-
-  // 2. Clear the flag on the users table (match by auth_id of the current session)
-  const { data: sessionData } = await supabase.auth.getSession();
-  const authId = sessionData?.session?.user?.id;
-  if (!authId) return { error: new Error('No active session found.') };
-
-  const { error: dbError } = await supabase
-    .from('users')
-    .update({ requires_password_change: false })
-    .eq('auth_id', authId);
-
-  return { error: dbError ?? null };
 }
 

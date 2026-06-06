@@ -1,9 +1,8 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { Users, Settings, ClipboardList, ShieldCheck } from 'lucide-react';
+import { Settings, ClipboardList, ShieldCheck } from 'lucide-react';
 import styles from './AdminLayout.module.css';
 
 const TABS = [
-  { to: '/admin/users',    label: 'User Management', icon: Users },
   { to: '/admin/settings', label: 'System Settings', icon: Settings },
   { to: '/admin/logs',     label: 'Audit Logs',      icon: ClipboardList },
 ];

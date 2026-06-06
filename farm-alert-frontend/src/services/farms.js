@@ -118,15 +118,30 @@ export async function deleteFarm(id) {
 }
 
 /**
- * Fetch all barangays for use in dropdowns.
+ * Fetch only the 10 approved rural barangays for use in the Farm Registry dropdown.
+ * Strictly restricted by name as per CVO requirements.
  * Ordered alphabetically by barangay_name.
  *
  * @returns {Promise<{ data: Array, error: object|null }>}
  */
+const APPROVED_BARANGAYS = [
+  'Concepcion',
+  'Dolores',
+  'San Cristobal',
+  'San Gregorio',
+  'San Joaquin',
+  'San Vicente',
+  'Santa Ana',
+  'Santa Cruz',
+  'Santisimo Rosario',
+  'Santo Niño',
+];
+
 export async function getBarangays() {
   const { data, error } = await supabase
     .from('barangays')
     .select('barangay_id, barangay_name, classification')
+    .in('barangay_name', APPROVED_BARANGAYS)
     .order('barangay_name', { ascending: true });
 
   return { data, error };

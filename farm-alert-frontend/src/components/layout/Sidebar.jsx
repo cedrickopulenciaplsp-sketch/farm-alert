@@ -11,31 +11,27 @@ import {
   Settings,
   LogOut,
   Leaf,
-  Bug,
+  ShieldCheck,
+  ClipboardList,
 } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
 import { signOut } from '../../services/auth';
 import { getActiveOutbreakCount } from '../../services/outbreaks';
 import styles from './Sidebar.module.css';
 
 // ---------------------------------------------------------------------------
-// Navigation items
+// Navigation items — single flat list for all authenticated users
 // ---------------------------------------------------------------------------
-const CVO_ITEMS = [
-  { to: '/dashboard',   icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/farms',       icon: Tractor,         label: 'Farms' },
-  { to: '/diseases',    icon: BookOpen,         label: 'Disease Library' },
-  { to: '/reports',     icon: FileText,         label: 'Disease Reports' },
-  { to: '/outbreaks',   icon: AlertTriangle,    label: 'Outbreak Alerts' },
-  { to: '/map',         icon: Map,              label: 'Disease Map' },
-  { to: '/pest-control', icon: Bug,        label: 'Pest Control' },
-  { to: '/pest-library', icon: BookOpen,   label: 'Pest Library' },
-  { to: '/analytics',   icon: BarChart2,   label: 'Analytics' },
-];
-
-// Exclusive admin-only tools — shown below a divider for admins only
-const ADMIN_TOOLS = [
-  { to: '/admin', icon: Settings, label: 'Admin Settings' },
+const NAV_ITEMS = [
+  { to: '/dashboard',      icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/farms',          icon: Tractor,         label: 'Farms' },
+  { to: '/diseases',       icon: BookOpen,        label: 'Disease Library' },
+  { to: '/reports',        icon: FileText,        label: 'Disease Reports' },
+  { to: '/outbreaks',      icon: AlertTriangle,   label: 'Outbreak Alerts' },
+  { to: '/map',            icon: Map,             label: 'Disease Map' },
+  { to: '/compliance',     icon: ShieldCheck,     label: 'Compliance Logs' },
+  { to: '/analytics',      icon: BarChart2,       label: 'Analytics' },
+  { to: '/admin/settings', icon: Settings,        label: 'System Settings' },
+  { to: '/admin/logs',     icon: ClipboardList,   label: 'Audit Logs' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -64,7 +60,6 @@ function OutbreakNavItem() {
   const [activeCount, setActiveCount] = useState(0);
 
   useEffect(() => {
-    // Fetch immediately on mount, then poll every 60 seconds
     async function fetchCount() {
       const { count } = await getActiveOutbreakCount();
       setActiveCount(count);
@@ -99,9 +94,6 @@ function OutbreakNavItem() {
 // Sidebar component
 // ---------------------------------------------------------------------------
 export default function Sidebar() {
-  const { role } = useAuth();
-  const isAdmin = role === 'admin';
-
   const handleLogout = async () => {
     await signOut();
   };
@@ -114,42 +106,13 @@ export default function Sidebar() {
         FarmAlert
       </NavLink>
 
-      {/* Primary nav links — same for both roles */}
+      {/* Primary nav links */}
       <nav>
         <ul className={styles.navList}>
-          {CVO_ITEMS.map(item =>
+          {NAV_ITEMS.map(item =>
             item.to === '/outbreaks'
               ? <OutbreakNavItem key="/outbreaks" />
               : <NavItem key={item.to} {...item} />
-          )}
-
-          {/* Admin-only tools section — shown below a divider */}
-          {isAdmin && (
-            <>
-              <li aria-hidden="true">
-                <div style={{
-                  height: '1px',
-                  background: 'var(--color-border)',
-                  margin: '8px 12px',
-                }} />
-              </li>
-              <li>
-                <span style={{
-                  display: 'block',
-                  padding: '4px 16px',
-                  fontSize: '0.68rem',
-                  fontWeight: 600,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  color: 'var(--color-text-muted)',
-                }}>
-                  Admin Tools
-                </span>
-              </li>
-              {ADMIN_TOOLS.map(item => (
-                <NavItem key={item.to} {...item} />
-              ))}
-            </>
           )}
         </ul>
       </nav>
@@ -169,4 +132,3 @@ export default function Sidebar() {
     </aside>
   );
 }
-

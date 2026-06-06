@@ -1,67 +1,6 @@
 import { supabase } from '../lib/supabase';
 
-// ── Users ─────────────────────────────────────────────────────────────────────
 
-/**
- * Fetch all users joined with their role name.
- */
-export async function getUsers() {
-  const { data, error } = await supabase
-    .from('users')
-    .select('user_id, full_name, username, role_id, is_active, requires_password_change, created_at, roles(role_name)')
-    .order('created_at', { ascending: true });
-  return { data, error };
-}
-
-/**
- * Fetch all roles from the roles table.
- */
-export async function getRoles() {
-  const { data, error } = await supabase
-    .from('roles')
-    .select('role_id, role_name')
-    .order('role_id', { ascending: true });
-  return { data, error };
-}
-
-/**
- * Update editable fields on a user profile row.
- */
-export async function updateUser(userId, updates) {
-  const { data, error } = await supabase
-    .from('users')
-    .update(updates)
-    .eq('user_id', userId)
-    .select()
-    .single();
-  return { data, error };
-}
-
-/**
- * Set requires_password_change = true for a given user.
- */
-export async function flagPasswordReset(userId) {
-  const { error } = await supabase
-    .from('users')
-    .update({ requires_password_change: true })
-    .eq('user_id', userId);
-  return { error };
-}
-
-/**
- * Create a new user account by calling the secure admin_create_user RPC.
- * The new user will be flagged to change their password on first login.
- * @param {{ email: string, password: string, fullName: string, roleId: number }} params
- */
-export async function createUser({ email, password, fullName, roleId }) {
-  const { data, error } = await supabase.rpc('admin_create_user', {
-    p_email:     email,
-    p_password:  password,
-    p_full_name: fullName,
-    p_role_id:   roleId,
-  });
-  return { data, error };
-}
 
 // ── System Settings ───────────────────────────────────────────────────────────
 

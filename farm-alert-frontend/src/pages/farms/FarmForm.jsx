@@ -16,7 +16,7 @@ import {
   getBarangays,
   getLivestockTypes,
 } from '../../services/farms';
-import { getPestControlLogs } from '../../services/pestControl';
+import { getComplianceLogs } from '../../services/compliance';
 import Button from '../../components/shared/Button';
 import Card from '../../components/shared/Card';
 import { Input, Select } from '../../components/shared/FormElements';
@@ -29,13 +29,13 @@ import styles from './FarmForm.module.css';
 // ---------------------------------------------------------------------------
 const PH_PHONE_RE = /^(09|\+639)\d{9}$/;
 
-function validate(fields) {
+function validate(fields, typeName) {
   const errors = {};
+  const isPoultryFarm = typeName === 'Poultry' || typeName === 'Both';
+  const isSwineAnimal = typeName === 'Swine'  || typeName === 'Both';
 
   if (!fields.farm_name.trim())
     errors.farm_name = 'Farm name is required.';
-  else if (fields.farm_name.trim().length < 3)
-    errors.farm_name = 'Farm name must be at least 3 characters.';
 
   if (!fields.owner_name.trim())
     errors.owner_name = 'Owner name is required.';
@@ -45,12 +45,6 @@ function validate(fields) {
 
   if (!fields.livestock_type_id)
     errors.livestock_type_id = 'Please select a livestock type.';
-
-  const count = Number(fields.head_count);
-  if (fields.head_count === '' || isNaN(count))
-    errors.head_count = 'Head count is required.';
-  else if (!Number.isInteger(count) || count < 0)
-    errors.head_count = 'Head count must be a whole number (0 or more).';
 
   if (fields.contact_number && !PH_PHONE_RE.test(fields.contact_number.trim()))
     errors.contact_number = 'Enter a valid PH number (e.g. 09171234567).';
@@ -63,6 +57,28 @@ function validate(fields) {
       Number(fields.longitude) < -180 || Number(fields.longitude) > 180))
     errors.longitude = 'Longitude must be between –180 and 180.';
 
+  // Swine sex-disaggregated validation (Swine or Both)
+  if (isSwineAnimal) {
+    if (fields.male_swine_population !== '' && (isNaN(Number(fields.male_swine_population)) || Number(fields.male_swine_population) < 0))
+      errors.male_swine_population = 'Male swine population must be 0 or more.';
+    if (fields.female_swine_population !== '' && (isNaN(Number(fields.female_swine_population)) || Number(fields.female_swine_population) < 0))
+      errors.female_swine_population = 'Female swine population must be 0 or more.';
+  }
+
+  // Poultry-specific validation (Poultry or Both)
+  if (isPoultryFarm) {
+    if (!fields.production_type)
+      errors.production_type = 'Please select a production type.';
+    if (fields.production_type === 'Others' && !fields.production_type_other.trim())
+      errors.production_type_other = 'Please specify the production type.';
+    if (!fields.facility_status)
+      errors.facility_status = 'Please select facility status.';
+    if (fields.male_population !== '' && (isNaN(Number(fields.male_population)) || Number(fields.male_population) < 0))
+      errors.male_population = 'Male bird population must be 0 or more.';
+    if (fields.female_population !== '' && (isNaN(Number(fields.female_population)) || Number(fields.female_population) < 0))
+      errors.female_population = 'Female bird population must be 0 or more.';
+  }
+
   return errors;
 }
 
@@ -71,15 +87,25 @@ function validate(fields) {
 // ---------------------------------------------------------------------------
 function blankForm() {
   return {
-    farm_name:         '',
-    owner_name:        '',
-    barangay_id:       '',
-    livestock_type_id: '',
-    head_count:        '',
-    contact_number:    '',
-    latitude:          '',
-    longitude:         '',
-    status:            'Active',
+    farm_name:                '',
+    owner_name:               '',
+    facility_address:         '',
+    barangay_id:              '',
+    livestock_type_id:        '',
+    head_count:               '',
+    contact_number:           '',
+    latitude:                 '',
+    longitude:                '',
+    status:                   'Active/Quarantine',
+    // Swine sex-disaggregated (nullable)
+    male_swine_population:    '',
+    female_swine_population:  '',
+    // Poultry-specific (nullable)
+    production_type:          '',
+    production_type_other:    '',
+    facility_status:          '',
+    male_population:          '',
+    female_population:        '',
   };
 }
 
@@ -99,7 +125,7 @@ export default function FarmForm() {
   // Reference data
   const [barangays, setBarangays]           = useState([]);
   const [livestockTypes, setLivestockTypes] = useState([]);
-  const [pestLogs, setPestLogs]             = useState([]);
+  const [complianceLogs, setComplianceLogs] = useState([]);
 
   // Page state
   const [loading, setLoading]         = useState(false);
@@ -129,20 +155,30 @@ export default function FarmForm() {
           setPageError(error.message);
         } else if (data) {
           setFields({
-            farm_name:         data.farm_name         ?? '',
-            owner_name:        data.owner_name        ?? '',
-            barangay_id:       String(data.barangay_id ?? ''),
-            livestock_type_id: String(data.livestock_type_id ?? ''),
-            head_count:        data.head_count != null ? String(data.head_count) : '',
-            contact_number:    data.contact_number    ?? '',
-            latitude:          data.latitude  != null ? String(data.latitude)  : '',
-            longitude:         data.longitude != null ? String(data.longitude) : '',
-            status:            data.status            ?? 'Active',
+            farm_name:               data.farm_name               ?? '',
+            owner_name:              data.owner_name              ?? '',
+            facility_address:        data.facility_address        ?? '',
+            barangay_id:             String(data.barangay_id      ?? ''),
+            livestock_type_id:       String(data.livestock_type_id ?? ''),
+            head_count:              data.head_count    != null  ? String(data.head_count)    : '',
+            contact_number:          data.contact_number          ?? '',
+            latitude:                data.latitude      != null  ? String(data.latitude)      : '',
+            longitude:               data.longitude     != null  ? String(data.longitude)     : '',
+            status:                  data.status                  ?? 'Active',
+            // Swine sex-disaggregated
+            male_swine_population:   data.male_swine_population   != null ? String(data.male_swine_population)   : '',
+            female_swine_population: data.female_swine_population != null ? String(data.female_swine_population) : '',
+            // Poultry-specific
+            production_type:         data.production_type         ?? '',
+            production_type_other:   data.production_type_other   ?? '',
+            facility_status:         data.facility_status         ?? '',
+            male_population:         data.male_population     != null ? String(data.male_population)   : '',
+            female_population:       data.female_population   != null ? String(data.female_population) : '',
           });
         }
         
-        const { data: logsData } = await getPestControlLogs({ farmId: id });
-        if (logsData) setPestLogs(logsData);
+        const { data: logsData } = await getComplianceLogs({ farmId: id });
+        if (logsData) setComplianceLogs(logsData);
         
         setPageLoading(false);
       }
@@ -155,10 +191,12 @@ export default function FarmForm() {
   // ---------------------------------------------------------------------------
   function handleChange(e) {
     const { name, value } = e.target;
-    setFields(prev => ({ ...prev, [name]: value }));
+    const updatedFields = { ...fields, [name]: value };
+    setFields(updatedFields);
     // Re-validate just this field on change if already touched
     if (touched[name]) {
-      const newErrors = validate({ ...fields, [name]: value });
+      const tn = livestockTypes.find(lt => String(lt.livestock_type_id) === String(updatedFields.livestock_type_id))?.type_name ?? '';
+      const newErrors = validate(updatedFields, tn);
       setErrors(prev => ({ ...prev, [name]: newErrors[name] }));
     }
   }
@@ -166,7 +204,9 @@ export default function FarmForm() {
   function handleBlur(e) {
     const { name } = e.target;
     setTouched(prev => ({ ...prev, [name]: true }));
-    const newErrors = validate({ ...fields, [name]: e.target.value });
+    const updatedFields = { ...fields, [name]: e.target.value };
+    const tn = livestockTypes.find(lt => String(lt.livestock_type_id) === String(updatedFields.livestock_type_id))?.type_name ?? '';
+    const newErrors = validate(updatedFields, tn);
     setErrors(prev => ({ ...prev, [name]: newErrors[name] }));
   }
 
@@ -178,7 +218,7 @@ export default function FarmForm() {
     // Mark all fields as touched and validate all
     const allTouched = Object.fromEntries(Object.keys(fields).map(k => [k, true]));
     setTouched(allTouched);
-    const allErrors = validate(fields);
+    const allErrors = validate(fields, selectedType?.type_name);
     setErrors(allErrors);
 
     if (Object.keys(allErrors).length > 0) return;
@@ -186,17 +226,37 @@ export default function FarmForm() {
     setLoading(true);
     setSubmitError(null);
 
-    // Build payload — strip empty optional strings; cast numerics
+    // Auto-calculate head_count
+    const maleSwine   = isSwineAnimal ? (Number(fields.male_swine_population)   || 0) : 0;
+    const femaleSwine = isSwineAnimal ? (Number(fields.female_swine_population) || 0) : 0;
+    const maleBirds   = isPoultryFarm ? (Number(fields.male_population)         || 0) : 0;
+    const femaleBirds = isPoultryFarm ? (Number(fields.female_population)       || 0) : 0;
+    const totalHead   = maleSwine + femaleSwine + maleBirds + femaleBirds;
+
+    // Build payload
     const payload = {
       farm_name:         fields.farm_name.trim(),
       owner_name:        fields.owner_name.trim(),
+      facility_address:  fields.facility_address.trim() || null,
       barangay_id:       Number(fields.barangay_id),
       livestock_type_id: Number(fields.livestock_type_id),
-      head_count:        Number(fields.head_count),
+      head_count:        totalHead,
       status:            fields.status,
       contact_number:    fields.contact_number.trim() || null,
       latitude:          fields.latitude  !== '' ? Number(fields.latitude)  : null,
       longitude:         fields.longitude !== '' ? Number(fields.longitude) : null,
+      // Swine sex-disaggregated
+      male_swine_population:   isSwineAnimal && fields.male_swine_population   !== '' ? maleSwine   : null,
+      female_swine_population: isSwineAnimal && fields.female_swine_population !== '' ? femaleSwine : null,
+      swine_population:        isSwineAnimal ? (maleSwine + femaleSwine) : null,
+      // Poultry-specific
+      production_type:       isPoultryFarm ? (fields.production_type || null)       : null,
+      production_type_other: isPoultryFarm && fields.production_type === 'Others'
+                               ? fields.production_type_other.trim() || null
+                               : null,
+      facility_status:       isPoultryFarm ? (fields.facility_status || null)       : null,
+      male_population:       isPoultryFarm && fields.male_population   !== '' ? maleBirds   : null,
+      female_population:     isPoultryFarm && fields.female_population !== '' ? femaleBirds : null,
     };
 
     const { error } = isEdit
@@ -209,7 +269,6 @@ export default function FarmForm() {
       setSubmitError(error.message);
     } else {
       setSubmitSuccess(true);
-      // Navigate back to list after short delay so user sees the success state
       setTimeout(() => navigate('/farms'), 1200);
     }
   }
@@ -233,6 +292,23 @@ export default function FarmForm() {
   // Error message helper (only show when field is touched)
   // ---------------------------------------------------------------------------
   const fieldError = (name) => (touched[name] ? errors[name] : undefined);
+
+  // Derived livestock type flags
+  const selectedType  = livestockTypes.find(
+    lt => String(lt.livestock_type_id) === String(fields.livestock_type_id)
+  );
+  const typeName      = selectedType?.type_name ?? '';
+  const isPoultryFarm = typeName === 'Poultry' || typeName === 'Both';
+  const isSwineAnimal = typeName === 'Swine'   || typeName === 'Both';
+  const isBoth        = typeName === 'Both';
+  const hasType       = !!typeName; // any livestock type selected
+
+  // Auto-calculated totals for display
+  const swineTotal   = (Number(fields.male_swine_population) || 0) + (Number(fields.female_swine_population) || 0);
+  const poultryTotal = (Number(fields.male_population)       || 0) + (Number(fields.female_population)       || 0);
+  const computedHeadCount = hasType
+    ? (isSwineAnimal ? swineTotal : 0) + (isPoultryFarm ? poultryTotal : 0)
+    : null;
 
   // ---------------------------------------------------------------------------
   // Page-level loading / error
@@ -363,9 +439,9 @@ export default function FarmForm() {
                 onBlur={handleBlur}
                 error={fieldError('status')}
               >
-                <option value="Active">Active</option>
+                <option value="Active/Quarantine">Active / Quarantine</option>
                 <option value="Inactive">Inactive</option>
-                <option value="Quarantine">Quarantine</option>
+                <option value="Temporarily Closed">Temporarily Closed</option>
               </Select>
             </Card.Body>
           </Card>
@@ -374,6 +450,18 @@ export default function FarmForm() {
           <Card className={styles.formCard}>
             <Card.Header title="Location & Livestock" />
             <Card.Body className={styles.cardBody}>
+              <Input
+                id="facility_address"
+                name="facility_address"
+                label="Facility Address (Street / Purok)"
+                placeholder="e.g. Purok 4, Sitio Looban"
+                value={fields.facility_address}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={fieldError('facility_address')}
+                hint="Optional — specific street or purok location"
+                maxLength={255}
+              />
               <Select
                 id="barangay_id"
                 name="barangay_id"
@@ -408,23 +496,158 @@ export default function FarmForm() {
                   </option>
                 ))}
               </Select>
-              <Input
-                id="head_count"
-                name="head_count"
-                label="Head Count"
-                required
-                type="number"
-                min="0"
-                step="1"
-                placeholder="0"
-                value={fields.head_count}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                error={fieldError('head_count')}
-                hint="Total number of animals on this farm"
-              />
+              {/* Auto-calculated Head Count — shown whenever a type is selected */}
+              {hasType && (
+                <div>
+                  <label style={{ display: 'block', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: '0.375rem' }}>
+                    Total Head Count <span style={{ fontWeight: 400, color: 'var(--color-text-muted)' }}>(auto-calculated)</span>
+                  </label>
+                  <div style={{
+                    padding: '0.6rem 0.875rem',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--color-border)',
+                    background: 'var(--color-surface-2)',
+                    fontSize: 'var(--text-base)',
+                    fontWeight: 700,
+                    color: 'var(--color-text-primary)',
+                    letterSpacing: '0.02em',
+                  }}>
+                    {computedHeadCount ?? 0}
+                  </div>
+                  <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: '0.3rem' }}>
+                    {isBoth ? 'Male Swine + Female Swine + Male Birds + Female Birds'
+                      : isSwineAnimal ? 'Male Swine + Female Swine'
+                      : 'Male Birds + Female Birds'}
+                  </p>
+                </div>
+              )}
             </Card.Body>
           </Card>
+
+          {/* ── Swine Details (Swine or Both) ─────────────────────────── */}
+          {isSwineAnimal && (
+            <Card className={`${styles.formCard} ${styles.swineCard}`}>
+              <Card.Header title="🐷 Swine Details" />
+              <Card.Body className={styles.cardBody}>
+                <Input
+                  id="male_swine_population"
+                  name="male_swine_population"
+                  label="Male Swine Population"
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="0"
+                  value={fields.male_swine_population}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  error={fieldError('male_swine_population')}
+                  hint="Number of male swine (boars/barrows)"
+                />
+                <Input
+                  id="female_swine_population"
+                  name="female_swine_population"
+                  label="Female Swine Population"
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="0"
+                  value={fields.female_swine_population}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  error={fieldError('female_swine_population')}
+                  hint="Number of female swine (sows/gilts)"
+                />
+              </Card.Body>
+            </Card>
+          )}
+
+          {/* ── Poultry Details (Poultry or Both) ───────────────────────── */}
+          {isPoultryFarm && (
+            <Card className={`${styles.formCard} ${styles.poultryCard}`}>
+              <Card.Header title="🐔 Poultry Details" />
+              <Card.Body className={styles.cardBody}>
+                <Select
+                  id="production_type"
+                  name="production_type"
+                  label="Type of Production"
+                  required
+                  value={fields.production_type}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  error={fieldError('production_type')}
+                >
+                  <option value="">— Select type —</option>
+                  <option value="Broiler">Broiler</option>
+                  <option value="Layer">Layer</option>
+                  <option value="Quail">Quail</option>
+                  <option value="Duck">Duck</option>
+                  <option value="Broiler Breeder">Broiler Breeder</option>
+                  <option value="Layer Breeder">Layer Breeder</option>
+                  <option value="Others">Others (please specify)</option>
+                </Select>
+
+                {fields.production_type === 'Others' && (
+                  <Input
+                    id="production_type_other"
+                    name="production_type_other"
+                    label="Please Specify Production Type"
+                    required
+                    placeholder="e.g. Free-range native chicken"
+                    value={fields.production_type_other}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    error={fieldError('production_type_other')}
+                    maxLength={150}
+                  />
+                )}
+
+                <Select
+                  id="facility_status"
+                  name="facility_status"
+                  label="Status of Facility"
+                  required
+                  value={fields.facility_status}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  error={fieldError('facility_status')}
+                >
+                  <option value="">— Select status —</option>
+                  <option value="Owned">Owned</option>
+                  <option value="Rented/Leased">Rented / Leased</option>
+                </Select>
+
+                <Input
+                  id="male_population"
+                  name="male_population"
+                  label="Male Bird Population"
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="0"
+                  value={fields.male_population}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  error={fieldError('male_population')}
+                  hint="Number of male birds on this farm"
+                />
+
+                <Input
+                  id="female_population"
+                  name="female_population"
+                  label="Female Bird Population"
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="0"
+                  value={fields.female_population}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  error={fieldError('female_population')}
+                  hint="Number of female birds on this farm"
+                />
+              </Card.Body>
+            </Card>
+          )}
 
           {/* ── Column 3: Map Coordinates (optional) ──────────────────── */}
           <Card className={`${styles.formCard} ${styles.fullWidth}`}>
@@ -437,13 +660,15 @@ export default function FarmForm() {
                 latitude={fields.latitude !== '' ? Number(fields.latitude) : null}
                 longitude={fields.longitude !== '' ? Number(fields.longitude) : null}
                 onChange={(lat, lng) => {
+                  const latStr = lat != null ? String(lat) : '';
+                  const lngStr = lng != null ? String(lng) : '';
                   setFields(prev => ({
                     ...prev,
-                    latitude: String(lat),
-                    longitude: String(lng)
+                    latitude: latStr,
+                    longitude: lngStr,
                   }));
                   // Revalidate
-                  const newErrors = validate({ ...fields, latitude: String(lat), longitude: String(lng) });
+                  const newErrors = validate({ ...fields, latitude: latStr, longitude: lngStr }, typeName);
                   setErrors(prev => ({ ...prev, latitude: newErrors.latitude, longitude: newErrors.longitude }));
                 }}
               />
@@ -455,30 +680,48 @@ export default function FarmForm() {
             </Card.Body>
           </Card>
 
-          {/* ── Pest Control History (Edit Mode Only) ────────────────── */}
+          {/* ── Compliance History (Edit Mode Only) ────────────────── */}
           {isEdit && (
             <Card className={`${styles.formCard} ${styles.fullWidth}`}>
-              <Card.Header title="Pest Control History" />
+              <Card.Header title="Compliance History" />
               <Card.Body className={styles.cardBody}>
-                {pestLogs.length === 0 ? (
-                  <p className={styles.coordsHint}>No pest control interventions recorded for this farm.</p>
+                {complianceLogs.length === 0 ? (
+                  <p className={styles.coordsHint}>No compliance evaluations recorded for this farm.</p>
                 ) : (
                   <div className={styles.tableWrapper}>
                     <table className={styles.table}>
                       <thead>
                         <tr>
                           <th className={styles.th}>Date</th>
-                          <th className={styles.th}>Pest Type</th>
-                          <th className={styles.th}>Treatment</th>
+                          <th className={styles.th}>Status</th>
+                          <th className={styles.th}>Notes</th>
                           <th className={styles.th}>Encoder</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {pestLogs.map(log => (
+                        {complianceLogs.map(log => (
                           <tr key={log.log_id} className={styles.row}>
-                            <td className={styles.cell}>{new Date(log.date_of_intervention).toLocaleDateString()}</td>
-                            <td className={styles.cell}>{log.pest_type}</td>
-                            <td className={styles.cell}>{log.treatment_applied}</td>
+                            <td className={styles.cell}>{new Date(log.evaluation_date).toLocaleDateString()}</td>
+                            <td className={styles.cell}>
+                              <span style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.3rem',
+                                padding: '0.2rem 0.65rem',
+                                borderRadius: 'var(--radius-full)',
+                                fontSize: 'var(--text-xs)',
+                                fontWeight: 600,
+                                background: log.compliance_status === 'Compliant' ? 'hsl(145,55%,92%)'
+                                  : log.compliance_status === 'Semi-Compliant' ? 'hsl(48,90%,92%)'
+                                  : 'hsl(4,74%,94%)',
+                                color: log.compliance_status === 'Compliant' ? 'hsl(145,60%,28%)'
+                                  : log.compliance_status === 'Semi-Compliant' ? 'hsl(38,80%,32%)'
+                                  : 'hsl(4,74%,40%)',
+                              }}>
+                                {log.compliance_status}
+                              </span>
+                            </td>
+                            <td className={styles.cell}>{log.notes || '—'}</td>
                             <td className={styles.cell}>{log.users?.full_name}</td>
                           </tr>
                         ))}
@@ -491,9 +734,9 @@ export default function FarmForm() {
                     type="button" 
                     variant="ghost" 
                     size="sm" 
-                    onClick={() => navigate('/pest-control')}
+                    onClick={() => navigate('/compliance')}
                   >
-                    Manage Pest Control Logs
+                    Manage Compliance Logs
                   </Button>
                 </div>
               </Card.Body>

@@ -4,10 +4,9 @@ import {
   getDiseaseBreakdown,
   getBarangayHotspots,
   getSeverityBreakdown,
-  getPestControlActivity,
-  getFarmStatusBreakdown,
   getReportStatusBreakdown,
   getActiveOutbreaks,
+  getComplianceBreakdown,
 } from '../../services/analytics';
 import { getDiseases } from '../../services/diseases';
 import {
@@ -20,8 +19,8 @@ import {
 } from 'recharts';
 import {
   TrendingUp, MapPin, AlertTriangle, FileText,
-  PieChart as PieIcon, Activity, Filter, Calendar,
-  ChevronUp, ChevronDown, Minus, Bug, Tractor, ClipboardList, Skull,
+  PieChart as PieIcon, Filter, Calendar,
+  ChevronUp, ChevronDown, Minus, ClipboardList, Skull, ShieldCheck,
 } from 'lucide-react';
 import Card from '../../components/shared/Card';
 import styles from './Analytics.module.css';
@@ -38,9 +37,14 @@ const DATE_RANGES = [
 
 const DISEASE_COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#14b8a6'];
 const SEVERITY_COLORS = { Mild: '#10b981', Moderate: '#f59e0b', Severe: '#f97316', Critical: '#ef4444' };
-const FARM_STATUS_COLORS = { Active: '#10b981', Inactive: '#94a3b8', Quarantine: '#f97316' };
 const REPORT_STATUS_COLORS = { 'Active': '#ef4444', 'Under Monitoring': '#f59e0b', 'Resolved': '#10b981' };
-const PEST_COLORS = ['#f59e0b','#f97316','#ef4444','#8b5cf6','#3b82f6','#14b8a6','#10b981','#ec4899','#64748b','#a3e635'];
+
+const COMPLIANCE_ORDER = ['Compliant', 'Semi-Compliant', 'Non-Compliant'];
+const COMPLIANCE_META  = {
+  'Compliant':      { color: '#10b981', label: 'Compliant' },
+  'Semi-Compliant': { color: '#f59e0b', label: 'Semi-Compliant' },
+  'Non-Compliant':  { color: '#ef4444', label: 'Non-Compliant' },
+};
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -220,6 +224,81 @@ function ReportStatusBar({ data, loading }) {
 }
 
 // ---------------------------------------------------------------------------
+// Compliance Status — Stacked Progress Bar
+// ---------------------------------------------------------------------------
+function ComplianceStatusBar({ data, loading }) {
+  const total = data.reduce((s, d) => s + d.count, 0);
+
+  const segments = COMPLIANCE_ORDER.map(status => {
+    const found = data.find(d => d.status === status);
+    return { status, count: found?.count ?? 0, color: COMPLIANCE_META[status]?.color ?? '#94a3b8', label: COMPLIANCE_META[status]?.label ?? status };
+  }).filter(s => total === 0 || s.count > 0);
+
+  if (loading) return <SkeletonChart height={180} />;
+  if (!data.length || total === 0) return <EmptyChart message="No compliance evaluations recorded yet." />;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, padding: '8px 0' }}>
+
+      {/* Total badge */}
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+        <span style={{ fontSize: 'var(--text-3xl, 2rem)', fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1 }}>{total}</span>
+        <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>total evaluations</span>
+      </div>
+
+      {/* Stacked bar */}
+      <div style={{ display: 'flex', height: 32, borderRadius: 8, overflow: 'hidden', gap: 2 }}>
+        {segments.map(s => {
+          const pct = ((s.count / total) * 100).toFixed(1);
+          return (
+            <div
+              key={s.status}
+              title={`${s.label}: ${s.count} (${pct}%)`}
+              style={{
+                flex: s.count / total,
+                background: s.color,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'opacity 0.2s',
+                cursor: 'default',
+                minWidth: s.count > 0 ? 8 : 0,
+              }}
+              onMouseEnter={e => { e.currentTarget.style.opacity = '0.8'; }}
+              onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
+            >
+              {pct >= 10 && (
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', userSelect: 'none' }}>{pct}%</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Legend + count badges */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {segments.map(s => {
+          const pct = ((s.count / total) * 100).toFixed(1);
+          return (
+            <div key={s.status} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ width: 10, height: 10, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
+              <span style={{ flex: 1, fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>{s.label}</span>
+              <span style={{
+                fontSize: 'var(--text-xs)', fontWeight: 700,
+                background: `${s.color}18`, color: s.color,
+                borderRadius: 99, padding: '2px 10px', whiteSpace: 'nowrap'
+              }}>
+                {s.count} &nbsp;<span style={{ opacity: 0.7 }}>({pct}%)</span>
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Reusable Pie Chart Card
 // ---------------------------------------------------------------------------
 function PieCard({ className, title, icon: Icon, loading, data, dataKey, nameKey, colors, colorMap, total, unitLabel = 'case' }) {
@@ -277,9 +356,8 @@ export default function Analytics() {
   const [reports, setReports]               = useState([]);
   const [allDiseases, setAllDiseases]       = useState([]);
   const [hotspots, setHotspots]             = useState([]);
-  const [pestActivity, setPestActivity]     = useState([]);
-  const [farmStatus, setFarmStatus]         = useState([]);
   const [reportStatus, setReportStatus]     = useState([]);
+  const [complianceData, setComplianceData] = useState([]);
   const [activeOutbreaks, setActiveOutbreaks] = useState(null);
   const [lastUpdated, setLastUpdated]       = useState(null);
 
@@ -303,12 +381,11 @@ export default function Analytics() {
       if (data) setAllDiseases(data);
     }
     async function loadExtra() {
-      const [pRes, fRes, rRes] = await Promise.all([
-        getPestControlActivity(), getFarmStatusBreakdown(), getReportStatusBreakdown(),
+      const [rRes, cRes] = await Promise.all([
+        getReportStatusBreakdown(), getComplianceBreakdown(),
       ]);
-      if (pRes.data) setPestActivity(pRes.data);
-      if (fRes.data) setFarmStatus(fRes.data);
       if (rRes.data) setReportStatus(rRes.data);
+      if (cRes.data) setComplianceData(cRes.data);
       setLoadingExtra(false);
     }
     loadStatic();
@@ -380,11 +457,12 @@ export default function Analytics() {
   const totalPieDiseases = filteredDiseases.reduce((s, d) => s + d.case_count, 0);
   const totalPieSeverity = filteredSeverity.reduce((s, d) => s + d.case_count, 0);
 
-  // Pest / Farm derived stats
-  const totalFarms         = farmStatus.reduce((s, d) => s + d.count, 0);
-  const quarantinedFarms   = farmStatus.find(d => d.status === 'Quarantine')?.count ?? 0;
-  const totalInterventions = pestActivity.reduce((s, d) => s + d.count, 0);
-  const topPest            = pestActivity[0]?.pest_type ?? '—';
+
+  // Compliance derived stats
+  const totalEvaluations  = complianceData.reduce((s, d) => s + d.count, 0);
+  const compliantCount    = complianceData.find(d => d.status === 'Compliant')?.count ?? 0;
+  const semiCompliantCount = complianceData.find(d => d.status === 'Semi-Compliant')?.count ?? 0;
+  const nonCompliantCount = complianceData.find(d => d.status === 'Non-Compliant')?.count ?? 0;
 
   return (
     <div className={styles.page}>
@@ -589,51 +667,19 @@ export default function Analytics() {
 
       {/* Pest / Farm Summary Stats */}
       <div className={styles.statsRow}>
-        <StatCard label="Total Farms Registered" value={totalFarms}         icon={Tractor}      color="#10b981" loading={loadingExtra} />
-        <StatCard label="Quarantined Farms"       value={quarantinedFarms}  icon={AlertTriangle} color="#f97316" loading={loadingExtra} sub={quarantinedFarms > 0 ? 'Requires attention' : 'None currently'} />
-        <StatCard label="Pest Interventions"      value={totalInterventions} icon={Bug}          color="#f59e0b" loading={loadingExtra} />
-        <StatCard label="Most Treated Pest"       value={topPest}           icon={Activity}     color="#8b5cf6" loading={loadingExtra} />
+        <StatCard label="Compliant"      value={compliantCount}     icon={ShieldCheck}   color="#10b981" loading={loadingExtra} sub={compliantCount > 0 ? 'Fully compliant farms' : 'No compliant farms'} />
+        <StatCard label="Semi-Compliant" value={semiCompliantCount} icon={ShieldCheck}   color="#f59e0b" loading={loadingExtra} sub={semiCompliantCount > 0 ? 'Partially compliant' : 'None'} />
+        <StatCard label="Non-Compliant"  value={nonCompliantCount}  icon={AlertTriangle} color="#ef4444" loading={loadingExtra} sub={nonCompliantCount > 0 ? 'Requires follow-up' : 'All farms compliant'} />
+        <StatCard label="Total Evaluations" value={totalEvaluations} icon={ShieldCheck} color="#3b82f6" loading={loadingExtra} />
       </div>
 
       <div className={styles.grid}>
 
-        {/* Farm Status — 1 column */}
-        <PieCard
-          className={styles.thirdCard}
-          title="Farm Status"
-          icon={Tractor}
-          loading={loadingExtra}
-          data={farmStatus}
-          dataKey="count"
-          nameKey="status"
-          colorMap={FARM_STATUS_COLORS}
-          colors={[]}
-          unitLabel="farm"
-        />
-
-        {/* Pest Control Interventions — 2 columns */}
-        <Card className={styles.twoThirdCard}>
-          <Card.Header title={<div className={styles.chartTitle}><Bug size={15} /><span>Pest Control Interventions by Pest Type</span></div>} />
+        {/* Compliance Status — full width */}
+        <Card className={styles.fullCard}>
+          <Card.Header title={<div className={styles.chartTitle}><ShieldCheck size={15} /><span>Pest Control Compliance Breakdown</span></div>} />
           <Card.Body>
-            {loadingExtra ? <SkeletonChart height={280} /> : pestActivity.length === 0 ? <EmptyChart message="No pest control logs recorded yet." /> : (
-              <div className={styles.chartWrap}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={pestActivity} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--color-border)" />
-                    <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                    <YAxis dataKey="pest_type" type="category" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={140} />
-                    <RechartsTooltip
-                      formatter={(v) => [`${v} intervention${v !== 1 ? 's' : ''}`, 'Count']}
-                      contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-md)' }}
-                      cursor={{ fill: 'var(--color-overlay)' }}
-                    />
-                    <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={20}>
-                      {pestActivity.map((_, i) => <Cell key={i} fill={PEST_COLORS[i % PEST_COLORS.length]} />)}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            )}
+            <ComplianceStatusBar data={complianceData} loading={loadingExtra} />
           </Card.Body>
         </Card>
 

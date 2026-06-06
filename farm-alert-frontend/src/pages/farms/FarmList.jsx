@@ -11,8 +11,10 @@ import {
   ChevronRight,
   AlertCircle,
   RefreshCw,
+  Download,
 } from 'lucide-react';
 import { getFarms, getBarangays, getLivestockTypes } from '../../services/farms';
+import { supabase } from '../../lib/supabase';
 import Button from '../../components/shared/Button';
 import Card from '../../components/shared/Card';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
@@ -140,6 +142,7 @@ export default function FarmList() {
   const [livestockTypes, setLivestockTypes] = useState([]);
   const [loading, setLoading]           = useState(true);
   const [error, setError]               = useState(null);
+  const [isExporting, setIsExporting]   = useState(false);
 
   // Filter state
   const [search, setSearch]             = useState('');
@@ -205,6 +208,35 @@ export default function FarmList() {
   const hasFilters = !!(search || barangayId || livestockTypeId || status);
 
   // ---------------------------------------------------------------------------
+  // CSV Export — invokes the server-side Edge Function
+  // ---------------------------------------------------------------------------
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke(
+        'export-farms-csv',
+        { body: { search, barangayId: barangayId || null, status: status || null } }
+      );
+      if (fnError) throw fnError;
+
+      const date = new Date().toISOString().slice(0, 10);
+      const blob = data instanceof Blob ? data : new Blob([data], { type: 'text/csv;charset=utf-8;' });
+      const url  = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `farms_export_${date}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Export failed:', err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
   return (
@@ -217,15 +249,46 @@ export default function FarmList() {
             {loading ? 'Loading…' : `${farms.length} farm${farms.length !== 1 ? 's' : ''} registered`}
           </p>
         </div>
-        <Button
-          id="add-farm-btn"
-          variant="primary"
-          size="md"
-          onClick={() => navigate('/farms/new')}
-        >
-          <Plus size={16} aria-hidden="true" />
-          Register Farm
-        </Button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {!loading && farms.length > 0 && (
+            <Button
+              id="export-farms-btn"
+              variant="ghost"
+              size="md"
+              onClick={handleExport}
+              disabled={isExporting}
+              title="Export current list to CSV"
+            >
+              {isExporting ? (
+                <>
+                  <span style={{
+                    width: '14px', height: '14px',
+                    border: '2px solid var(--color-border-strong)',
+                    borderTopColor: 'var(--color-brand)',
+                    borderRadius: '50%',
+                    animation: 'spin 0.7s linear infinite',
+                    display: 'inline-block',
+                  }} />
+                  Exporting…
+                </>
+              ) : (
+                <>
+                  <Download size={15} aria-hidden="true" />
+                  Export CSV
+                </>
+              )}
+            </Button>
+          )}
+          <Button
+            id="add-farm-btn"
+            variant="primary"
+            size="md"
+            onClick={() => navigate('/farms/new')}
+          >
+            <Plus size={16} aria-hidden="true" />
+            Register Farm
+          </Button>
+        </div>
       </header>
 
       {/* ── Filters Bar ─────────────────────────────────────────────────── */}

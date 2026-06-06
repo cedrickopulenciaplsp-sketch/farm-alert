@@ -73,23 +73,13 @@ export function AuthProvider({ children }) {
   // session === undefined means getSession() hasn't resolved yet
   const loading = session === undefined;
 
-  // True when the user must change their password before continuing
-  const requiresPasswordChange = profile?.requires_password_change ?? false;
-
-  // Refresh helper for SetupPassword page
+  // Refresh helper
   const refreshProfile = useCallback(() => {
     if (user) return fetchProfile(user);
     return Promise.resolve();
   }, [user, fetchProfile]);
 
-  // Immediately clear the password-change gate in local state.
-  // Called after a successful password update so the ProtectedRoute
-  // does not loop back to /setup-password before the DB re-fetch finishes.
-  const clearPasswordChangeFlag = useCallback(() => {
-    setProfile(prev => prev ? { ...prev, requires_password_change: false } : prev);
-  }, []);
-
-  const value = { session, user, role, profile, loading, profileLoaded, requiresPasswordChange, refreshProfile, clearPasswordChangeFlag };
+  const value = { session, user, role, profile, loading, profileLoaded, refreshProfile };
 
   return (
     <AuthContext.Provider value={value}>

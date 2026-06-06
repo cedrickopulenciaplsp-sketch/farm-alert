@@ -69,47 +69,225 @@ export async function getFilteredReports({ since = null, diseaseId = null } = {}
   return { data, error };
 }
 
+// ---------------------------------------------------------------------------
+// Helper — resolve a time-range string to an ISO from-date string
+// ---------------------------------------------------------------------------
+function getFromDate(timeRange) {
+  const now = new Date();
+  if (timeRange === '30d') {
+    const d = new Date(now);
+    d.setDate(d.getDate() - 30);
+    return d.toISOString().split('T')[0];
+  }
+  if (timeRange === '6m') {
+    const d = new Date(now);
+    d.setMonth(d.getMonth() - 6);
+    return d.toISOString().split('T')[0];
+  }
+  if (timeRange === 'ytd') {
+    return `${now.getFullYear()}-01-01`;
+  }
+  return null; // 'all' — no filter
+}
+
 /**
  * Analytics: Monthly Case Trends
+ * Fetches from disease_reports and aggregates client-side so time-range
+ * filters work correctly against the pre-aggregated view.
+ * @param {string} timeRange - '30d' | '6m' | 'ytd' | 'all'
  */
-export async function getMonthlyTrends() {
-  const { data, error } = await supabase
-    .from('v_analytics_monthly')
-    .select('*')
-    .order('report_month', { ascending: true });
-  return { data, error };
+export async function getMonthlyTrends(timeRange = 'ytd') {
+  const fromDate = getFromDate(timeRange);
+
+  let query = supabase
+    .from('disease_reports')
+    .select('date_reported, animals_affected, mortalities')
+    .order('date_reported', { ascending: true });
+
+  if (fromDate) query = query.gte('date_reported', fromDate);
+
+  const { data, error } = await query;
+  if (error) return { data: null, error };
+
+  // Aggregate by month in JS
+  const map = {};
+  (data ?? []).forEach((r) => {
+    const d = new Date(r.date_reported);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const label = d.toLocaleString('en-PH', { month: 'short', year: 'numeric' });
+    if (!map[key]) {
+      map[key] = {
+        report_month: key,
+        month_label: label,
+        total_reports: 0,
+        total_animals_affected: 0,
+        total_mortalities: 0,
+      };
+    }
+    map[key].total_reports += 1;
+    map[key].total_animals_affected += r.animals_affected ?? 0;
+    map[key].total_mortalities += r.mortalities ?? 0;
+  });
+
+  const sorted = Object.values(map).sort((a, b) =>
+    a.report_month.localeCompare(b.report_month)
+  );
+  return { data: sorted, error: null };
 }
 
 /**
- * Analytics: Breakdown by Disease
+ * Analytics: Case distribution by disease.
+ * @param {object} filters
+ * @param {string} [filters.livestockType] - 'Swine' | 'Poultry' | 'Both' | 'all'
+ * @param {string} [filters.timeRange]    - '30d' | '6m' | 'ytd' | 'all'
  */
-export async function getDiseaseBreakdown() {
-  const { data, error } = await supabase
-    .from('v_analytics_by_disease')
-    .select('*')
-    .order('case_count', { ascending: false });
-  return { data, error };
+export async function getDiseaseBreakdown(filters = {}) {
+  const { livestockType = 'all', timeRange = 'all' } = filters;
+  const fromDate = getFromDate(timeRange);
+
+  // Fetch from base table with filters, aggregate client-side
+  let query = supabase
+    .from('disease_reports')
+    .select(`
+      disease_id,
+      animals_affected,
+      mortalities,
+      diseases!inner ( disease_name, livestock_types!inner ( type_name ) )
+    `);
+
+  if (fromDate) query = query.gte('date_reported', fromDate);
+  if (livestockType !== 'all') {
+    query = query.eq('diseases.livestock_types.type_name', livestockType);
+  }
+
+  const { data, error } = await query;
+  if (error) return { data: null, error };
+
+  const map = {};
+  (data ?? []).forEach((r) => {
+    const name = r.diseases?.disease_name ?? 'Unknown';
+    const type = r.diseases?.livestock_types?.type_name ?? 'Unknown';
+    if (!map[name]) {
+      map[name] = { disease_name: name, livestock_type: type, total_reports: 0, total_animals_affected: 0, total_mortalities: 0 };
+    }
+    map[name].total_reports += 1;
+    map[name].total_animals_affected += r.animals_affected ?? 0;
+    map[name].total_mortalities += r.mortalities ?? 0;
+  });
+
+  const sorted = Object.values(map).sort((a, b) => b.total_reports - a.total_reports);
+  return { data: sorted, error: null };
 }
 
 /**
- * Analytics: Breakdown by Barangay
+ * Analytics: Disease density by barangay.
+ * @param {object} filters
+ * @param {string} [filters.timeRange] - '30d' | '6m' | 'ytd' | 'all'
  */
-export async function getBarangayHotspots() {
-  const { data, error } = await supabase
-    .from('v_analytics_by_barangay')
-    .select('*')
-    .order('case_count', { ascending: false });
-  return { data, error };
+export async function getBarangayHotspots(filters = {}) {
+  const { timeRange = 'all' } = filters;
+  const fromDate = getFromDate(timeRange);
+
+  if (!fromDate) {
+    // No time filter — use the view directly
+    const { data, error } = await supabase
+      .from('v_analytics_by_barangay')
+      .select('*')
+      .order('total_reports', { ascending: false });
+    return { data, error };
+  }
+
+  // Time-filtered: query base tables and aggregate
+  let query = supabase
+    .from('disease_reports')
+    .select(`
+      report_id, animals_affected, mortalities,
+      farms!inner ( barangay_id, barangays!inner ( barangay_name, classification ) )
+    `)
+    .gte('date_reported', fromDate);
+
+  const { data, error } = await query;
+  if (error) return { data: null, error };
+
+  const map = {};
+  (data ?? []).forEach((r) => {
+    const b = r.farms?.barangays;
+    const key = r.farms?.barangay_id;
+    if (!key) return;
+    if (!map[key]) {
+      map[key] = {
+        barangay_id: key,
+        barangay_name: b?.barangay_name ?? 'Unknown',
+        classification: b?.classification ?? 0,
+        total_reports: 0,
+        total_animals_affected: 0,
+        total_mortalities: 0,
+      };
+    }
+    map[key].total_reports += 1;
+    map[key].total_animals_affected += r.animals_affected ?? 0;
+    map[key].total_mortalities += r.mortalities ?? 0;
+  });
+
+  const sorted = Object.values(map).sort((a, b) => b.total_reports - a.total_reports);
+  return { data: sorted, error: null };
 }
 
 /**
- * Analytics: Breakdown by Severity
+ * Analytics: Severity breakdown — always all 4 levels.
+ * Supports time-range filtering via base table.
+ * @param {string} timeRange - '30d' | '6m' | 'ytd' | 'all'
  */
-export async function getSeverityBreakdown() {
+export async function getSeverityBreakdown(timeRange = 'all') {
+  const fromDate = getFromDate(timeRange);
+
+  if (!fromDate) {
+    const { data, error } = await supabase
+      .from('v_analytics_by_severity')
+      .select('*');
+    return { data, error };
+  }
+
+  // Time-filtered: aggregate from base
   const { data, error } = await supabase
-    .from('v_analytics_by_severity')
-    .select('*');
-  return { data, error };
+    .from('disease_reports')
+    .select('severity, animals_affected, mortalities')
+    .gte('date_reported', fromDate);
+
+  if (error) return { data: null, error };
+
+  const ORDER = { Critical: 1, Severe: 2, Moderate: 3, Mild: 4 };
+  const map = {};
+  (data ?? []).forEach((r) => {
+    const key = r.severity ?? 'Unknown';
+    if (!map[key]) {
+      map[key] = { severity: key, total_reports: 0, total_animals_affected: 0, total_mortalities: 0 };
+    }
+    map[key].total_reports += 1;
+    map[key].total_animals_affected += r.animals_affected ?? 0;
+    map[key].total_mortalities += r.mortalities ?? 0;
+  });
+
+  const sorted = Object.values(map).sort(
+    (a, b) => (ORDER[a.severity] ?? 5) - (ORDER[b.severity] ?? 5)
+  );
+  return { data: sorted, error: null };
+}
+
+// ---------------------------------------------------------------------------
+// Convenience: load all 4 datasets at once (used on initial page mount)
+// ---------------------------------------------------------------------------
+export async function getAllAnalytics(options = {}) {
+  const { timeRange = 'ytd', livestockType = 'all' } = options;
+
+  const [monthly, disease, barangay, severity] = await Promise.all([
+    getMonthlyTrends(timeRange),
+    getDiseaseBreakdown({ livestockType, timeRange }),
+    getBarangayHotspots({ timeRange }),
+    getSeverityBreakdown(timeRange),
+  ]);
+
+  return { monthly, disease, barangay, severity };
 }
 
 /**
@@ -163,6 +341,24 @@ export async function getReportStatusBreakdown() {
   const map = {};
   (data ?? []).forEach(r => {
     map[r.status] = (map[r.status] || 0) + 1;
+  });
+  const result = Object.entries(map).map(([status, count]) => ({ status, count }));
+  return { data: result, error: null };
+}
+
+/**
+ * Analytics: Pest control compliance distribution (Compliant / Semi-Compliant / Non-Compliant).
+ */
+export async function getComplianceBreakdown() {
+  const { data, error } = await supabase
+    .from('pest_compliance_logs')
+    .select('compliance_status');
+  if (error) return { data: null, error };
+
+  const map = {};
+  (data ?? []).forEach(r => {
+    const key = r.compliance_status || 'Unknown';
+    map[key] = (map[key] || 0) + 1;
   });
   const result = Object.entries(map).map(([status, count]) => ({ status, count }));
   return { data: result, error: null };

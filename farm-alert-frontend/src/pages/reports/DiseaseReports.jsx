@@ -10,8 +10,10 @@ import {
   AlertCircle,
   RefreshCw,
   ChevronRight,
+  Download,
 } from 'lucide-react';
 import { getReports } from '../../services/reports';
+import { supabase } from '../../lib/supabase';
 import Button from '../../components/shared/Button';
 import Card from '../../components/shared/Card';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
@@ -174,9 +176,10 @@ function EmptyState({ hasFilters, onClear }) {
 // DiseaseReports — main page
 // ---------------------------------------------------------------------------
 export default function DiseaseReports() {
-  const [reports,  setReports]  = useState([]);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState(null);
+  const [reports,    setReports]    = useState([]);
+  const [loading,    setLoading]    = useState(true);
+  const [error,      setError]      = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Filter state
   const [search,   setSearch]   = useState('');
@@ -243,6 +246,35 @@ export default function DiseaseReports() {
   const hasFilters = !!(search || status || severity);
 
   // ---------------------------------------------------------------------------
+  // CSV Export — invokes the server-side Edge Function
+  // ---------------------------------------------------------------------------
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke(
+        'export-reports-csv',
+        { body: { search, status: status || null, severity: severity || null } }
+      );
+      if (fnError) throw fnError;
+
+      const date = new Date().toISOString().slice(0, 10);
+      const blob = data instanceof Blob ? data : new Blob([data], { type: 'text/csv;charset=utf-8;' });
+      const url  = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `disease_reports_${date}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Export failed:', err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
   return (
@@ -258,15 +290,46 @@ export default function DiseaseReports() {
               : `${reports.length} report${reports.length !== 1 ? 's' : ''}${hasFilters ? ' (filtered)' : ''}`}
           </p>
         </div>
-        <Button
-          id="new-report-btn"
-          variant="primary"
-          size="md"
-          onClick={() => setShowModal(true)}
-        >
-          <Plus size={16} aria-hidden="true" />
-          New Report
-        </Button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {!loading && reports.length > 0 && (
+            <Button
+              id="export-reports-btn"
+              variant="ghost"
+              size="md"
+              onClick={handleExport}
+              disabled={isExporting}
+              title="Export current list to CSV"
+            >
+              {isExporting ? (
+                <>
+                  <span style={{
+                    width: '14px', height: '14px',
+                    border: '2px solid var(--color-border-strong)',
+                    borderTopColor: 'var(--color-brand)',
+                    borderRadius: '50%',
+                    animation: 'spin 0.7s linear infinite',
+                    display: 'inline-block',
+                  }} />
+                  Exporting…
+                </>
+              ) : (
+                <>
+                  <Download size={15} aria-hidden="true" />
+                  Export CSV
+                </>
+              )}
+            </Button>
+          )}
+          <Button
+            id="new-report-btn"
+            variant="primary"
+            size="md"
+            onClick={() => setShowModal(true)}
+          >
+            <Plus size={16} aria-hidden="true" />
+            New Report
+          </Button>
+        </div>
       </header>
 
       {/* ── Filters Bar ──────────────────────────────────────────────────── */}
