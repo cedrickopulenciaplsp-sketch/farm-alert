@@ -13,9 +13,7 @@ ON CONFLICT (type_name) DO NOTHING;
 
 -- Insert System Settings
 INSERT INTO system_settings (setting_key, setting_value) VALUES
-  ('system_name', 'FarmAlert'),
-  ('institution_name', 'City Veterinary Office'),
-  ('outbreak_farm_threshold', '3'),
+  ('outbreak_farm_threshold', '1'),
   ('outbreak_days_window', '7'),
   ('auto_detection_enabled', 'true')
 ON CONFLICT (setting_key) DO NOTHING;
