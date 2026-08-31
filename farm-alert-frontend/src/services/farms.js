@@ -17,11 +17,20 @@ import { supabase } from '../lib/supabase';
  * @param {string}  [options.status]    - filter by farm status ('Active' | 'Inactive')
  * @returns {Promise<{ data: Array, error: object|null }>}
  */
-export async function getFarms({ search = '', barangayId = null, status = null } = {}) {
+export async function getFarms({ search = '', barangayId = null, status = null, sortBy = 'name_asc' } = {}) {
   let query = supabase
     .from('v_farms_enriched')
-    .select('*')
-    .order('farm_name', { ascending: true });
+    .select('*');
+
+  // Apply sorting
+  if (sortBy === 'newest') {
+    query = query.order('created_at', { ascending: false });
+  } else if (sortBy === 'oldest') {
+    query = query.order('created_at', { ascending: true });
+  } else {
+    // default: name_asc
+    query = query.order('farm_name', { ascending: true });
+  }
 
   if (search) {
     // PostgREST 'or' filter: match farm_name OR owner_name
@@ -42,14 +51,14 @@ export async function getFarms({ search = '', barangayId = null, status = null }
 
 /**
  * Fetch a single farm by its primary key.
- * Returns the enriched row (barangay_name, livestock_type_name included).
+ * Queries the base 'farms' table to get all raw IDs and columns needed for editing.
  *
  * @param {string} id  - farm_id (UUID)
  * @returns {Promise<{ data: object|null, error: object|null }>}
  */
 export async function getFarmById(id) {
   const { data, error } = await supabase
-    .from('v_farms_enriched')
+    .from('farms')
     .select('*')
     .eq('farm_id', id)
     .single();
@@ -159,4 +168,32 @@ export async function getLivestockTypes() {
     .order('type_name', { ascending: true });
 
   return { data, error };
+}
+
+/**
+ * Fetch the full 360° dossier for a single farm:
+ * the enriched farm profile + all disease reports for that farm ordered chronologically.
+ *
+ * @param {string} farmId - farm_id (UUID)
+ * @returns {Promise<{ farm: object|null, reports: Array, error: object|null }>}
+ */
+export async function getFarmDossier(farmId) {
+  const [farmRes, reportsRes] = await Promise.all([
+    supabase
+      .from('v_farms_enriched')
+      .select('*')
+      .eq('farm_id', farmId)
+      .single(),
+    supabase
+      .from('v_reports_enriched')
+      .select('*')
+      .eq('farm_id', farmId)
+      .order('date_reported', { ascending: false }),
+  ]);
+
+  return {
+    farm:    farmRes.data ?? null,
+    reports: reportsRes.data ?? [],
+    error:   farmRes.error || reportsRes.error || null,
+  };
 }

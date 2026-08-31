@@ -87,7 +87,16 @@
 
 /* Select filters — strip the field wrapper padding from FormElements */
 .filterSelect {
-  min-width: 160px;
+  min-width: 130px;
+  height: 38px !important;
+  font-size: var(--text-sm) !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Sort By — slightly narrower */
+.sortSelect {
+  min-width: 140px;
   height: 38px !important;
   font-size: var(--text-sm) !important;
   padding-top: 0 !important;
@@ -302,6 +311,26 @@
 }
 
 .editBtn:hover {
+  color: var(--color-brand);
+  border-color: var(--color-brand);
+  background: var(--color-brand-light);
+}
+
+.dossierBtn {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xs);
+  padding: 0.35rem;
+  cursor: pointer;
+  color: var(--color-brand-mid);
+  display: inline-flex;
+  align-items: center;
+  margin-right: 0.35rem;
+  transition: color var(--transition-fast), border-color var(--transition-fast),
+              background var(--transition-fast);
+}
+
+.dossierBtn:hover {
   color: var(--color-brand);
   border-color: var(--color-brand);
   background: var(--color-brand-light);

@@ -7,7 +7,8 @@
  * The standalone DiseaseMap page continues to own its own data fetching
  * and realtime subscriptions, then passes the result to this widget.
  */
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
+import React from 'react';
 import L from 'leaflet';
 import { ShieldAlert } from 'lucide-react';
 
@@ -50,6 +51,8 @@ const MAP_CENTER = [14.0722, 121.3253];
  * @param {string}   props.style     – Optional inline style object for the MapContainer.
  */
 export default function MapWidget({ farms = [], zoom = 13, className = '', style = {} }) {
+  const validFarms = farms.filter(f => f.latitude && f.longitude);
+
   return (
     <MapContainer
       center={MAP_CENTER}
@@ -61,6 +64,39 @@ export default function MapWidget({ farms = [], zoom = 13, className = '', style
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+
+      {/* ── Buffer Zones (Underneath Markers) ── */}
+      {validFarms.map(farm => {
+        const isInfected = farm.latest_report_status === 'Active' || farm.farm_status === 'Quarantine';
+        if (!isInfected) return null;
+        return (
+          <React.Fragment key={`buffers-${farm.farm_id}`}>
+            {/* 3km Surveillance Zone - Orange */}
+            <Circle
+              center={[farm.latitude, farm.longitude]}
+              radius={3000} // 3km in meters
+              pathOptions={{
+                color: '#f59e0b',
+                fillColor: '#f59e0b',
+                fillOpacity: 0.15,
+                weight: 1.5,
+                dashArray: '5, 5'
+              }}
+            />
+            {/* 1km Infected Zone - Red */}
+            <Circle
+              center={[farm.latitude, farm.longitude]}
+              radius={1000} // 1km in meters
+              pathOptions={{
+                color: '#ef4444',
+                fillColor: '#ef4444',
+                fillOpacity: 0.25,
+                weight: 2
+              }}
+            />
+          </React.Fragment>
+        );
+      })}
 
       {farms.filter(f => f.latitude && f.longitude).map(farm => {
         const isInfected = farm.latest_report_status === 'Active';

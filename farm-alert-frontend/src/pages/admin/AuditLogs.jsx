@@ -6,7 +6,7 @@ import {
 import { getAuditLogs } from '../../services/admin';
 import Card from '../../components/shared/Card';
 import Button from '../../components/shared/Button';
-import LoadingSpinner from '../../components/shared/LoadingSpinner';
+import SkeletonLoader from '../../components/shared/SkeletonLoader';
 import styles from './AuditLogs.module.css';
 
 const PAGE_SIZE = 30;
@@ -79,7 +79,20 @@ export default function AuditLogs() {
   useEffect(() => { load(); }, [load]);
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} page-enter`}>
+
+      {/* ── Page Header (standalone — no longer inside AdminLayout) ─────── */}
+      <header className={styles.pageHeader}>
+        <div className={styles.headerLeft}>
+          <div className={styles.headerIcon}>
+            <ClipboardList size={20} />
+          </div>
+          <div>
+            <h1 className={styles.pageTitle}>Audit Logs</h1>
+            <p className={styles.pageSubtitle}>Immutable record of all significant system actions.</p>
+          </div>
+        </div>
+      </header>
 
       {/* Toolbar */}
       <div className={styles.toolbar}>
@@ -102,13 +115,15 @@ export default function AuditLogs() {
           </Card.Body>
         </Card>
       ) : loading ? (
-        <div className={styles.loadingWrapper}><LoadingSpinner size={36} /></div>
+        <Card className={styles.tableCard}>
+          <SkeletonLoader rows={8} columns={6} type="table" />
+        </Card>
       ) : logs.length === 0 ? (
         <Card>
           <Card.Body className={styles.emptyBody}>
             <ClipboardList size={28} />
             <p>No audit log entries yet.</p>
-            <p className={styles.emptyHint}>Actions performed by admins will appear here.</p>
+            <p className={styles.emptyHint}>Actions performed in the system will appear here.</p>
           </Card.Body>
         </Card>
       ) : (

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useTheme } from '../../context/ThemeContext';
 import {
-  getFilteredReports,
+  getMonthlyTrends,
   getDiseaseBreakdown,
   getBarangayHotspots,
   getSeverityBreakdown,
@@ -9,17 +10,17 @@ import {
   getComplianceBreakdown,
 } from '../../services/analytics';
 import { getDiseases } from '../../services/diseases';
+import { getBarangays } from '../../services/farms';
 import {
   AreaChart, Area,
-  BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid,
-  PieChart, Pie, Legend, Tooltip as RechartsTooltip,
-  RadialBarChart, RadialBar,
-  LineChart, Line,
-  ResponsiveContainer
+  BarChart, Bar,
+  Cell, Legend, Tooltip as RechartsTooltip,
+  XAxis, YAxis, CartesianGrid,
+  ResponsiveContainer,
 } from 'recharts';
 import {
   TrendingUp, MapPin, AlertTriangle, FileText,
-  PieChart as PieIcon, Filter, Calendar,
+  BarChart2, Filter, Calendar,
   ChevronUp, ChevronDown, Minus, ClipboardList, Skull, ShieldCheck,
 } from 'lucide-react';
 import Card from '../../components/shared/Card';
@@ -28,77 +29,34 @@ import styles from './Analytics.module.css';
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-const DATE_RANGES = [
-  { label: 'Last 30 days', days: 30 },
-  { label: 'Last 90 days', days: 90 },
-  { label: 'Last year',    days: 365 },
-  { label: 'All time',     days: null },
+const TIME_RANGES = [
+  { label: 'Last 30 Days', value: '30d' },
+  { label: 'Last 6 Months', value: '6m'  },
+  { label: 'Year-to-Date', value: 'ytd' },
+  { label: 'All Time',     value: 'all' },
 ];
 
-const DISEASE_COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#14b8a6'];
+const LIVESTOCK_TYPES = ['all', 'Swine', 'Poultry'];
+
+const DISEASE_COLORS  = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#14b8a6'];
 const SEVERITY_COLORS = { Mild: '#10b981', Moderate: '#f59e0b', Severe: '#f97316', Critical: '#ef4444' };
-const REPORT_STATUS_COLORS = { 'Active': '#ef4444', 'Under Monitoring': '#f59e0b', 'Resolved': '#10b981' };
 
 const COMPLIANCE_ORDER = ['Compliant', 'Semi-Compliant', 'Non-Compliant'];
 const COMPLIANCE_META  = {
-  'Compliant':      { color: '#10b981', label: 'Compliant' },
-  'Semi-Compliant': { color: '#f59e0b', label: 'Semi-Compliant' },
-  'Non-Compliant':  { color: '#ef4444', label: 'Non-Compliant' },
+  'Compliant':      { color: '#10b981' },
+  'Semi-Compliant': { color: '#f59e0b' },
+  'Non-Compliant':  { color: '#ef4444' },
+};
+
+const STATUS_ORDER = ['Active', 'Under Monitoring', 'Resolved'];
+const STATUS_META  = {
+  'Active':           { color: '#ef4444', label: 'Active' },
+  'Under Monitoring': { color: '#f59e0b', label: 'Monitoring' },
+  'Resolved':         { color: '#10b981', label: 'Resolved' },
 };
 
 // ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-function getSinceDate(days) {
-  if (!days) return null;
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  return d.toISOString().slice(0, 10);
-}
-
-function rankColor(index, total) {
-  if (total <= 1) return '#ef4444';
-  const t = index / (total - 1);
-  if (t < 0.5) {
-    const local = t / 0.5;
-    return `rgb(${Math.round(239+(245-239)*local)},${Math.round(68+(158-68)*local)},${Math.round(68+(11-68)*local)})`;
-  } else {
-    const local = (t - 0.5) / 0.5;
-    return `rgb(${Math.round(245+(16-245)*local)},${Math.round(158+(185-158)*local)},${Math.round(11+(129-11)*local)})`;
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Custom Tooltips
-// ---------------------------------------------------------------------------
-function CustomTooltip({ active, payload, label, total }) {
-  if (!active || !payload?.length) return null;
-  const value = payload[0].value;
-  const pct = total > 0 ? ((value / total) * 100).toFixed(1) : null;
-  return (
-    <div className={styles.tooltip}>
-      {label && <p className={styles.tooltipLabel}>{label}</p>}
-      <p className={styles.tooltipValue}>{value} case{value !== 1 ? 's' : ''}</p>
-      {pct && <p className={styles.tooltipPct}>{pct}% of total</p>}
-    </div>
-  );
-}
-
-function PieTooltip({ active, payload, total }) {
-  if (!active || !payload?.length) return null;
-  const { name, value } = payload[0];
-  const pct = total > 0 ? ((value / total) * 100).toFixed(1) : null;
-  return (
-    <div className={styles.tooltip}>
-      <p className={styles.tooltipLabel}>{name}</p>
-      <p className={styles.tooltipValue}>{value} case{value !== 1 ? 's' : ''}</p>
-      {pct && <p className={styles.tooltipPct}>{pct}% of total</p>}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Skeleton & Empty
+// Shared helpers
 // ---------------------------------------------------------------------------
 function SkeletonChart({ height = 260 }) {
   return (
@@ -122,13 +80,13 @@ function EmptyChart({ message = 'No data available for this period.' }) {
 // ---------------------------------------------------------------------------
 // Summary Stat Card
 // ---------------------------------------------------------------------------
-function StatCard({ label, value, sub, icon: Icon, color, loading }) {
+function StatCard({ label, value, sub, icon: Icon, iconBg, iconColor, loading }) {
   return (
-    <Card className={styles.statCard}>
-      <div className={styles.statIconBox} style={{ color, background: `${color}18` }}>
+    <div className={styles.statCard}>
+      <div className={styles.statIconBox} style={{ color: iconColor, background: iconBg }}>
         <Icon size={22} />
       </div>
-      <div>
+      <div className={styles.statContent}>
         {loading
           ? <div className={styles.skeletonBar} style={{ width: 60, height: 28, marginBottom: 6 }} />
           : <p className={styles.statValue}>{value ?? '—'}</p>
@@ -136,84 +94,52 @@ function StatCard({ label, value, sub, icon: Icon, color, loading }) {
         <p className={styles.statLabel}>{label}</p>
         {sub && !loading && <p className={styles.statSub}>{sub}</p>}
       </div>
-    </Card>
+    </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// Report Status — Stacked Progress Bar
+// Stacked Progress Bar — shared for Report Status & Compliance
 // ---------------------------------------------------------------------------
-const STATUS_ORDER = ['Active', 'Under Monitoring', 'Resolved'];
-const STATUS_META  = {
-  'Active':          { color: '#ef4444', label: 'Active' },
-  'Under Monitoring':{ color: '#f59e0b', label: 'Monitoring' },
-  'Resolved':        { color: '#10b981', label: 'Resolved' },
-};
-
-function ReportStatusBar({ data, loading }) {
+function StackedBar({ data, order, meta, emptyMessage, loading }) {
   const total = data.reduce((s, d) => s + d.count, 0);
-
-  // Normalise to STATUS_ORDER so segments always appear in the same sequence
-  const segments = STATUS_ORDER.map(status => {
-    const found = data.find(d => d.status === status);
-    return { status, count: found?.count ?? 0, color: STATUS_META[status]?.color ?? '#94a3b8', label: STATUS_META[status]?.label ?? status };
+  const segments = order.map(key => {
+    const found = data.find(d => d.status === key);
+    return { key, count: found?.count ?? 0, color: meta[key]?.color ?? '#94a3b8', label: meta[key]?.label ?? key };
   }).filter(s => total === 0 || s.count > 0);
 
   if (loading) return <SkeletonChart height={180} />;
-  if (!data.length || total === 0) return <EmptyChart message="No reports filed yet." />;
+  if (!data.length || total === 0) return <EmptyChart message={emptyMessage} />;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20, padding: '8px 0' }}>
-
-      {/* Total badge */}
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
         <span style={{ fontSize: 'var(--text-3xl, 2rem)', fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1 }}>{total}</span>
-        <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>total reports</span>
+        <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>total</span>
       </div>
-
-      {/* Stacked bar */}
       <div style={{ display: 'flex', height: 32, borderRadius: 8, overflow: 'hidden', gap: 2 }}>
         {segments.map(s => {
           const pct = ((s.count / total) * 100).toFixed(1);
           return (
-            <div
-              key={s.status}
-              title={`${s.label}: ${s.count} (${pct}%)`}
-              style={{
-                flex: s.count / total,
-                background: s.color,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'opacity 0.2s',
-                cursor: 'default',
-                minWidth: s.count > 0 ? 8 : 0,
-              }}
+            <div key={s.key} title={`${s.label}: ${s.count} (${pct}%)`}
+              style={{ flex: s.count / total, background: s.color, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'default', minWidth: s.count > 0 ? 8 : 0 }}
               onMouseEnter={e => { e.currentTarget.style.opacity = '0.8'; }}
               onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
             >
-              {pct >= 10 && (
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', userSelect: 'none' }}>{pct}%</span>
-              )}
+              {pct >= 10 && <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', userSelect: 'none' }}>{pct}%</span>}
             </div>
           );
         })}
       </div>
-
-      {/* Legend + count badges */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {segments.map(s => {
           const pct = ((s.count / total) * 100).toFixed(1);
           return (
-            <div key={s.status} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ width: 10, height: 10, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
               <span style={{ flex: 1, fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>{s.label}</span>
-              <span style={{
-                fontSize: 'var(--text-xs)', fontWeight: 700,
-                background: `${s.color}18`, color: s.color,
-                borderRadius: 99, padding: '2px 10px', whiteSpace: 'nowrap'
-              }}>
-                {s.count} &nbsp;<span style={{ opacity: 0.7 }}>({pct}%)</span>
+              <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, background: `${s.color}18`, color: s.color, borderRadius: 99, padding: '2px 10px', whiteSpace: 'nowrap' }}>
+                {s.count}&nbsp;<span style={{ opacity: 0.7 }}>({pct}%)</span>
               </span>
             </div>
           );
@@ -223,251 +149,129 @@ function ReportStatusBar({ data, loading }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Compliance Status — Stacked Progress Bar
-// ---------------------------------------------------------------------------
-function ComplianceStatusBar({ data, loading }) {
-  const total = data.reduce((s, d) => s + d.count, 0);
-
-  const segments = COMPLIANCE_ORDER.map(status => {
-    const found = data.find(d => d.status === status);
-    return { status, count: found?.count ?? 0, color: COMPLIANCE_META[status]?.color ?? '#94a3b8', label: COMPLIANCE_META[status]?.label ?? status };
-  }).filter(s => total === 0 || s.count > 0);
-
-  if (loading) return <SkeletonChart height={180} />;
-  if (!data.length || total === 0) return <EmptyChart message="No compliance evaluations recorded yet." />;
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, padding: '8px 0' }}>
-
-      {/* Total badge */}
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-        <span style={{ fontSize: 'var(--text-3xl, 2rem)', fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1 }}>{total}</span>
-        <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>total evaluations</span>
-      </div>
-
-      {/* Stacked bar */}
-      <div style={{ display: 'flex', height: 32, borderRadius: 8, overflow: 'hidden', gap: 2 }}>
-        {segments.map(s => {
-          const pct = ((s.count / total) * 100).toFixed(1);
-          return (
-            <div
-              key={s.status}
-              title={`${s.label}: ${s.count} (${pct}%)`}
-              style={{
-                flex: s.count / total,
-                background: s.color,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'opacity 0.2s',
-                cursor: 'default',
-                minWidth: s.count > 0 ? 8 : 0,
-              }}
-              onMouseEnter={e => { e.currentTarget.style.opacity = '0.8'; }}
-              onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
-            >
-              {pct >= 10 && (
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', userSelect: 'none' }}>{pct}%</span>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Legend + count badges */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {segments.map(s => {
-          const pct = ((s.count / total) * 100).toFixed(1);
-          return (
-            <div key={s.status} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ width: 10, height: 10, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
-              <span style={{ flex: 1, fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>{s.label}</span>
-              <span style={{
-                fontSize: 'var(--text-xs)', fontWeight: 700,
-                background: `${s.color}18`, color: s.color,
-                borderRadius: 99, padding: '2px 10px', whiteSpace: 'nowrap'
-              }}>
-                {s.count} &nbsp;<span style={{ opacity: 0.7 }}>({pct}%)</span>
-              </span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Reusable Pie Chart Card
-// ---------------------------------------------------------------------------
-function PieCard({ className, title, icon: Icon, loading, data, dataKey, nameKey, colors, colorMap, total, unitLabel = 'case' }) {
-  return (
-    <Card className={className}>
-      <Card.Header title={<div className={styles.chartTitle}><Icon size={15} /><span>{title}</span></div>} />
-      <Card.Body>
-        {loading
-          ? <SkeletonChart height={280} />
-          : !data?.length
-          ? <EmptyChart />
-          : (
-            <div className={styles.chartWrap}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={data} cx="50%" cy="42%" innerRadius={50} outerRadius={80} paddingAngle={3} dataKey={dataKey} nameKey={nameKey}>
-                    {data.map((entry, i) => (
-                      <Cell key={i} fill={colorMap ? (colorMap[entry[nameKey]] || '#94a3b8') : colors[i % colors.length]} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip
-                    formatter={(v, name) => [`${v} ${unitLabel}${v !== 1 ? 's' : ''}`, name]}
-                    contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-md)' }}
-                  />
-                  <Legend
-                    iconType="circle" iconSize={9}
-                    formatter={name => <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{name}</span>}
-                    wrapperStyle={{ paddingTop: 6 }}
-                    payload={data.map((d, i) => ({
-                      value: d[nameKey],
-                      type: 'circle',
-                      color: colorMap ? (colorMap[d[nameKey]] || '#94a3b8') : colors[i % colors.length],
-                    }))}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          )
-        }
-      </Card.Body>
-    </Card>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Analytics Page
 // ---------------------------------------------------------------------------
 export default function Analytics() {
-  // Filters
-  const [rangeDays, setRangeDays] = useState(null);
-  const [diseaseFilter, setDiseaseFilter] = useState('');
-  const [diseases, setDiseases] = useState([]);
+  const { isDark } = useTheme();
 
-  // Data
-  const [reports, setReports]               = useState([]);
-  const [allDiseases, setAllDiseases]       = useState([]);
-  const [hotspots, setHotspots]             = useState([]);
-  const [reportStatus, setReportStatus]     = useState([]);
+  // ── Chart theme helpers — passed to Recharts to support dark mode ──────
+  const tickColor   = isDark ? 'hsl(150,10%,55%)' : 'hsl(160,10%,40%)';
+  const tooltipBg   = isDark ? 'hsl(160,14%,12%)' : '#ffffff';
+  const tooltipText = isDark ? 'hsl(150,15%,90%)' : 'hsl(160,20%,10%)';
+
+  // ── Filters ──────────────────────────────────────────────────────────────
+  const [timeRange, setTimeRange]       = useState('ytd');
+  const [livestockType, setLivestockType] = useState('all');
+  const [barangayFilter, setBarangayFilter] = useState('all');
+
+  // ── Reference data for filter dropdowns ─────────────────────────────────
+  const [barangays, setBarangays] = useState([]);
+
+  // ── Chart data ───────────────────────────────────────────────────────────
+  const [monthlyData, setMonthlyData]     = useState([]);
+  const [diseaseData, setDiseaseData]     = useState([]);
+  const [barangayData, setBarangayData]   = useState([]);
+  const [severityData, setSeverityData]   = useState([]);
+  const [reportStatus, setReportStatus]   = useState([]);
   const [complianceData, setComplianceData] = useState([]);
   const [activeOutbreaks, setActiveOutbreaks] = useState(null);
-  const [lastUpdated, setLastUpdated]       = useState(null);
+  const [lastUpdated, setLastUpdated]     = useState(null);
 
-  // Loading
-  const [loadingReports, setLoadingReports] = useState(true);
-  const [loadingStatic, setLoadingStatic]   = useState(true);
-  const [loadingExtra, setLoadingExtra]     = useState(true);
+  // ── Loading flags ─────────────────────────────────────────────────────────
+  const [loadingMonthly, setLoadingMonthly]   = useState(true);
+  const [loadingDisease, setLoadingDisease]   = useState(true);
+  const [loadingBarangay, setLoadingBarangay] = useState(true);
+  const [loadingSeverity, setLoadingSeverity] = useState(true);
+  const [loadingExtra, setLoadingExtra]       = useState(true);
 
-  // Load static data (no date filter)
+  // ── Load reference data once ─────────────────────────────────────────────
   useEffect(() => {
-    async function loadStatic() {
-      const [hRes, sRes, dRes] = await Promise.all([
-        getBarangayHotspots(), getSeverityBreakdown(), getDiseases(),
-      ]);
-      if (hRes.data) setHotspots(hRes.data.slice(0, 10));
-      if (dRes.data) setDiseases(dRes.data);
-      setLoadingStatic(false);
-    }
-    async function loadAllDiseases() {
-      const { data } = await getDiseaseBreakdown();
-      if (data) setAllDiseases(data);
-    }
-    async function loadExtra() {
-      const [rRes, cRes] = await Promise.all([
-        getReportStatusBreakdown(), getComplianceBreakdown(),
-      ]);
+    getBarangays().then(({ data }) => { if (data) setBarangays(data); });
+    getActiveOutbreaks().then(({ count }) => setActiveOutbreaks(count));
+    Promise.all([getReportStatusBreakdown(), getComplianceBreakdown()]).then(([rRes, cRes]) => {
       if (rRes.data) setReportStatus(rRes.data);
       if (cRes.data) setComplianceData(cRes.data);
       setLoadingExtra(false);
-    }
-    loadStatic();
-    loadAllDiseases();
-    loadExtra();
-    // Fetch active outbreaks count for stat card
-    getActiveOutbreaks().then(({ count }) => setActiveOutbreaks(count));
+    });
   }, []);
 
-  // Load filtered reports
+  // ── Re-fetch monthly trends when timeRange or livestockType changes ──────
   useEffect(() => {
-    async function loadReports() {
-      setLoadingReports(true);
-      const { data } = await getFilteredReports({
-        since: getSinceDate(rangeDays),
-        diseaseId: diseaseFilter || null,
-      });
-      if (data) { setReports(data); setLastUpdated(new Date()); }
-      setLoadingReports(false);
-    }
-    loadReports();
-  }, [rangeDays, diseaseFilter]);
-
-  // Derived: monthly trends with BOTH cases and deaths per month
-  const trends = useMemo(() => {
-    const map = {};
-    reports.forEach(r => {
-      const month = r.date_reported.slice(0, 7);
-      if (!map[month]) map[month] = { cases: 0, deaths: 0 };
-      map[month].cases  += 1;
-      map[month].deaths += (r.mortalities || 0);
+    setLoadingMonthly(true);
+    getMonthlyTrends(timeRange, livestockType).then(({ data }) => {
+      setMonthlyData(data ?? []);
+      setLoadingMonthly(false);
+      setLastUpdated(new Date());
     });
-    return Object.entries(map).sort(([a], [b]) => a.localeCompare(b)).map(([month, data]) => ({
-      month: new Date(month + '-01').toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
-      cases:  data.cases,
-      deaths: data.deaths,
-    }));
-  }, [reports]);
+  }, [timeRange, livestockType]);
 
-  // Total mortalities for the selected period
-  const totalMortalitiesPeriod = useMemo(() =>
-    reports.reduce((sum, r) => sum + (r.mortalities || 0), 0)
-  , [reports]);
+  // ── Re-fetch disease breakdown when filters change ───────────────────────
+  useEffect(() => {
+    setLoadingDisease(true);
+    getDiseaseBreakdown({ timeRange, livestockType }).then(({ data }) => {
+      setDiseaseData(data ?? []);
+      setLoadingDisease(false);
+    });
+  }, [timeRange, livestockType]);
 
-  const filteredDiseases = useMemo(() => {
-    const map = {};
-    reports.forEach(r => { map[r.disease_name] = (map[r.disease_name] || 0) + 1; });
-    return Object.entries(map).sort(([,a],[,b]) => b-a).map(([disease_name, case_count]) => ({ disease_name, case_count }));
-  }, [reports]);
+  // ── Re-fetch barangay hotspots when filters change ────────────────────────
+  useEffect(() => {
+    setLoadingBarangay(true);
+    getBarangayHotspots({ timeRange, livestockType }).then(({ data }) => {
+      setBarangayData(data ?? []);
+      setLoadingBarangay(false);
+    });
+  }, [timeRange, livestockType]);
 
-  const filteredSeverity = useMemo(() => {
-    const map = {};
-    reports.forEach(r => { if (r.severity) map[r.severity] = (map[r.severity] || 0) + 1; });
-    return Object.entries(map).map(([severity, case_count]) => ({ severity, case_count }));
-  }, [reports]);
+  // ── Re-fetch severity when filters change ──────────────────────────────────
+  useEffect(() => {
+    setLoadingSeverity(true);
+    getSeverityBreakdown(timeRange, livestockType).then(({ data }) => {
+      setSeverityData(data ?? []);
+      setLoadingSeverity(false);
+    });
+  }, [timeRange, livestockType]);
 
+  // ── Derived values ────────────────────────────────────────────────────────
+
+  // Apply optional client-side barangay filter on already-fetched barangay data
+  const filteredBarangays = useMemo(() => {
+    if (barangayFilter === 'all') return barangayData.slice(0, 10);
+    return barangayData.filter(b => String(b.barangay_id) === barangayFilter).slice(0, 10);
+  }, [barangayData, barangayFilter]);
+
+  // Trend badge: compare last 2 months
   const trendIndicator = useMemo(() => {
-    if (trends.length < 2) return null;
-    const last = trends[trends.length - 1]?.cases || 0;
-    const prev = trends[trends.length - 2]?.cases || 0;
+    if (monthlyData.length < 2) return null;
+    const last = monthlyData[monthlyData.length - 1]?.total_reports || 0;
+    const prev = monthlyData[monthlyData.length - 2]?.total_reports || 0;
     if (prev === 0) return null;
     const pct = Math.round(((last - prev) / prev) * 100);
     return { pct, up: pct > 0, same: pct === 0 };
-  }, [trends]);
+  }, [monthlyData]);
 
-  const totalCases       = reports.length;
-  const topDisease       = filteredDiseases[0]?.disease_name ?? allDiseases[0]?.disease_name ?? '—';
-  const topBarangay      = hotspots[0]?.barangay_name ?? '—';
-  const totalPieDiseases = filteredDiseases.reduce((s, d) => s + d.case_count, 0);
-  const totalPieSeverity = filteredSeverity.reduce((s, d) => s + d.case_count, 0);
+  const totalCases     = monthlyData.reduce((s, d) => s + (d.total_reports ?? 0), 0);
+  const totalMortalities = monthlyData.reduce((s, d) => s + (d.total_mortalities ?? 0), 0);
+  const topBarangay    = barangayData[0]?.barangay_name ?? '—';
 
+  const totalPieSeverity  = severityData.reduce((s, d) => s + (d.total_reports ?? 0), 0);
 
-  // Compliance derived stats
-  const totalEvaluations  = complianceData.reduce((s, d) => s + d.count, 0);
-  const compliantCount    = complianceData.find(d => d.status === 'Compliant')?.count ?? 0;
+  const compliantCount     = complianceData.find(d => d.status === 'Compliant')?.count ?? 0;
   const semiCompliantCount = complianceData.find(d => d.status === 'Semi-Compliant')?.count ?? 0;
-  const nonCompliantCount = complianceData.find(d => d.status === 'Non-Compliant')?.count ?? 0;
+  const nonCompliantCount  = complianceData.find(d => d.status === 'Non-Compliant')?.count ?? 0;
+  const totalEvaluations   = complianceData.reduce((s, d) => s + d.count, 0);
 
+  // Map severity data to consistent field names for PieCard
+  const severityPieData = severityData.map(d => ({ status: d.severity, count: d.total_reports }));
+
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} page-enter`}>
 
-      {/* ── Page Header ──────────────────────────────────────────────────────── */}
+      {/* ── Page Header ──────────────────────────────────────────────────── */}
       <header className={styles.header}>
         <div>
           <h1 className={styles.pageTitle}>Analytics Hub</h1>
@@ -482,46 +286,74 @@ export default function Analytics() {
         </div>
       </header>
 
-      {/* ── Filter Bar ───────────────────────────────────────────────────────── */}
+      {/* ── Filter Bar ───────────────────────────────────────────────────── */}
       <Card className={styles.filterBar}>
         <div className={styles.filterBarInner}>
+
+          {/* Time Range */}
           <div className={styles.filterGroup}>
             <Calendar size={14} className={styles.filterIcon} />
             <span className={styles.filterLabel}>Period:</span>
-            {DATE_RANGES.map(r => (
+            {TIME_RANGES.map(r => (
               <button
-                key={r.label}
-                className={`${styles.filterPill} ${rangeDays === r.days ? styles.filterPillActive : ''}`}
-                onClick={() => setRangeDays(r.days)}
+                key={r.value}
+                className={`${styles.filterPill} ${timeRange === r.value ? styles.filterPillActive : ''}`}
+                onClick={() => setTimeRange(r.value)}
               >
                 {r.label}
               </button>
             ))}
           </div>
+
+          {/* Livestock Type */}
           <div className={styles.filterGroup}>
             <Filter size={14} className={styles.filterIcon} />
-            <span className={styles.filterLabel}>Disease:</span>
-            <select className={styles.filterSelect} value={diseaseFilter} onChange={e => setDiseaseFilter(e.target.value)}>
-              <option value="">All Diseases</option>
-              {diseases.map(d => <option key={d.disease_id} value={d.disease_id}>{d.disease_name}</option>)}
+            <span className={styles.filterLabel}>Livestock:</span>
+            <select
+              className={styles.filterSelect}
+              value={livestockType}
+              onChange={e => setLivestockType(e.target.value)}
+              aria-label="Filter by livestock type"
+            >
+              {LIVESTOCK_TYPES.map(t => (
+                <option key={t} value={t}>{t === 'all' ? 'All Types' : t}</option>
+              ))}
             </select>
           </div>
+
+          {/* Barangay */}
+          <div className={styles.filterGroup}>
+            <MapPin size={14} className={styles.filterIcon} />
+            <span className={styles.filterLabel}>Barangay:</span>
+            <select
+              className={styles.filterSelect}
+              value={barangayFilter}
+              onChange={e => setBarangayFilter(e.target.value)}
+              aria-label="Filter by barangay"
+            >
+              <option value="all">All Barangays</option>
+              {barangays.map(b => (
+                <option key={b.barangay_id} value={String(b.barangay_id)}>{b.barangay_name}</option>
+              ))}
+            </select>
+          </div>
+
         </div>
       </Card>
 
-      {/* ── Summary Stat Cards ────────────────────────────────────────────────── */}
+      {/* ── Summary Stat Cards ────────────────────────────────────────────── */}
       <div className={styles.statsRow}>
-        <StatCard label="Total Cases (Period)"     value={totalCases}               icon={FileText}      color="hsl(152,58%,28%)" loading={loadingReports} />
-        <StatCard label="Total Mortalities (Period)" value={totalMortalitiesPeriod} icon={Skull}         color="#ef4444"          loading={loadingReports}
-          sub={totalMortalitiesPeriod > 0 ? 'Deaths in selected period' : 'No deaths recorded'} />
-        <StatCard label="Active Outbreaks"          value={activeOutbreaks}         icon={AlertTriangle} color="#f97316"          loading={activeOutbreaks === null}
+        <StatCard label="Total Cases (Period)"      value={totalCases}       icon={FileText}      iconBg="var(--icon-green-bg)"  iconColor="var(--icon-green-text)"  loading={loadingMonthly} />
+        <StatCard label="Total Mortalities (Period)" value={totalMortalities} icon={Skull}         iconBg="var(--icon-red-bg)"    iconColor="var(--icon-red-text)"    loading={loadingMonthly}
+          sub={totalMortalities > 0 ? 'Deaths in selected period' : 'No deaths recorded'} />
+        <StatCard label="Active Outbreaks"           value={activeOutbreaks}  icon={AlertTriangle} iconBg="var(--icon-orange-bg)" iconColor="var(--icon-orange-text)" loading={activeOutbreaks === null}
           sub={activeOutbreaks > 0 ? 'Requires immediate attention' : 'No active outbreaks'} />
-        <StatCard label="Hotspot Barangay"          value={topBarangay}             icon={MapPin}         color="#f59e0b"          loading={loadingStatic} />
+        <StatCard label="Hotspot Barangay"           value={topBarangay}      icon={MapPin}        iconBg="var(--icon-amber-bg)"  iconColor="var(--icon-amber-text)"  loading={loadingBarangay} />
       </div>
 
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {/* SECTION 1 — Disease Analytics                                        */}
-      {/* ══════════════════════════════════════════════════════════════════════ */}
+      {/* ════════════════════════════════════════════════════════════════════ */}
+      {/* SECTION 1 — Disease Analytics                                      */}
+      {/* ════════════════════════════════════════════════════════════════════ */}
       <div className={styles.sectionHeader}>
         <span className={styles.sectionTitle}>📊 Disease Analytics</span>
         <div className={styles.sectionLine} />
@@ -529,13 +361,13 @@ export default function Analytics() {
 
       <div className={styles.grid}>
 
-        {/* Monthly Trend — spans all 3 columns, now shows CASES + DEATHS */}
+        {/* Area Chart — Monthly Trends (full width) */}
         <Card className={styles.fullCard}>
           <Card.Header
             title={
               <div className={styles.chartTitle}>
                 <TrendingUp size={15} />
-                <span>Monthly Case & Mortality Trends</span>
+                <span>Monthly Case &amp; Mortality Trends</span>
                 {trendIndicator && (
                   <span className={`${styles.trendBadge} ${trendIndicator.up ? styles.trendUp : styles.trendDown}`}>
                     {trendIndicator.up ? <ChevronUp size={12} /> : trendIndicator.same ? <Minus size={12} /> : <ChevronDown size={12} />}
@@ -546,71 +378,74 @@ export default function Analytics() {
             }
           />
           <Card.Body>
-            {loadingReports ? <SkeletonChart height={280} /> : trends.length === 0 ? <EmptyChart message="No cases recorded in this period." /> : (
+            {loadingMonthly ? <SkeletonChart height={280} /> : monthlyData.length === 0 ? <EmptyChart message="No cases recorded in this period." /> : (
               <div className={styles.chartWrap}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={trends} margin={{ top: 10, right: 30, bottom: 0, left: 0 }}>
+                  <AreaChart data={monthlyData} margin={{ top: 10, right: 30, bottom: 0, left: 0 }}>
                     <defs>
-                      <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                      <linearGradient id="gradCases" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%"  stopColor="hsl(152,58%,28%)" stopOpacity={0.25} />
                         <stop offset="95%" stopColor="hsl(152,58%,28%)" stopOpacity={0} />
                       </linearGradient>
+                      <linearGradient id="gradDeaths" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%"  stopColor="#ef4444" stopOpacity={0.18} />
+                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                      </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
-                    <XAxis dataKey="month" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
-                    <YAxis allowDecimals={false} tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
+                    <XAxis dataKey="month_label" tick={{ fontSize: 12, fill: tickColor }} tickLine={false} axisLine={false} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: tickColor }} tickLine={false} axisLine={false} />
                     <RechartsTooltip
-                      contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-md)' }}
-                      formatter={(value, name) => [
-                        value,
-                        name === 'cases' ? 'Cases' : 'Deaths',
-                      ]}
+                      contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-md)', backgroundColor: tooltipBg, color: tooltipText }}
+                      formatter={(value, name) => [value, name === 'total_reports' ? 'Cases' : 'Deaths']}
                     />
                     <Legend
                       iconType="circle" iconSize={9}
-                      formatter={name => <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{name === 'cases' ? 'Cases' : 'Deaths'}</span>}
+                      formatter={name => <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{name === 'total_reports' ? 'Cases' : 'Deaths'}</span>}
                       wrapperStyle={{ paddingTop: 6 }}
                     />
-                    <Line
-                      type="monotone" dataKey="cases"
+                    <Area
+                      type="monotone" dataKey="total_reports"
                       stroke="hsl(152,58%,28%)" strokeWidth={2.5}
+                      fill="url(#gradCases)"
                       dot={{ r: 4, fill: 'hsl(152,58%,28%)' }} activeDot={{ r: 6 }}
                     />
-                    <Line
-                      type="monotone" dataKey="deaths"
+                    <Area
+                      type="monotone" dataKey="total_mortalities"
                       stroke="#ef4444" strokeWidth={2}
                       strokeDasharray="4 2"
+                      fill="url(#gradDeaths)"
                       dot={{ r: 3, fill: '#ef4444' }} activeDot={{ r: 5 }}
                     />
-                  </LineChart>
+                  </AreaChart>
                 </ResponsiveContainer>
               </div>
             )}
           </Card.Body>
         </Card>
 
-        {/* Hotspot Bar — spans 2 columns, now grouped: cases + deaths */}
+        {/* Bar Chart — Hotspots by Barangay (2/3 width) */}
         <Card className={styles.twoThirdCard}>
-          <Card.Header title={<div className={styles.chartTitle}><MapPin size={15} /><span>Hotspots by Barangay — Cases & Deaths</span></div>} />
+          <Card.Header title={<div className={styles.chartTitle}><MapPin size={15} /><span>Disease Density by Barangay</span></div>} />
           <Card.Body>
-            {loadingStatic ? <SkeletonChart height={280} /> : hotspots.length === 0 ? <EmptyChart message="No cases by location yet." /> : (
+            {loadingBarangay ? <SkeletonChart height={280} /> : filteredBarangays.length === 0 ? <EmptyChart message="No cases by location yet." /> : (
               <div className={styles.chartWrap}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={hotspots} layout="vertical" margin={{ top: 5, right: 30, left: 50, bottom: 5 }}>
+                  <BarChart data={filteredBarangays} layout="vertical" margin={{ top: 5, right: 30, left: 60, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--color-border)" />
-                    <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-                    <YAxis dataKey="barangay_name" type="category" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={80} />
+                    <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: tickColor }} tickLine={false} axisLine={false} />
+                    <YAxis dataKey="barangay_name" type="category" tick={{ fontSize: 11, fill: tickColor }} axisLine={false} tickLine={false} width={90} />
                     <RechartsTooltip
-                      contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-md)' }}
-                      formatter={(value, name) => [value, name === 'case_count' ? 'Cases' : 'Deaths']}
+                      contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-md)', backgroundColor: tooltipBg, color: tooltipText }}
+                      formatter={(value, name) => [value, name === 'total_reports' ? 'Cases' : 'Deaths']}
                       cursor={{ fill: 'var(--color-overlay)' }}
                     />
                     <Legend
                       iconType="circle" iconSize={9}
-                      formatter={name => <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{name === 'case_count' ? 'Cases' : 'Deaths'}</span>}
+                      formatter={name => <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{name === 'total_reports' ? 'Cases' : 'Deaths'}</span>}
                       wrapperStyle={{ paddingTop: 6 }}
                     />
-                    <Bar dataKey="case_count" name="case_count" radius={[0, 4, 4, 0]} barSize={12} fill="hsl(152,58%,40%)" />
+                    <Bar dataKey="total_reports"     name="total_reports"     radius={[0, 4, 4, 0]} barSize={12} fill="hsl(152,58%,40%)" />
                     <Bar dataKey="total_mortalities" name="total_mortalities" radius={[0, 4, 4, 0]} barSize={12} fill="#ef4444" />
                   </BarChart>
                 </ResponsiveContainer>
@@ -619,70 +454,91 @@ export default function Analytics() {
           </Card.Body>
         </Card>
 
+        {/* Bar Chart — Cases by Disease (1/3 width) */}
+        <Card className={styles.thirdCard}>
+          <Card.Header title={<div className={styles.chartTitle}><BarChart2 size={15} /><span>Cases by Disease</span></div>} />
+          <Card.Body>
+            {loadingDisease ? <SkeletonChart height={220} /> : diseaseData.length === 0 ? <EmptyChart /> : (
+              <div className={styles.chartWrapSm}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={diseaseData.slice(0, 6)} margin={{ top: 5, right: 10, left: -20, bottom: 40 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
+                    <XAxis dataKey="disease_name" tick={{ fontSize: 10, fill: tickColor }} tickLine={false} axisLine={false} angle={-35} textAnchor="end" interval={0} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: tickColor }} tickLine={false} axisLine={false} />
+                    <RechartsTooltip
+                      contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-md)', backgroundColor: tooltipBg, color: tooltipText }}
+                      formatter={(v) => [`${v} cases`]}
+                    />
+                    <Bar dataKey="total_reports" radius={[4, 4, 0, 0]} barSize={28}>
+                      {diseaseData.slice(0, 6).map((_, i) => (
+                        <Cell key={i} fill={DISEASE_COLORS[i % DISEASE_COLORS.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </Card.Body>
+        </Card>
 
-        {/* Cases by Disease — 1 column */}
-        <PieCard
-          className={styles.thirdCard}
-          title="Cases by Disease"
-          icon={PieIcon}
-          loading={loadingReports}
-          data={filteredDiseases}
-          dataKey="case_count"
-          nameKey="disease_name"
-          colors={DISEASE_COLORS}
-          total={totalPieDiseases}
-        />
-
-        {/* Report Status — Stacked Progress Bar */}
+        {/* Report Status Bar */}
         <Card className={styles.thirdCard}>
           <Card.Header title={<div className={styles.chartTitle}><ClipboardList size={15} /><span>Report Status</span></div>} />
           <Card.Body>
-            <ReportStatusBar data={reportStatus} loading={loadingExtra} />
+            <StackedBar
+              data={reportStatus}
+              order={STATUS_ORDER}
+              meta={STATUS_META}
+              emptyMessage="No reports filed yet."
+              loading={loadingExtra}
+            />
           </Card.Body>
         </Card>
 
-        {/* Cases by Severity — 1 column */}
-        <PieCard
-          className={styles.thirdCard}
-          title="Cases by Severity"
-          icon={AlertTriangle}
-          loading={loadingReports}
-          data={filteredSeverity}
-          dataKey="case_count"
-          nameKey="severity"
-          colorMap={SEVERITY_COLORS}
-          colors={[]}
-          total={totalPieSeverity}
-        />
+        {/* Stacked Bar — Severity Distribution (1/3 width) */}
+        <Card className={styles.thirdCard}>
+          <Card.Header title={<div className={styles.chartTitle}><AlertTriangle size={15} /><span>Cases by Severity</span></div>} />
+          <Card.Body>
+            <StackedBar
+              data={severityPieData}
+              order={Object.keys(SEVERITY_COLORS)}
+              meta={Object.fromEntries(Object.entries(SEVERITY_COLORS).map(([k, color]) => [k, { color, label: k }]))}
+              emptyMessage="No severity data yet."
+              loading={loadingSeverity}
+            />
+          </Card.Body>
+        </Card>
 
       </div>
 
-      {/* ══════════════════════════════════════════════════════════════════════ */}
-      {/* SECTION 2 — Farm & Pest Operations                                   */}
-      {/* ══════════════════════════════════════════════════════════════════════ */}
+      {/* ════════════════════════════════════════════════════════════════════ */}
+      {/* SECTION 2 — Farm & Pest Compliance                                 */}
+      {/* ════════════════════════════════════════════════════════════════════ */}
       <div className={styles.sectionHeader}>
-        <span className={styles.sectionTitle}>🐛 Farm & Pest Operations</span>
+        <span className={styles.sectionTitle}>🛡️ Farm Compliance</span>
         <div className={styles.sectionLine} />
       </div>
 
-      {/* Pest / Farm Summary Stats */}
       <div className={styles.statsRow}>
-        <StatCard label="Compliant"      value={compliantCount}     icon={ShieldCheck}   color="#10b981" loading={loadingExtra} sub={compliantCount > 0 ? 'Fully compliant farms' : 'No compliant farms'} />
-        <StatCard label="Semi-Compliant" value={semiCompliantCount} icon={ShieldCheck}   color="#f59e0b" loading={loadingExtra} sub={semiCompliantCount > 0 ? 'Partially compliant' : 'None'} />
-        <StatCard label="Non-Compliant"  value={nonCompliantCount}  icon={AlertTriangle} color="#ef4444" loading={loadingExtra} sub={nonCompliantCount > 0 ? 'Requires follow-up' : 'All farms compliant'} />
-        <StatCard label="Total Evaluations" value={totalEvaluations} icon={ShieldCheck} color="#3b82f6" loading={loadingExtra} />
+        <StatCard label="Compliant"        value={compliantCount}     icon={ShieldCheck}   iconBg="var(--badge-compliant-bg)"     iconColor="var(--badge-compliant-text)"     loading={loadingExtra} sub={compliantCount > 0 ? 'Fully compliant farms' : 'None recorded'} />
+        <StatCard label="Semi-Compliant"   value={semiCompliantCount} icon={ShieldCheck}   iconBg="var(--badge-semi-bg)"          iconColor="var(--badge-semi-text)"          loading={loadingExtra} sub={semiCompliantCount > 0 ? 'Partially compliant' : 'None'} />
+        <StatCard label="Non-Compliant"    value={nonCompliantCount}  icon={AlertTriangle} iconBg="var(--badge-noncompliant-bg)"  iconColor="var(--badge-noncompliant-text)"  loading={loadingExtra} sub={nonCompliantCount > 0 ? 'Requires follow-up' : 'All compliant'} />
+        <StatCard label="Total Evaluations" value={totalEvaluations}  icon={ShieldCheck}   iconBg="var(--icon-green-bg)"          iconColor="var(--icon-green-text)"          loading={loadingExtra} />
       </div>
 
       <div className={styles.grid}>
-
-        {/* Compliance Status — full width */}
         <Card className={styles.fullCard}>
           <Card.Header title={<div className={styles.chartTitle}><ShieldCheck size={15} /><span>Pest Control Compliance Breakdown</span></div>} />
           <Card.Body>
-            <ComplianceStatusBar data={complianceData} loading={loadingExtra} />
+            <StackedBar
+              data={complianceData}
+              order={COMPLIANCE_ORDER}
+              meta={Object.fromEntries(COMPLIANCE_ORDER.map(k => [k, { ...COMPLIANCE_META[k], label: k }]))}
+              emptyMessage="No compliance evaluations recorded yet."
+              loading={loadingExtra}
+            />
           </Card.Body>
         </Card>
-
       </div>
 
     </div>

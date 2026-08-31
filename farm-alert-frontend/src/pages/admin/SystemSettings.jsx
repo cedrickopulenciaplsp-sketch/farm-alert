@@ -8,8 +8,24 @@ import { writeAuditLog } from '../../services/admin';
 import { useAuth } from '../../context/AuthContext';
 import Card from '../../components/shared/Card';
 import Button from '../../components/shared/Button';
-import LoadingSpinner from '../../components/shared/LoadingSpinner';
+import SkeletonLoader from '../../components/shared/SkeletonLoader';
 import styles from './SystemSettings.module.css';
+
+// ── Human-readable labels for each setting key ───────────────────────────────
+const SETTING_LABELS = {
+  outbreak_farm_threshold: {
+    label:       'Outbreak Farm Threshold',
+    description: 'Number of farms in the same barangay reporting the same disease before an outbreak alert is triggered.',
+  },
+  outbreak_days_window: {
+    label:       'Outbreak Detection Window (Days)',
+    description: 'The number of days to look back when counting disease reports for outbreak detection.',
+  },
+  auto_detection_enabled: {
+    label:       'Auto Outbreak Detection',
+    description: 'When enabled, the system automatically creates outbreak alerts when the threshold is met.',
+  },
+};
 
 // ── Single setting row ────────────────────────────────────────────────────────
 function SettingRow({ setting, onSave }) {
@@ -43,10 +59,15 @@ function SettingRow({ setting, onSave }) {
       })
     : '—';
 
+  const meta = SETTING_LABELS[setting.setting_key];
+
   return (
     <div className={styles.settingRow}>
       <div className={styles.settingInfo}>
-        <p className={styles.settingKey}>{setting.setting_key}</p>
+        <p className={styles.settingKey}>{meta?.label ?? setting.setting_key}</p>
+        {meta?.description && (
+          <p className={styles.settingDesc}>{meta.description}</p>
+        )}
         <p className={styles.settingMeta}>Last updated: {updatedAt}</p>
         {error && (
           <p className={styles.settingError}>
@@ -126,13 +147,18 @@ export default function SystemSettings() {
   async function handleSave(settingId, newValue) {
     const { data, error: saveErr } = await updateSetting(settingId, newValue);
     if (!saveErr) {
+      // Resolve the setting key for the human-readable log message
+      const settingRow = settings.find(s => s.setting_id === settingId);
+      const settingKey = settingRow?.setting_key ?? `ID:${settingId}`;
+      const oldValue   = settingRow?.setting_value ?? '?';
+
       // Update local state immediately without full reload
       setSettings(prev =>
         prev.map(s => s.setting_id === settingId ? { ...s, ...data } : s)
       );
       await writeAuditLog({
         userId:      profile?.user_id,
-        action:      `Updated system setting ID: ${settingId}`,
+        action:      `Changed setting '${settingKey}' from '${oldValue}' to '${newValue}'`,
         targetTable: 'system_settings',
         targetId:    String(settingId),
       });
@@ -142,7 +168,20 @@ export default function SystemSettings() {
   }
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} page-enter`}>
+
+      {/* ── Page Header (standalone — no longer inside AdminLayout) ─────── */}
+      <header className={styles.pageHeader}>
+        <div className={styles.headerLeft}>
+          <div className={styles.headerIcon}>
+            <Settings size={20} />
+          </div>
+          <div>
+            <h1 className={styles.pageTitle}>System Settings</h1>
+            <p className={styles.pageSubtitle}>Manage system configuration values for the CVO office.</p>
+          </div>
+        </div>
+      </header>
 
       {/* Toast */}
       {toast && (
@@ -172,7 +211,7 @@ export default function SystemSettings() {
           </Card.Body>
         </Card>
       ) : loading ? (
-        <div className={styles.loadingWrapper}><LoadingSpinner size={36} /></div>
+        <SkeletonLoader rows={3} columns={2} type="list" />
       ) : settings.length === 0 ? (
         <Card>
           <Card.Body className={styles.emptyBody}>

@@ -156,6 +156,16 @@ export default function ReportForm({ onSuccess, onCancel }) {
     setForm(prev => {
       const next = { ...prev, [name]: value };
 
+      // Real-time: animals_affected cannot exceed farm head count
+      if (name === 'animals_affected') {
+        const affected = value !== '' ? Number(value) : null;
+        if (affected !== null && selectedFarm && affected > selectedFarm.head_count) {
+          setErrors(e => ({ ...e, animals_affected: `Cannot exceed the farm's total head count (${selectedFarm.head_count}).` }));
+        } else {
+          setErrors(e => ({ ...e, animals_affected: '' }));
+        }
+      }
+
       // Real-time cross-field: mortalities must not exceed animals_affected
       if (name === 'mortalities' || name === 'animals_affected') {
         const affected   = next.animals_affected !== '' ? Number(next.animals_affected) : null;
@@ -165,9 +175,9 @@ export default function ReportForm({ onSuccess, onCancel }) {
         if (bothFilled && deaths > affected) {
           setErrors(e => ({ ...e, mortalities: 'Mortalities cannot exceed the number of animals affected.' }));
         } else {
-          setErrors(e => ({ ...e, mortalities: '', animals_affected: name === 'animals_affected' ? '' : e.animals_affected }));
+          setErrors(e => ({ ...e, mortalities: '', ...(name === 'animals_affected' ? {} : {}) }));
         }
-      } else {
+      } else if (name !== 'animals_affected') {
         setErrors(e => ({ ...e, [name]: '' }));
       }
 
@@ -313,6 +323,7 @@ export default function ReportForm({ onSuccess, onCancel }) {
         name="animals_affected"
         type="number"
         min="0"
+        max={headCount > 0 ? headCount : undefined}
         label="Animals Affected"
         required
         value={form.animals_affected}
@@ -320,6 +331,7 @@ export default function ReportForm({ onSuccess, onCancel }) {
         error={errors.animals_affected}
         disabled={submit}
         placeholder="E.g., 10"
+        hint={selectedFarm && headCount > 0 ? `Max: ${headCount} (farm's total head count)` : undefined}
       />
 
       {/* Mortalities (deaths) */}

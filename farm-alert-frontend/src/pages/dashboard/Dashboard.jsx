@@ -4,10 +4,10 @@ import { getDashboardSummary, getMapFarms } from '../../services/analytics';
 import { getReports } from '../../services/reports';
 import { getOutbreaks } from '../../services/outbreaks';
 import { useRealtime } from '../../hooks/useRealtime';
-import { Tractor, ShieldAlert, FileText, Activity, AlertCircle, Plus, Skull } from 'lucide-react';
+import { Warehouse, Siren, FileText, Thermometer, AlertCircle, Plus, HeartPulse } from 'lucide-react';
 import Card from '../../components/shared/Card';
 import Button from '../../components/shared/Button';
-import LoadingSpinner from '../../components/shared/LoadingSpinner';
+import SkeletonLoader from '../../components/shared/SkeletonLoader';
 import MapWidget from '../../components/map/MapWidget';
 import MiniTrendChart from '../../components/analytics/MiniTrendChart';
 import MiniDiseaseChart from '../../components/analytics/MiniDiseaseChart';
@@ -132,8 +132,14 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className={styles.centeredPage}>
-        <LoadingSpinner size={40} />
+      <div className={`${styles.page} page-enter`}>
+        <div className={styles.metricsGrid}>
+          <SkeletonLoader rows={1} columns={2} type="card" />
+          <SkeletonLoader rows={1} columns={2} type="card" />
+          <SkeletonLoader rows={1} columns={2} type="card" />
+          <SkeletonLoader rows={1} columns={2} type="card" />
+        </div>
+        <SkeletonLoader rows={6} columns={5} type="list" />
       </div>
     );
   }
@@ -148,17 +154,17 @@ export default function Dashboard() {
   }
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} page-enter`}>
 
       {/* ── Header ──────────────────────────────────────────────── */}
       <header className={styles.header}>
         <div>
-          <h1 className={styles.pageTitle}>Dashboard</h1>
-          <p className={styles.pageSubtitle}>Overview of San Pablo City Livestock Health</p>
+          <h1 className={styles.pageTitle}>Situational Overview</h1>
+          <p className={styles.pageSubtitle}>San Pablo City Veterinary Office — Livestock Health Monitoring</p>
         </div>
         <div className={styles.headerActions}>
           <Button variant="secondary" onClick={() => navigate('/reports')}>
-            <FileText size={15} /> View Reports
+            <FileText size={15} /> Disease Reports
           </Button>
           <Button variant="primary" onClick={() => navigate('/farms/new')}>
             <Plus size={15} /> Register Farm
@@ -169,34 +175,31 @@ export default function Dashboard() {
       {/* ── Metric Cards ────────────────────────────────────────── */}
       <div className={styles.metricsGrid}>
         <Card className={styles.metricCard}>
-          <div className={styles.metricIconBox} style={{ color: 'hsl(152,58%,28%)', background: 'hsl(152,55%,92%)' }}>
-            <Tractor size={22} />
+          <div className={styles.metricIconBox} style={{ color: 'var(--icon-green-text)', background: 'var(--icon-green-bg)' }}>
+            <Warehouse size={20} />
           </div>
           <div className={styles.metricContent}>
             <p className={styles.metricValue}>{summary?.totalFarms}</p>
-            <p className={styles.metricLabel}>Total Registered Farms</p>
+            <p className={styles.metricLabel}>Registered Farms</p>
           </div>
         </Card>
 
         <Card className={styles.metricCard}>
-          <div className={styles.metricIconBox} style={{ color: 'hsl(38,92%,38%)', background: 'hsl(38,92%,92%)' }}>
-            <Activity size={22} />
+          <div className={styles.metricIconBox} style={{ color: 'var(--icon-amber-text)', background: 'var(--icon-amber-bg)' }}>
+            <Thermometer size={20} />
           </div>
           <div className={styles.metricContent}>
             <p className={styles.metricValue}>{summary?.activeReports}</p>
-            <p className={styles.metricLabel}>Active Disease Reports</p>
+            <p className={styles.metricLabel}>Active Cases</p>
           </div>
         </Card>
 
-        <Card className={`${styles.metricCard} ${summary?.activeOutbreaks > 0 ? styles.pulseDanger : ''}`}>
-          <div className={styles.metricIconBox} style={{ color: 'hsl(4,74%,44%)', background: 'hsl(4,74%,93%)' }}>
-            <ShieldAlert size={22} />
+        <Card className={`${styles.metricCard} ${styles.metricCardDominant} ${summary?.activeOutbreaks > 0 ? styles.pulseDanger : ''}`}>
+          <div className={styles.metricIconBox}>
+            <Siren size={22} />
           </div>
           <div className={styles.metricContent}>
-            <p
-              className={styles.metricValue}
-              style={{ color: summary?.activeOutbreaks > 0 ? 'hsl(4,74%,44%)' : 'inherit' }}
-            >
+            <p className={styles.metricValue}>
               {summary?.activeOutbreaks}
             </p>
             <p className={styles.metricLabel}>Active Outbreaks</p>
@@ -204,35 +207,35 @@ export default function Dashboard() {
         </Card>
 
         <Card className={`${styles.metricCard} ${summary?.totalMortalities > 0 ? styles.pulseDanger : ''}`}>
-          <div className={styles.metricIconBox} style={{ color: 'hsl(0,72%,38%)', background: 'hsl(0,72%,93%)' }}>
-            <Skull size={22} />
+          <div className={styles.metricIconBox} style={{ color: 'var(--icon-red-text)', background: 'var(--icon-red-bg)' }}>
+            <HeartPulse size={20} />
           </div>
           <div className={styles.metricContent}>
             <p
               className={styles.metricValue}
-              style={{ color: summary?.totalMortalities > 0 ? 'hsl(0,72%,38%)' : 'inherit' }}
+              style={{ color: summary?.totalMortalities > 0 ? 'var(--color-danger)' : 'inherit' }}
             >
               {summary?.totalMortalities}
             </p>
-            <p className={styles.metricLabel}>Total Mortalities (Active)</p>
+            <p className={styles.metricLabel}>Livestock Deaths</p>
           </div>
         </Card>
       </div>
 
       {/* ── Analytics Charts ────────────────────────────────────── */}
       <div className={styles.sectionHeader}>
-        <h2 className={styles.sectionTitle}>Analytics Overview</h2>
-        <span className={styles.sectionLink} onClick={() => navigate('/analytics')}>View Full Analytics →</span>
+        <h2 className={styles.sectionTitle}>Epidemiological Trend</h2>
+        <span className={styles.sectionLink} onClick={() => navigate('/analytics')}>Full Analytics &rarr;</span>
       </div>
       <div className={styles.chartsRow}>
         <Card className={styles.chartCard}>
           <p className={styles.chartTitle}>Monthly Case &amp; Mortality Trend</p>
-          <p className={styles.chartSubtitle}>All-time reported cases and deaths per month</p>
+          <p className={styles.chartSubtitle}>Reported cases and livestock deaths across all barangays</p>
           <MiniTrendChart trends={trends} loading={loadingCharts} height={240} />
         </Card>
         <Card className={styles.chartCard}>
           <p className={styles.chartTitle}>Cases by Disease</p>
-          <p className={styles.chartSubtitle}>Distribution across all recorded diseases</p>
+          <p className={styles.chartSubtitle}>Top diseases reported in San Pablo City</p>
           <MiniDiseaseChart data={diseaseData} loading={loadingCharts} height={240} />
         </Card>
       </div>
@@ -243,10 +246,10 @@ export default function Dashboard() {
         {/* Map */}
         <Card className={styles.mapCard}>
           <div className={styles.sectionHeader}>
-            <p className={styles.chartTitle}>Farm Disease Map</p>
-            <span className={styles.sectionLink} onClick={() => navigate('/map')}>Open Full Map →</span>
+            <p className={styles.chartTitle}>Barangay Disease Map</p>
+            <span className={styles.sectionLink} onClick={() => navigate('/map')}>Expand Map &rarr;</span>
           </div>
-          <p className={styles.chartSubtitle}>Real-time farm health status across San Pablo City</p>
+          <p className={styles.chartSubtitle}>Active farm health status across San Pablo City barangays</p>
           <div className={styles.mapEmbed}>
             <MapWidget farms={mapFarms} zoom={13} />
           </div>
@@ -255,7 +258,7 @@ export default function Dashboard() {
         {/* Recent Activity */}
         <Card className={styles.activityCard}>
           <div className={styles.activityHeader}>
-            <p className={styles.chartTitle}>Recent Activity</p>
+            <p className={styles.chartTitle}>Field Activity Log</p>
           </div>
           {recentActivity.length === 0 ? (
             <div className={styles.emptyState}>No recent activity found.</div>
@@ -265,8 +268,8 @@ export default function Dashboard() {
                 <li key={act.id} className={styles.activityItem} onClick={() => navigate(act.path)}>
                   <div className={styles.activityIconWrapper}>
                     {act.type === 'Outbreak'
-                      ? <ShieldAlert size={15} color="hsl(4,74%,44%)" />
-                      : <FileText size={15} color="hsl(152,58%,28%)" />
+                      ? <Siren size={15} color="#e07a5f" />
+                      : <FileText size={15} color="#1d3557" />
                     }
                   </div>
                   <div className={styles.activityDetails}>

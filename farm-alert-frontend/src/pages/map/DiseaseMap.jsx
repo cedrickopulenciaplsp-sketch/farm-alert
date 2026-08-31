@@ -84,6 +84,20 @@ export default function DiseaseMap() {
                   </div>
                   <span className={styles.legendCount}>{farms.filter(f => f.farm_status === 'Temporarily Closed').length}</span>
                 </li>
+                <li className={styles.legendItem}>
+                  <div className={styles.legendZone} style={{ borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.25)' }}></div>
+                  <div className={styles.legendText}>
+                    <span className={styles.legendLabel}>1km Infected Zone</span>
+                    <span className={styles.legendDesc}>Immediate radius around confirmed outbreaks. Requires strict quarantine.</span>
+                  </div>
+                </li>
+                <li className={styles.legendItem}>
+                  <div className={styles.legendZone} style={{ borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.15)', borderStyle: 'dashed', borderWidth: '1.5px' }}></div>
+                  <div className={styles.legendText}>
+                    <span className={styles.legendLabel}>3km Surveillance Zone</span>
+                    <span className={styles.legendDesc}>Monitoring radius for potential disease spread. Requires elevated monitoring.</span>
+                  </div>
+                </li>
               </ul>
             </Card.Body>
           </Card>

@@ -92,19 +92,24 @@ function getFromDate(timeRange) {
 
 /**
  * Analytics: Monthly Case Trends
- * Fetches from disease_reports and aggregates client-side so time-range
- * filters work correctly against the pre-aggregated view.
  * @param {string} timeRange - '30d' | '6m' | 'ytd' | 'all'
+ * @param {string} livestockType - 'Swine' | 'Poultry' | 'Both' | 'all'
  */
-export async function getMonthlyTrends(timeRange = 'ytd') {
+export async function getMonthlyTrends(timeRange = 'ytd', livestockType = 'all') {
   const fromDate = getFromDate(timeRange);
 
   let query = supabase
     .from('disease_reports')
-    .select('date_reported, animals_affected, mortalities')
+    .select(`
+      date_reported, animals_affected, mortalities,
+      diseases!inner ( livestock_types!inner ( type_name ) )
+    `)
     .order('date_reported', { ascending: true });
 
   if (fromDate) query = query.gte('date_reported', fromDate);
+  if (livestockType !== 'all') {
+    query = query.eq('diseases.livestock_types.type_name', livestockType);
+  }
 
   const { data, error } = await query;
   if (error) return { data: null, error };
@@ -182,14 +187,15 @@ export async function getDiseaseBreakdown(filters = {}) {
 /**
  * Analytics: Disease density by barangay.
  * @param {object} filters
- * @param {string} [filters.timeRange] - '30d' | '6m' | 'ytd' | 'all'
+ * @param {string} [filters.timeRange]     - '30d' | '6m' | 'ytd' | 'all'
+ * @param {string} [filters.livestockType] - 'Swine' | 'Poultry' | 'Both' | 'all'
  */
 export async function getBarangayHotspots(filters = {}) {
-  const { timeRange = 'all' } = filters;
+  const { timeRange = 'all', livestockType = 'all' } = filters;
   const fromDate = getFromDate(timeRange);
 
-  if (!fromDate) {
-    // No time filter — use the view directly
+  // If no filters at all, use the view directly
+  if (!fromDate && livestockType === 'all') {
     const { data, error } = await supabase
       .from('v_analytics_by_barangay')
       .select('*')
@@ -197,14 +203,19 @@ export async function getBarangayHotspots(filters = {}) {
     return { data, error };
   }
 
-  // Time-filtered: query base tables and aggregate
+  // Otherwise query base tables so we can filter by livestock type
   let query = supabase
     .from('disease_reports')
     .select(`
       report_id, animals_affected, mortalities,
-      farms!inner ( barangay_id, barangays!inner ( barangay_name, classification ) )
-    `)
-    .gte('date_reported', fromDate);
+      farms!inner ( barangay_id, barangays!inner ( barangay_name, classification ) ),
+      diseases!inner ( livestock_types!inner ( type_name ) )
+    `);
+
+  if (fromDate) query = query.gte('date_reported', fromDate);
+  if (livestockType !== 'all') {
+    query = query.eq('diseases.livestock_types.type_name', livestockType);
+  }
 
   const { data, error } = await query;
   if (error) return { data: null, error };
@@ -234,26 +245,35 @@ export async function getBarangayHotspots(filters = {}) {
 }
 
 /**
- * Analytics: Severity breakdown — always all 4 levels.
- * Supports time-range filtering via base table.
+ * Analytics: Severity breakdown.
  * @param {string} timeRange - '30d' | '6m' | 'ytd' | 'all'
+ * @param {string} livestockType - 'Swine' | 'Poultry' | 'Both' | 'all'
  */
-export async function getSeverityBreakdown(timeRange = 'all') {
+export async function getSeverityBreakdown(timeRange = 'all', livestockType = 'all') {
   const fromDate = getFromDate(timeRange);
 
-  if (!fromDate) {
+  // If no filters at all, use the view directly
+  if (!fromDate && livestockType === 'all') {
     const { data, error } = await supabase
       .from('v_analytics_by_severity')
       .select('*');
     return { data, error };
   }
 
-  // Time-filtered: aggregate from base
-  const { data, error } = await supabase
+  // Otherwise query base tables to support livestock filter
+  let query = supabase
     .from('disease_reports')
-    .select('severity, animals_affected, mortalities')
-    .gte('date_reported', fromDate);
+    .select(`
+      severity, animals_affected, mortalities,
+      diseases!inner ( livestock_types!inner ( type_name ) )
+    `);
 
+  if (fromDate) query = query.gte('date_reported', fromDate);
+  if (livestockType !== 'all') {
+    query = query.eq('diseases.livestock_types.type_name', livestockType);
+  }
+
+  const { data, error } = await query;
   if (error) return { data: null, error };
 
   const ORDER = { Critical: 1, Severe: 2, Moderate: 3, Mild: 4 };
@@ -281,10 +301,10 @@ export async function getAllAnalytics(options = {}) {
   const { timeRange = 'ytd', livestockType = 'all' } = options;
 
   const [monthly, disease, barangay, severity] = await Promise.all([
-    getMonthlyTrends(timeRange),
+    getMonthlyTrends(timeRange, livestockType),
     getDiseaseBreakdown({ livestockType, timeRange }),
-    getBarangayHotspots({ timeRange }),
-    getSeverityBreakdown(timeRange),
+    getBarangayHotspots({ timeRange, livestockType }),
+    getSeverityBreakdown(timeRange, livestockType),
   ]);
 
   return { monthly, disease, barangay, severity };

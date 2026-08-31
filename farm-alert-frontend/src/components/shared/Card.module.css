@@ -13,7 +13,8 @@
 
 .card.hoverable:hover {
   box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  border-color: var(--color-brand-mid);
 }
 
 /* Sub-components */

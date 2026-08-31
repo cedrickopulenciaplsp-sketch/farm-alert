@@ -16,7 +16,7 @@ import { getFarms, getBarangays } from '../../services/farms';
 import { exportToCsv } from '../../utils/exportCsv';
 import Button from '../../components/shared/Button';
 import Card from '../../components/shared/Card';
-import LoadingSpinner from '../../components/shared/LoadingSpinner';
+import SkeletonLoader from '../../components/shared/SkeletonLoader';
 import { Select } from '../../components/shared/FormElements';
 import styles from './PestControlLog.module.css';
 
@@ -191,7 +191,7 @@ export default function PestControlLog() {
   };
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} page-enter`}>
       {/* ── Page Header ─────────────────────────────────────────────────── */}
       <header className={styles.pageHeader}>
         <div>
@@ -286,9 +286,9 @@ export default function PestControlLog() {
           </Card.Body>
         </Card>
       ) : loading ? (
-        <div className={styles.loadingWrapper}>
-          <LoadingSpinner size={36} />
-        </div>
+        <Card className={styles.tableCard}>
+          <SkeletonLoader rows={5} columns={6} type="table" />
+        </Card>
       ) : logs.length === 0 ? (
         <EmptyState hasFilters={hasFilters} onClear={handleClearFilters} />
       ) : (

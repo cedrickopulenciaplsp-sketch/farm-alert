@@ -16,7 +16,7 @@ import { getReports } from '../../services/reports';
 import { supabase } from '../../lib/supabase';
 import Button from '../../components/shared/Button';
 import Card from '../../components/shared/Card';
-import LoadingSpinner from '../../components/shared/LoadingSpinner';
+import SkeletonLoader from '../../components/shared/SkeletonLoader';
 import { Select } from '../../components/shared/FormElements';
 import Modal from '../../components/shared/Modal';
 import ReportForm from '../../components/reports/ReportForm';
@@ -26,14 +26,14 @@ import styles from './DiseaseReports.module.css';
 // Severity badge — colour-coded per level
 // ---------------------------------------------------------------------------
 const SEVERITY_COLORS = {
-  Mild:     { bg: 'hsl(145, 55%, 92%)', color: 'hsl(145, 60%, 28%)' },
-  Moderate: { bg: 'hsl(48,  90%, 92%)', color: 'hsl(38,  80%, 32%)' },
-  Severe:   { bg: 'hsl(25,  90%, 92%)', color: 'hsl(25,  80%, 35%)' },
-  Critical: { bg: 'hsl(4,   74%, 94%)', color: 'hsl(4,   74%, 40%)' },
+  Mild:     { bg: 'var(--badge-mild-bg)',    color: 'var(--badge-mild-text)'    },
+  Moderate: { bg: 'var(--badge-mod-bg)',     color: 'var(--badge-mod-text)'     },
+  Severe:   { bg: 'var(--badge-sev-bg)',     color: 'var(--badge-sev-text)'     },
+  Critical: { bg: 'var(--badge-crit-bg)',    color: 'var(--badge-crit-text)'    },
 };
 
 function SeverityBadge({ severity }) {
-  const palette = SEVERITY_COLORS[severity] ?? { bg: 'hsl(0,0%,92%)', color: 'hsl(0,0%,40%)' };
+  const palette = SEVERITY_COLORS[severity] ?? { bg: 'var(--badge-default-bg)', color: 'var(--badge-default-text)' };
   return (
     <span
       className={styles.badge}
@@ -278,7 +278,7 @@ export default function DiseaseReports() {
   // Render
   // ---------------------------------------------------------------------------
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} page-enter`}>
 
       {/* ── Page Header ──────────────────────────────────────────────────── */}
       <header className={styles.pageHeader}>
@@ -410,9 +410,9 @@ export default function DiseaseReports() {
           </Card.Body>
         </Card>
       ) : loading ? (
-        <div className={styles.loadingWrapper}>
-          <LoadingSpinner size={36} />
-        </div>
+        <Card className={styles.tableCard}>
+          <SkeletonLoader rows={6} columns={9} type="table" />
+        </Card>
       ) : reports.length === 0 ? (
         <EmptyState hasFilters={hasFilters} onClear={handleClearFilters} />
       ) : (

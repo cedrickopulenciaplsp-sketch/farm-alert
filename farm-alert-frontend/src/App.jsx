@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
+import { NotificationProvider } from './context/NotificationContext';
 import ProtectedRoute from './routes/ProtectedRoute';
 import Layout from './components/layout/Layout';
 import Login from './pages/auth/Login';
@@ -14,7 +16,6 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import DiseaseMap from './pages/Map/DiseaseMap';
 import Analytics from './pages/Analytics/Analytics';
 import ComplianceLogs from './pages/compliance/ComplianceLogs';
-import AdminLayout from './pages/admin/AdminLayout';
 import SystemSettings from './pages/admin/SystemSettings';
 import AuditLogs from './pages/admin/AuditLogs';
 
@@ -44,7 +45,9 @@ function PlaceholderPage({ name }) {
 // ---------------------------------------------------------------------------
 function App() {
   return (
+    <ThemeProvider>
     <AuthProvider>
+    <NotificationProvider>
       <Router>
         <Routes>
           {/* Public routes */}
@@ -65,13 +68,15 @@ function App() {
               <Route path="/map"            element={<DiseaseMap />} />
               <Route path="/compliance"            element={<ComplianceLogs />} />
               <Route path="/analytics"             element={<Analytics />} />
-              
-              {/* Admin settings integrated into main layout */}
-              <Route element={<AdminLayout />}>
-                <Route path="/admin/settings" element={<SystemSettings />} />
-                <Route path="/admin/logs"     element={<AuditLogs />} />
-                <Route path="/admin" element={<Navigate to="/admin/settings" replace />} />
-              </Route>
+
+              {/* Settings & Audit Logs — no longer behind AdminLayout (Phase 10 pivot) */}
+              <Route path="/settings" element={<SystemSettings />} />
+              <Route path="/logs"     element={<AuditLogs />} />
+
+              {/* Legacy admin redirects — preserve deep-links from bookmarks/external refs */}
+              <Route path="/admin/settings" element={<Navigate to="/settings" replace />} />
+              <Route path="/admin/logs"     element={<Navigate to="/logs" replace />} />
+              <Route path="/admin"          element={<Navigate to="/settings" replace />} />
 
               {/* Phase 4 sandbox — remove after verification */}
               <Route path="/ui-sandbox" element={<UiSandbox />} />
@@ -85,7 +90,9 @@ function App() {
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Router>
+    </NotificationProvider>
     </AuthProvider>
+    </ThemeProvider>
   );
 }
 

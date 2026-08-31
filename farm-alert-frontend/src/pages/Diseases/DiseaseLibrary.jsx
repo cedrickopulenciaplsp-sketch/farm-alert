@@ -21,9 +21,10 @@ import { getLivestockTypes } from '../../services/farms';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/shared/Button';
 import Card from '../../components/shared/Card';
-import LoadingSpinner from '../../components/shared/LoadingSpinner';
+import SkeletonLoader from '../../components/shared/SkeletonLoader';
 import Modal from '../../components/shared/Modal';
 import { Input, Select } from '../../components/shared/FormElements';
+import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import styles from './DiseaseLibrary.module.css';
 
 // ---------------------------------------------------------------------------
@@ -466,7 +467,7 @@ export default function DiseaseLibrary() {
   }
 
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} page-enter`}>
       {/* Toast */}
       {toast && (
         <div style={{
@@ -558,7 +559,7 @@ export default function DiseaseLibrary() {
           </Card.Body>
         </Card>
       ) : loading ? (
-        <div className={styles.loadingWrapper}><LoadingSpinner size={36} /></div>
+        <SkeletonLoader rows={6} columns={3} type="card" />
       ) : displayed.length === 0 ? (
         <EmptyState
           hasFilters={hasFilters}

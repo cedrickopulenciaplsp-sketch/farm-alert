@@ -16,6 +16,8 @@ import {
   getBarangays,
   getLivestockTypes,
 } from '../../services/farms';
+import { writeAuditLog } from '../../services/admin';
+import { useAuth } from '../../context/AuthContext';
 import { getComplianceLogs } from '../../services/compliance';
 import Button from '../../components/shared/Button';
 import Card from '../../components/shared/Card';
@@ -116,6 +118,7 @@ export default function FarmForm() {
   const navigate  = useNavigate();
   const { id }    = useParams();   // undefined when creating
   const isEdit    = !!id;
+  const { profile } = useAuth();
 
   // Form state
   const [fields, setFields]         = useState(blankForm());
@@ -146,7 +149,16 @@ export default function FarmForm() {
       // Always load dropdowns
       const [bRes, ltRes] = await Promise.all([getBarangays(), getLivestockTypes()]);
       if (!bRes.error)  setBarangays(bRes.data ?? []);
-      if (!ltRes.error) setLivestockTypes(ltRes.data ?? []);
+      if (!ltRes.error) {
+        const sortedTypes = [...(ltRes.data ?? [])].sort((a, b) => {
+          if (a.type_name === 'Both') return 1;
+          if (b.type_name === 'Both') return -1;
+          if (a.type_name === 'Swine' && b.type_name === 'Poultry') return -1;
+          if (a.type_name === 'Poultry' && b.type_name === 'Swine') return 1;
+          return a.type_name.localeCompare(b.type_name);
+        });
+        setLivestockTypes(sortedTypes);
+      }
 
       // If editing, also fetch farm data
       if (isEdit) {
@@ -259,9 +271,29 @@ export default function FarmForm() {
       female_population:     isPoultryFarm && fields.female_population !== '' ? femaleBirds : null,
     };
 
-    const { error } = isEdit
+    const { data: savedFarm, error } = isEdit
       ? await updateFarm(id, payload)
       : await createFarm(payload);
+
+    if (!error) {
+      // Audit log — human-readable description
+      const farmName = payload.farm_name;
+      if (isEdit) {
+        await writeAuditLog({
+          userId:      profile?.user_id,
+          action:      `Updated farm '${farmName}' (status: ${payload.status}, livestock: ${selectedType?.type_name ?? 'Unknown'})`,
+          targetTable: 'farms',
+          targetId:    id,
+        });
+      } else {
+        await writeAuditLog({
+          userId:      profile?.user_id,
+          action:      `Registered new farm '${farmName}' in ${barangays.find(b => String(b.barangay_id) === String(payload.barangay_id))?.barangay_name ?? 'Unknown Barangay'} (${selectedType?.type_name ?? 'Unknown'})`,
+          targetTable: 'farms',
+          targetId:    savedFarm?.farm_id ?? null,
+        });
+      }
+    }
 
     setLoading(false);
 
@@ -279,6 +311,14 @@ export default function FarmForm() {
   async function handleDelete() {
     setDeleting(true);
     const { error } = await deleteFarm(id);
+    if (!error) {
+      await writeAuditLog({
+        userId:      profile?.user_id,
+        action:      `Deleted farm '${fields.farm_name}'`,
+        targetTable: 'farms',
+        targetId:    id,
+      });
+    }
     setDeleting(false);
     if (error) {
       setSubmitError(error.message);
@@ -649,6 +689,66 @@ export default function FarmForm() {
             </Card>
           )}
 
+          {/* ── Compliance History (Edit Mode Only) ────────────────── */}
+          {isEdit && (
+            <Card className={styles.formCard}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--color-border)' }}>
+                <h3 style={{ fontSize: 'var(--text-base)', fontWeight: 700, margin: 0 }}>Compliance & Evaluation History</h3>
+                <Button variant="ghost" size="sm" onClick={() => navigate('/compliance')}>
+                  Manage
+                </Button>
+              </div>
+              <Card.Body className={styles.cardBody} style={{ padding: 0 }}>
+                {complianceLogs.length === 0 ? (
+                  <div style={{ padding: '2rem 1rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                    <p style={{ fontSize: 'var(--text-sm)' }}>No compliance evaluations on record.</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    {complianceLogs.slice(0, 4).map((log, idx) => {
+                      const isCompliant = log.compliance_status === 'Compliant';
+                      const isSemi = log.compliance_status === 'Semi-Compliant';
+                      const dotColor = isCompliant ? 'var(--color-success)' : isSemi ? 'var(--color-warning)' : 'var(--color-danger)';
+                      const bgColor = isCompliant ? 'var(--color-success-light)' : isSemi ? 'var(--color-warning-light)' : 'var(--color-danger-light)';
+
+                      return (
+                        <div key={log.log_id} style={{
+                          display: 'flex', alignItems: 'flex-start', gap: '1rem',
+                          padding: '1rem 1.25rem', borderBottom: idx !== Math.min(complianceLogs.length, 4) - 1 ? '1px solid var(--color-border)' : 'none'
+                        }}>
+                          <div style={{
+                            width: '32px', height: '32px', borderRadius: 'var(--radius-sm)',
+                            background: bgColor, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                          }}>
+                            {isCompliant ? <CheckCircle2 size={16} color={dotColor} /> : <AlertCircle size={16} color={dotColor} />}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                              <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-text-primary)' }}>
+                                {log.compliance_status}
+                              </span>
+                              <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
+                                {new Date(log.evaluation_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                              </span>
+                            </div>
+                            {log.notes && (
+                              <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', lineHeight: 1.4, marginBottom: '6px' }}>
+                                {log.notes}
+                              </p>
+                            )}
+                            <p style={{ fontSize: '10px', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                              Assessed by {log.users?.full_name || 'Officer'}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </Card.Body>
+            </Card>
+          )}
+
           {/* ── Column 3: Map Coordinates (optional) ──────────────────── */}
           <Card className={`${styles.formCard} ${styles.fullWidth}`}>
             <Card.Header title="Map Coordinates" />
@@ -679,69 +779,6 @@ export default function FarmForm() {
               )}
             </Card.Body>
           </Card>
-
-          {/* ── Compliance History (Edit Mode Only) ────────────────── */}
-          {isEdit && (
-            <Card className={`${styles.formCard} ${styles.fullWidth}`}>
-              <Card.Header title="Compliance History" />
-              <Card.Body className={styles.cardBody}>
-                {complianceLogs.length === 0 ? (
-                  <p className={styles.coordsHint}>No compliance evaluations recorded for this farm.</p>
-                ) : (
-                  <div className={styles.tableWrapper}>
-                    <table className={styles.table}>
-                      <thead>
-                        <tr>
-                          <th className={styles.th}>Date</th>
-                          <th className={styles.th}>Status</th>
-                          <th className={styles.th}>Notes</th>
-                          <th className={styles.th}>Encoder</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {complianceLogs.map(log => (
-                          <tr key={log.log_id} className={styles.row}>
-                            <td className={styles.cell}>{new Date(log.evaluation_date).toLocaleDateString()}</td>
-                            <td className={styles.cell}>
-                              <span style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '0.3rem',
-                                padding: '0.2rem 0.65rem',
-                                borderRadius: 'var(--radius-full)',
-                                fontSize: 'var(--text-xs)',
-                                fontWeight: 600,
-                                background: log.compliance_status === 'Compliant' ? 'hsl(145,55%,92%)'
-                                  : log.compliance_status === 'Semi-Compliant' ? 'hsl(48,90%,92%)'
-                                  : 'hsl(4,74%,94%)',
-                                color: log.compliance_status === 'Compliant' ? 'hsl(145,60%,28%)'
-                                  : log.compliance_status === 'Semi-Compliant' ? 'hsl(38,80%,32%)'
-                                  : 'hsl(4,74%,40%)',
-                              }}>
-                                {log.compliance_status}
-                              </span>
-                            </td>
-                            <td className={styles.cell}>{log.notes || '—'}</td>
-                            <td className={styles.cell}>{log.users?.full_name}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-                <div style={{ marginTop: '1rem' }}>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => navigate('/compliance')}
-                  >
-                    Manage Compliance Logs
-                  </Button>
-                </div>
-              </Card.Body>
-            </Card>
-          )}
         </div>
 
         {/* ── Footer Actions ─────────────────────────────────────────── */}

@@ -10,12 +10,13 @@ import {
   BarChart2,
   Settings,
   LogOut,
-  Leaf,
+  Shield,
   ShieldCheck,
   ClipboardList,
 } from 'lucide-react';
 import { signOut } from '../../services/auth';
 import { getActiveOutbreakCount } from '../../services/outbreaks';
+import { supabase } from '../../lib/supabase';
 import styles from './Sidebar.module.css';
 
 // ---------------------------------------------------------------------------
@@ -30,8 +31,8 @@ const NAV_ITEMS = [
   { to: '/map',            icon: Map,             label: 'Disease Map' },
   { to: '/compliance',     icon: ShieldCheck,     label: 'Compliance Logs' },
   { to: '/analytics',      icon: BarChart2,       label: 'Analytics' },
-  { to: '/admin/settings', icon: Settings,        label: 'System Settings' },
-  { to: '/admin/logs',     icon: ClipboardList,   label: 'Audit Logs' },
+  { to: '/settings',      icon: Settings,        label: 'System Settings' },
+  { to: '/logs',          icon: ClipboardList,   label: 'Audit Logs' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -60,13 +61,24 @@ function OutbreakNavItem() {
   const [activeCount, setActiveCount] = useState(0);
 
   useEffect(() => {
+    // Initial fetch
     async function fetchCount() {
       const { count } = await getActiveOutbreakCount();
       setActiveCount(count);
     }
     fetchCount();
-    const interval = setInterval(fetchCount, 60_000);
-    return () => clearInterval(interval);
+
+    // Realtime subscription — re-fetch count on any INSERT, UPDATE, or DELETE
+    const channel = supabase
+      .channel('outbreak-badge')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'outbreak_alerts' },
+        () => fetchCount()
+      )
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
   }, []);
 
   return (
@@ -100,10 +112,15 @@ export default function Sidebar() {
 
   return (
     <aside className={styles.sidebar}>
-      {/* Brand / Logo */}
+      {/* Brand / CVO Institutional Crest */}
       <NavLink to="/dashboard" className={styles.brand}>
-        <Leaf size={20} className={styles.brandIcon} />
-        FarmAlert
+        <div className={styles.brandCrest}>
+          <Shield size={22} aria-hidden="true" />
+        </div>
+        <div className={styles.brandText}>
+          <span className={styles.brandName}>FarmAlert</span>
+          <span className={styles.brandSub}>City Veterinary Office</span>
+        </div>
       </NavLink>
 
       {/* Primary nav links */}

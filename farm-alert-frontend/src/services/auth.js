@@ -13,6 +13,11 @@ export async function loginWithGoogle() {
     provider: 'google',
     options: {
       redirectTo: `${window.location.origin}/dashboard`,
+      // Forces Google to always show the account screen after logout.
+      // Prevents silent re-authentication on shared/unattended CVO computers.
+      queryParams: {
+        prompt: 'login',
+      },
     },
   });
   return { data, error };

@@ -1,11 +1,12 @@
 /* ============================================================
-   DASHBOARD — Premium Design
+   DASHBOARD — Veterinary Command Center
+   Agricultural/Veterinary Design System
    ============================================================ */
 
 @keyframes pulseRed {
-  0%   { box-shadow: 0 0 0 0   rgba(239, 68, 68, 0.35); }
-  70%  { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);   }
-  100% { box-shadow: 0 0 0 0   rgba(239, 68, 68, 0);   }
+  0%   { box-shadow: 0 0 0 0   rgba(224, 122, 95, 0.4); }
+  70%  { box-shadow: 0 0 0 12px rgba(224, 122, 95, 0);   }
+  100% { box-shadow: 0 0 0 0   rgba(224, 122, 95, 0);   }
 }
 
 @keyframes slideInUp {
@@ -22,7 +23,7 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.75rem;
   animation: slideInUp 320ms ease both;
 }
 
@@ -37,18 +38,16 @@
   font-family: var(--font-display);
   font-size: var(--text-2xl);
   font-weight: 800;
-  letter-spacing: -0.03em;
-  background: linear-gradient(135deg, hsl(152, 60%, 22%) 0%, hsl(152, 50%, 38%) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  letter-spacing: -0.04em;
+  color: var(--color-brand);
 }
 
 .pageSubtitle {
-  color: var(--color-text-secondary);
+  color: var(--color-text-muted);
   font-size: var(--text-sm);
   margin-top: 0.3rem;
   font-weight: 400;
+  letter-spacing: 0.01em;
 }
 
 .headerActions {
@@ -56,81 +55,113 @@
   gap: 0.75rem;
 }
 
-/* ── Metrics Grid ──────────────────────────────────────────── */
+/* ── Metrics Grid — Asymmetric ────────────────────────────── */
 .metricsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: 1fr 1fr 1.4fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 1100px) {
+  .metricsGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .metricsGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .metricCard {
   position: relative;
   display: flex;
   align-items: center;
-  padding: 1.5rem 1.5rem 1.5rem 1.25rem;
-  gap: 1.1rem;
+  padding: 1.35rem 1.25rem;
+  gap: 1rem;
   cursor: default;
-  background: linear-gradient(145deg, #ffffff 0%, hsl(140, 20%, 98%) 100%);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-sm);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
   transition:
     transform 200ms ease,
     box-shadow 200ms ease,
-    border-color 200ms ease;
+    border-color 200ms ease,
+    background-color var(--transition-slow);
   overflow: hidden;
   animation: slideInUp 340ms ease both;
 }
 
-.metricCard::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.6) 0%, transparent 60%);
-  pointer-events: none;
+.metricCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+  border-color: var(--color-border-strong);
 }
 
-.metricCard:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--color-border-strong);
+/* Dominant card — outbreaks */
+.metricCardDominant {
+  background: var(--color-brand);
+  border-color: var(--color-brand);
+  color: var(--color-text-inverse);
+}
+
+.metricCardDominant:hover {
+  background: var(--color-brand-hover);
+  border-color: var(--color-brand-hover);
+}
+
+.metricCardDominant .metricValue {
+  color: var(--color-text-inverse) !important;
+  font-size: 2.25rem;
+}
+
+.metricCardDominant .metricLabel {
+  color: rgba(255,255,255,0.75);
+}
+
+.metricCardDominant .metricIconBox {
+  background: rgba(255,255,255,0.15) !important;
+  color: var(--color-text-inverse) !important;
+  box-shadow: none;
 }
 
 .metricIconBox {
   position: relative;
-  width: 52px;
-  height: 52px;
-  border-radius: var(--radius-lg);
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  /* Glass-like effect */
-  backdrop-filter: blur(4px);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6);
 }
 
 .metricContent {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.15rem;
   min-width: 0;
 }
 
 .metricValue {
   font-family: var(--font-display);
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 800;
   line-height: 1.1;
   letter-spacing: -0.03em;
+  color: var(--color-text-primary);
   animation: countUp 500ms ease both;
 }
 
 .metricLabel {
-  color: var(--color-text-secondary);
-  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
   font-weight: 500;
   line-height: 1.3;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -138,7 +169,13 @@
 
 .pulseDanger {
   animation: slideInUp 340ms ease both, pulseRed 2.2s 500ms infinite;
-  border-color: hsla(4, 74%, 49%, 0.4);
+  border-color: rgba(224, 122, 95, 0.5);
+}
+
+.metricCardDominant.pulseDanger {
+  background: #c0392b;
+  border-color: #c0392b;
+  animation: slideInUp 340ms ease both, pulseRed 1.8s 300ms infinite;
 }
 
 /* ── Section Headings ──────────────────────────────────────── */
@@ -154,12 +191,12 @@
   font-size: var(--text-base);
   font-weight: 700;
   color: var(--color-text-primary);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 
 .sectionLink {
-  font-size: var(--text-sm);
-  color: var(--color-brand);
+  font-size: var(--text-xs);
+  color: var(--color-brand-mid);
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
@@ -167,6 +204,8 @@
   display: inline-flex;
   align-items: center;
   gap: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .sectionLink:hover {
@@ -177,8 +216,8 @@
 /* ── Charts Row ────────────────────────────────────────────── */
 .chartsRow {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.25rem;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 1rem;
 }
 
 @media (max-width: 900px) {
@@ -190,13 +229,15 @@
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  background: linear-gradient(160deg, #ffffff 0%, hsl(140, 18%, 98.5%) 100%);
-  transition: transform 200ms ease, box-shadow 200ms ease;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transition: transform 200ms ease, box-shadow 200ms ease, background-color var(--transition-slow);
 }
 
 .chartCard:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
 }
 
 .chartTitle {
@@ -217,8 +258,8 @@
 /* ── Bottom Row ────────────────────────────────────────────── */
 .bottomRow {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 1.25rem;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 1rem;
   align-items: start;
 }
 
@@ -231,25 +272,31 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  background: linear-gradient(160deg, #ffffff 0%, hsl(140, 18%, 98.5%) 100%);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transition: background-color var(--transition-slow);
 }
 
 .mapEmbed {
   height: 380px;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   overflow: hidden;
   margin-top: 0.75rem;
-  box-shadow: inset 0 0 0 1px var(--color-border), var(--shadow-sm);
+  box-shadow: inset 0 0 0 1px var(--color-border);
 }
 
 /* ── Activity Feed ─────────────────────────────────────────── */
 .activityCard {
   overflow: hidden;
-  background: linear-gradient(160deg, #ffffff 0%, hsl(140, 18%, 98.5%) 100%);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transition: background-color var(--transition-slow);
 }
 
 .activityHeader {
-  padding: 1.1rem 1.5rem 1rem;
+  padding: 1.1rem 1.5rem 0.85rem;
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -268,7 +315,7 @@
 .activityItem {
   display: flex;
   align-items: center;
-  padding: 0.85rem 1.5rem;
+  padding: 0.75rem 1.5rem;
   border-bottom: 1px solid var(--color-border);
   gap: 0.85rem;
   cursor: pointer;
@@ -283,26 +330,24 @@
 }
 
 .activityItem:hover {
-  background-color: hsl(140, 18%, 97%);
+  background-color: var(--color-overlay);
   padding-left: 1.75rem;
 }
 
 .activityIconWrapper {
-  width: 34px;
-  height: 34px;
-  border-radius: var(--radius-full);
-  background: var(--color-canvas);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--color-overlay);
   border: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: var(--shadow-xs);
-  transition: box-shadow 150ms ease;
 }
 
 .activityItem:hover .activityIconWrapper {
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-xs);
 }
 
 .activityDetails {
@@ -320,7 +365,7 @@
 }
 
 .activitySubtitle {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--color-text-secondary);
   margin-top: 0.1rem;
   white-space: nowrap;
@@ -331,7 +376,7 @@
 .activityDate {
   font-size: var(--text-xs);
   color: var(--color-text-muted);
-  margin-top: 0.2rem;
+  margin-top: 0.15rem;
 }
 
 .activityStatus {
@@ -350,24 +395,21 @@
 }
 
 .active {
-  background: hsla(4, 74%, 49%, 0.1);
-  color: hsl(4, 74%, 40%);
-  box-shadow: 0 0 0 1px hsla(4, 74%, 49%, 0.2);
+  background: var(--badge-crit-bg);
+  color: var(--badge-crit-text);
+  box-shadow: 0 0 0 1px rgba(224, 122, 95, 0.25);
 }
 
 .acknowledged {
-  background: hsla(38, 92%, 50%, 0.1);
-  color: hsl(38, 92%, 35%);
-  box-shadow: 0 0 0 1px hsla(38, 92%, 50%, 0.2);
+  background: var(--badge-mod-bg);
+  color: var(--badge-mod-text);
+  box-shadow: 0 0 0 1px rgba(233, 196, 106, 0.25);
 }
 
-/* "Under Monitoring" badge — the class name with a space can't be used directly,
-   so we target it via the defaultStatus fallback below and override if needed. */
-
 .resolved {
-  background: hsla(145, 63%, 40%, 0.1);
-  color: hsl(145, 63%, 32%);
-  box-shadow: 0 0 0 1px hsla(145, 63%, 40%, 0.2);
+  background: var(--badge-mild-bg);
+  color: var(--badge-mild-text);
+  box-shadow: 0 0 0 1px rgba(42, 157, 143, 0.25);
 }
 
 .defaultStatus {

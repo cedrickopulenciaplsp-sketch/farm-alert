@@ -51,11 +51,11 @@ export default function MiniTrendChart({ trends = [], loading = false, height = 
       <LineChart data={trends} margin={{ top: 10, right: 20, bottom: 0, left: -10 }}>
         <defs>
           <linearGradient id="caseGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%"  stopColor="hsl(152,58%,28%)" stopOpacity={0.25} />
-            <stop offset="95%" stopColor="hsl(152,58%,28%)" stopOpacity={0} />
+            <stop offset="5%"  stopColor="#1d3557" stopOpacity={0.25} />
+            <stop offset="95%" stopColor="#1d3557" stopOpacity={0} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
         <XAxis
           dataKey="month"
           tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
@@ -78,14 +78,14 @@ export default function MiniTrendChart({ trends = [], loading = false, height = 
             fontSize: 12,
             padding: '8px 12px',
           }}
-          formatter={(value, name) => [value, name === 'cases' ? 'Cases' : 'Deaths']}
+          formatter={(value, name) => [value, name === 'cases' ? 'Reported Cases' : 'Livestock Deaths']}
         />
         <Legend
           iconType="circle"
           iconSize={8}
           formatter={name => (
             <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
-              {name === 'cases' ? 'Cases' : 'Deaths'}
+              {name === 'cases' ? 'Reported Cases' : 'Livestock Deaths'}
             </span>
           )}
           wrapperStyle={{ paddingTop: 4 }}
@@ -93,18 +93,17 @@ export default function MiniTrendChart({ trends = [], loading = false, height = 
         <Line
           type="monotone"
           dataKey="cases"
-          stroke="hsl(152,58%,28%)"
+          stroke="#1d3557"
           strokeWidth={2.5}
-          dot={{ r: 3, fill: 'hsl(152,58%,28%)' }}
+          dot={{ r: 3, fill: '#1d3557' }}
           activeDot={{ r: 5 }}
         />
         <Line
           type="monotone"
           dataKey="deaths"
-          stroke="#ef4444"
+          stroke="#e07a5f"
           strokeWidth={2}
-          strokeDasharray="4 2"
-          dot={{ r: 3, fill: '#ef4444' }}
+          dot={{ r: 3, fill: '#e07a5f' }}
           activeDot={{ r: 5 }}
         />
       </LineChart>

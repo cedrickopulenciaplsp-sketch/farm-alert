@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Plus,
-  Filter,
   Edit2,
   ShieldCheck,
   MapPin,
@@ -24,13 +23,13 @@ import styles from './ComplianceLogs.module.css';
 // Compliance status badge — colour-coded
 // ---------------------------------------------------------------------------
 const STATUS_COLORS = {
-  'Compliant':       { bg: 'hsl(145, 55%, 92%)', color: 'hsl(145, 60%, 28%)' },
-  'Semi-Compliant':  { bg: 'hsl(48,  90%, 92%)', color: 'hsl(38,  80%, 32%)' },
-  'Non-Compliant':   { bg: 'hsl(4,   74%, 94%)', color: 'hsl(4,   74%, 40%)' },
+  'Compliant':       { bg: 'var(--badge-compliant-bg)',     color: 'var(--badge-compliant-text)'     },
+  'Semi-Compliant':  { bg: 'var(--badge-semi-bg)',          color: 'var(--badge-semi-text)'          },
+  'Non-Compliant':   { bg: 'var(--badge-noncompliant-bg)',  color: 'var(--badge-noncompliant-text)'  },
 };
 
 function ComplianceBadge({ status }) {
-  const palette = STATUS_COLORS[status] ?? { bg: 'hsl(0,0%,92%)', color: 'hsl(0,0%,40%)' };
+  const palette = STATUS_COLORS[status] ?? { bg: 'var(--badge-default-bg)', color: 'var(--badge-default-text)' };
   return (
     <span
       className={styles.badge}
@@ -286,7 +285,6 @@ export default function ComplianceLogs() {
           </Select>
 
           <div className={styles.filterActions}>
-            <Filter size={15} aria-hidden="true" color="var(--color-text-muted)" />
             {hasFilters && (
               <button
                 id="clear-compliance-filters-inline-btn"

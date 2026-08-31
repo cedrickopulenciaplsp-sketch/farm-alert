@@ -12,13 +12,15 @@ import {
   AlertCircle,
   RefreshCw,
   Download,
+  BookOpen,
 } from 'lucide-react';
 import { getFarms, getBarangays, getLivestockTypes } from '../../services/farms';
 import { supabase } from '../../lib/supabase';
 import Button from '../../components/shared/Button';
 import Card from '../../components/shared/Card';
-import LoadingSpinner from '../../components/shared/LoadingSpinner';
+import SkeletonLoader from '../../components/shared/SkeletonLoader';
 import { Select } from '../../components/shared/FormElements';
+import FarmDossierModal from '../../components/farms/FarmDossierModal';
 import styles from './FarmList.module.css';
 
 // ---------------------------------------------------------------------------
@@ -39,7 +41,7 @@ function StatusBadge({ status }) {
 // ---------------------------------------------------------------------------
 // FarmRow — single table row
 // ---------------------------------------------------------------------------
-function FarmRow({ farm, onEdit }) {
+function FarmRow({ farm, onEdit, onViewDossier }) {
   const navigate = useNavigate();
 
   const handleRowClick = () => navigate(`/farms/${farm.farm_id}/edit`);
@@ -89,6 +91,15 @@ function FarmRow({ farm, onEdit }) {
         <StatusBadge status={farm.status} />
       </td>
       <td className={styles.cellAction} onClick={(e) => e.stopPropagation()}>
+        <button
+          id={`dossier-farm-${farm.farm_id}`}
+          className={styles.dossierBtn}
+          onClick={() => onViewDossier(farm.farm_id)}
+          aria-label={`View dossier for ${farm.farm_name}`}
+          title="View 360° Dossier"
+        >
+          <BookOpen size={14} />
+        </button>
         <button
           id={`edit-farm-${farm.farm_id}`}
           className={styles.editBtn}
@@ -144,11 +155,15 @@ export default function FarmList() {
   const [error, setError]               = useState(null);
   const [isExporting, setIsExporting]   = useState(false);
 
+  // Dossier modal state
+  const [dossierFarmId, setDossierFarmId] = useState(null);
+
   // Filter state
   const [search, setSearch]             = useState('');
   const [barangayId, setBarangayId]     = useState('');
   const [livestockTypeId, setLivestockTypeId] = useState('');
   const [status, setStatus]             = useState('');
+  const [sortBy, setSortBy]             = useState('name_asc');
 
   // ---------------------------------------------------------------------------
   // Load reference data (barangays, livestock types) once on mount
@@ -173,6 +188,7 @@ export default function FarmList() {
       search,
       barangayId: barangayId || null,
       status: status || null,
+      sortBy,
     });
 
     if (fetchError) {
@@ -187,7 +203,7 @@ export default function FarmList() {
       setFarms(result);
     }
     setLoading(false);
-  }, [search, barangayId, livestockTypeId, status]);
+  }, [search, barangayId, livestockTypeId, status, sortBy]);
 
   // Debounce the search input so we don't fire on every keystroke
   useEffect(() => {
@@ -203,9 +219,10 @@ export default function FarmList() {
     setBarangayId('');
     setLivestockTypeId('');
     setStatus('');
+    setSortBy('name_asc');
   };
 
-  const hasFilters = !!(search || barangayId || livestockTypeId || status);
+  const hasFilters = !!(search || barangayId || livestockTypeId || status || sortBy !== 'name_asc');
 
   // ---------------------------------------------------------------------------
   // CSV Export — invokes the server-side Edge Function
@@ -240,7 +257,7 @@ export default function FarmList() {
   // Render
   // ---------------------------------------------------------------------------
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} page-enter`}>
       {/* ── Page Header ─────────────────────────────────────────────────── */}
       <header className={styles.pageHeader}>
         <div>
@@ -352,9 +369,23 @@ export default function FarmList() {
             className={styles.filterSelect}
           >
             <option value="">All Status</option>
-            <option value="Active">Active</option>
+            <option value="Active/Quarantine">Active / Quarantine</option>
             <option value="Inactive">Inactive</option>
-            <option value="Quarantine">Quarantine</option>
+            <option value="Temporarily Closed">Temporarily Closed</option>
+          </Select>
+
+          {/* Sort By */}
+          <Select
+            id="filter-sort"
+            label=""
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            aria-label="Sort farms"
+            className={styles.sortSelect}
+          >
+            <option value="name_asc">Name (A – Z)</option>
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
           </Select>
 
           {/* Filter icon + clear */}
@@ -391,9 +422,9 @@ export default function FarmList() {
           </Card.Body>
         </Card>
       ) : loading ? (
-        <div className={styles.loadingWrapper}>
-          <LoadingSpinner size={36} />
-        </div>
+        <Card className={styles.tableCard}>
+          <SkeletonLoader rows={6} columns={7} type="table" />
+        </Card>
       ) : farms.length === 0 ? (
         <EmptyState hasFilters={hasFilters} onClear={handleClearFilters} />
       ) : (
@@ -417,6 +448,7 @@ export default function FarmList() {
                     key={farm.farm_id}
                     farm={farm}
                     onEdit={(id) => navigate(`/farms/${id}/edit`)}
+                    onViewDossier={(id) => setDossierFarmId(id)}
                   />
                 ))}
               </tbody>
@@ -431,6 +463,14 @@ export default function FarmList() {
             </span>
           </div>
         </Card>
+      )}
+
+      {/* ── Farm 360° Dossier Modal ──────────────────────────────────────── */}
+      {dossierFarmId && (
+        <FarmDossierModal
+          farmId={dossierFarmId}
+          onClose={() => setDossierFarmId(null)}
+        />
       )}
     </div>
   );

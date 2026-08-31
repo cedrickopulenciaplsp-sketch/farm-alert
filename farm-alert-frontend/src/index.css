@@ -1,38 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Sora:wght@400;600;700;800&display=swap');
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
 /* ============================================================
    FARMALERT DESIGN TOKENS
    Edit here to restyle the entire product.
-   Brand: Deep agricultural green — intentional for a
-   government livestock monitoring system.
+   Brand: Deep agricultural navy & earthy tones.
    ============================================================ */
 :root {
-  /* Brand — 10% accent (agricultural green) */
-  --color-brand:        hsl(152, 58%, 28%);
-  --color-brand-hover:  hsl(152, 58%, 22%);
-  --color-brand-light:  hsl(152, 55%, 94%);
-  --color-brand-mid:    hsl(152, 45%, 50%);
+  /* Brand — Deep Navy */
+  --color-brand:        #1d3557;
+  --color-brand-hover:  #14253d;
+  --color-brand-light:  #e5ecf5;
+  --color-brand-mid:    #457b9d;
 
   /* Surfaces — 60% canvas, 30% secondary */
-  --color-canvas:   hsl(140, 12%, 97%);   /* Page background */
-  --color-surface:  hsl(0, 0%, 100%);     /* Cards / panels */
-  --color-overlay:  hsl(140, 10%, 95%);   /* Sidebar, input bg */
+  --color-canvas:   #f7f9f9;   /* Page background */
+  --color-surface:  #ffffff;   /* Cards / panels */
+  --color-overlay:  #f0f4f8;   /* Sidebar, input bg */
 
   /* Text */
-  --color-text-primary:   hsl(160, 20%, 10%);
-  --color-text-secondary: hsl(160, 10%, 38%);
-  --color-text-muted:     hsl(160,  8%, 58%);
-  --color-text-inverse:   hsl(0, 0%, 100%);
+  --color-text-primary:   #1a202c;
+  --color-text-secondary: #4a5568;
+  --color-text-muted:     #718096;
+  --color-text-inverse:   #ffffff;
 
   /* Borders */
-  --color-border:        hsl(150, 14%, 84%);
-  --color-border-strong: hsl(150, 14%, 68%);
+  --color-border:        #e2e8f0;
+  --color-border-strong: #cbd5e0;
 
   /* Semantic */
-  --color-danger:       hsl(4, 74%, 49%);
-  --color-danger-light: hsl(4, 74%, 96%);
-  --color-success:      hsl(145, 63%, 40%);
+  --color-danger:       #e07a5f; /* Terracotta */
+  --color-danger-light: #fbeae5;
+  --color-success:      #2a9d8f; /* Earthy Green */
+  --color-success-light:#e2f4f2;
+  --color-warning:      #e9c46a; /* Ochre */
+  --color-warning-light:#fdf8ec;
 
   /* Shadows (subtle — never dark) */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -53,6 +56,10 @@
   --transition-base: 180ms ease;
   --transition-slow: 320ms ease;
 
+  /* Easing curves */
+  --ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out-quad: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
   /* Type scale */
   --text-xs:   11px;
   --text-sm:   13px;
@@ -64,8 +71,110 @@
   --text-3xl:  40px;
 
   /* Font families */
-  --font-body:    'Inter', system-ui, sans-serif;
-  --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-body:    'IBM Plex Sans', system-ui, sans-serif;
+  --font-display: 'Sora', system-ui, sans-serif;
+
+  /* ── Badge / Status tokens (light defaults) ───────────────────────────── */
+  /* Severity */
+  --badge-mild-bg:      var(--color-success-light);
+  --badge-mild-text:    var(--color-success);
+  --badge-mod-bg:       var(--color-warning-light);
+  --badge-mod-text:     #b8860b;
+  --badge-sev-bg:       #fbd38d;
+  --badge-sev-text:     #975a16;
+  --badge-crit-bg:      var(--color-danger-light);
+  --badge-crit-text:    var(--color-danger);
+  --badge-default-bg:   #edf2f7;
+  --badge-default-text: #4a5568;
+
+  /* Compliance */
+  --badge-compliant-bg:     var(--color-success-light);
+  --badge-compliant-text:   var(--color-success);
+  --badge-semi-bg:          var(--color-warning-light);
+  --badge-semi-text:        #b8860b;
+  --badge-noncompliant-bg:  var(--color-danger-light);
+  --badge-noncompliant-text:var(--color-danger);
+
+  /* Dashboard stat icon boxes */
+  --icon-green-bg:   var(--color-success-light);
+  --icon-green-text: var(--color-success);
+  --icon-amber-bg:   var(--color-warning-light);
+  --icon-amber-text: #b8860b;
+  --icon-red-bg:     var(--color-danger-light);
+  --icon-red-text:   hsl(4,   74%, 44%);
+  --icon-orange-bg:  hsl(0,   72%, 93%);
+  --icon-orange-text:hsl(0,   72%, 38%);
+}
+
+/* ============================================================
+   DARK MODE OVERRIDES
+   Applied when <html class="dark"> is set by ThemeContext.
+   ============================================================ */
+html.dark {
+  /* Brand — navy brightened for dark bg */
+  --color-brand:        #6ea4c9;
+  --color-brand-hover:  #8bbbd8;
+  --color-brand-light:  rgba(69, 123, 157, 0.15);
+  --color-brand-mid:    #457b9d;
+
+  /* Surfaces — deep dark slate */
+  --color-canvas:   #0f1419;
+  --color-surface:  #1a2027;
+  --color-overlay:  #242d35;
+
+  /* Text */
+  --color-text-primary:   #e8ecef;
+  --color-text-secondary: #9ba8b5;
+  --color-text-muted:     #6b7b8a;
+  --color-text-inverse:   #0f1419;
+
+  /* Borders */
+  --color-border:        #2a3640;
+  --color-border-strong: #3d4f5f;
+
+  /* Semantic */
+  --color-danger:       #e8947d;
+  --color-danger-light: rgba(224, 122, 95, 0.15);
+  --color-success:      #4fbdaf;
+  --color-success-light:rgba(42, 157, 143, 0.15);
+  --color-warning:      #f0d68a;
+  --color-warning-light:rgba(233, 196, 106, 0.15);
+
+  /* Shadows */
+  --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5), 0 4px 8px rgba(0, 0, 0, 0.35);
+
+  /* Badge / Status tokens */
+  --badge-mild-bg:     rgba(42, 157, 143, 0.15);
+  --badge-mild-text:   #4fbdaf;
+  --badge-mod-bg:      rgba(233, 196, 106, 0.15);
+  --badge-mod-text:    #f0d68a;
+  --badge-sev-bg:      rgba(233, 196, 106, 0.2);
+  --badge-sev-text:    #f0d68a;
+  --badge-crit-bg:     rgba(224, 122, 95, 0.15);
+  --badge-crit-text:   #e8947d;
+  --badge-default-bg:  rgba(255,255,255,0.08);
+  --badge-default-text:#9ba8b5;
+
+  /* Compliance */
+  --badge-compliant-bg:    rgba(42, 157, 143, 0.15);
+  --badge-compliant-text:  #4fbdaf;
+  --badge-semi-bg:         rgba(233, 196, 106, 0.15);
+  --badge-semi-text:       #f0d68a;
+  --badge-noncompliant-bg: rgba(224, 122, 95, 0.15);
+  --badge-noncompliant-text:#e8947d;
+
+  /* Dashboard stat icon boxes */
+  --icon-green-bg:   rgba(42, 157, 143, 0.15);
+  --icon-green-text: #4fbdaf;
+  --icon-amber-bg:   rgba(233, 196, 106, 0.15);
+  --icon-amber-text: #f0d68a;
+  --icon-red-bg:     rgba(224, 122, 95, 0.15);
+  --icon-red-text:   #e8947d;
+  --icon-orange-bg:  rgba(224, 122, 95, 0.2);
+  --icon-orange-text:#e8947d;
 }
 
 /* ============================================================
@@ -109,6 +218,8 @@ body {
   background-color: var(--color-canvas);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Smooth theme transition */
+  transition: background-color var(--transition-slow), color var(--transition-slow);
 }
 
 /* Global interactive transitions */
@@ -153,6 +264,80 @@ button, a, [role="button"], input, select, textarea {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-text-muted);
+}
+
+/* ============================================================
+   GLOBAL PAGE TRANSITION
+   Add .page-enter to the top-level page <div> to animate
+   each page in on mount.
+   ============================================================ */
+@keyframes fa-page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter {
+  animation: fa-page-enter 280ms var(--ease-out-quad) both;
+}
+
+/* Staggered children inside a .page-enter container */
+.page-enter > * {
+  animation: fa-page-enter 300ms var(--ease-out-quad) both;
+}
+.page-enter > *:nth-child(1) { animation-delay: 0ms;   }
+.page-enter > *:nth-child(2) { animation-delay: 40ms;  }
+.page-enter > *:nth-child(3) { animation-delay: 80ms;  }
+.page-enter > *:nth-child(4) { animation-delay: 120ms; }
+.page-enter > *:nth-child(5) { animation-delay: 160ms; }
+.page-enter > *:nth-child(6) { animation-delay: 200ms; }
+
+/* ============================================================
+   SKELETON LOADER SHIMMER
+   ============================================================ */
+@keyframes fa-skeleton-shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+
+.skeleton {
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--color-overlay) 25%,
+    var(--color-border)  50%,
+    var(--color-overlay) 75%
+  );
+  background-size: 1200px 100%;
+  animation: fa-skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+/* ============================================================
+   FOCUS RING UTILITY
+   Apply .focus-ring to interactive elements for consistent
+   keyboard accessibility styling.
+   ============================================================ */
+.focus-ring:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+/* ============================================================
+   TABLE ROW ENTER ANIMATION
+   ============================================================ */
+@keyframes fa-row-enter {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.row-enter {
+  animation: fa-row-enter 220ms var(--ease-out-quad) both;
 }
 
 /* ============================================================

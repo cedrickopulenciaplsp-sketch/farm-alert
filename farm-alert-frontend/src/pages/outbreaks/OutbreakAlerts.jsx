@@ -17,7 +17,7 @@ import { getOutbreaks, updateOutbreak } from '../../services/outbreaks';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/shared/Button';
 import Card from '../../components/shared/Card';
-import LoadingSpinner from '../../components/shared/LoadingSpinner';
+import SkeletonLoader from '../../components/shared/SkeletonLoader';
 import Modal from '../../components/shared/Modal';
 import { Select } from '../../components/shared/FormElements';
 import styles from './OutbreakAlerts.module.css';
@@ -75,11 +75,20 @@ function SummaryStats({ outbreaks }) {
   );
 }
 
+const DEFAULT_PROTOCOL = [
+  { id: 'step_1', text: 'Issue 1km Animal Movement Ban & Checkpoints', completed: false },
+  { id: 'step_2', text: 'Notify Barangay Captain & Municipal Health', completed: false },
+  { id: 'step_3', text: 'Dispatch CVO Disinfection & Biosecurity Team', completed: false },
+  { id: 'step_4', text: 'Conduct Ring Surveillance in 3km Buffer', completed: false },
+  { id: 'step_5', text: 'Issue Terminal Disinfection Clearance', completed: false },
+];
+
 // ---------------------------------------------------------------------------
 // OutbreakCard — individual alert card
 // ---------------------------------------------------------------------------
-function OutbreakCard({ outbreak, onAction }) {
+function OutbreakCard({ outbreak, onAction, onChecklistUpdate }) {
   const [actioning, setActioning] = useState(false);
+  const [checklistUpdating, setChecklistUpdating] = useState(false);
 
   const isActive       = outbreak.status === 'Active';
   const isAcknowledged = outbreak.status === 'Acknowledged';
@@ -95,6 +104,32 @@ function OutbreakCard({ outbreak, onAction }) {
     setActioning(true);
     await onAction(outbreak.outbreak_id, newStatus);
     setActioning(false);
+  }
+
+  // Seed checklist from prop — fall back to DEFAULT_PROTOCOL if empty/null
+  const initChecklist = () => {
+    if (Array.isArray(outbreak.response_checklist) && outbreak.response_checklist.length > 0) {
+      return outbreak.response_checklist;
+    }
+    return DEFAULT_PROTOCOL.map(item => ({ ...item }));
+  };
+
+  const [checklist, setChecklist] = useState(initChecklist);
+
+  const completedCount = checklist.filter(c => c.completed).length;
+  const progressPercent = Math.round((completedCount / checklist.length) * 100);
+
+  async function toggleCheck(stepId) {
+    // Immediately update local state so checkbox responds visually
+    const updated = checklist.map(item =>
+      item.id === stepId ? { ...item, completed: !item.completed } : item
+    );
+    setChecklist(updated);
+
+    // Persist to Supabase in background
+    setChecklistUpdating(true);
+    await onChecklistUpdate(outbreak.outbreak_id, updated);
+    setChecklistUpdating(false);
   }
 
   return (
@@ -153,6 +188,37 @@ function OutbreakCard({ outbreak, onAction }) {
           )}
         </div>
 
+        {/* ── Protocol Checklist Section ── */}
+        <div className={styles.checklistSection}>
+          <div className={styles.checklistHeader}>
+            <h4 className={styles.checklistTitle}>Containment Protocol</h4>
+            <span className={styles.checklistProgressText}>{progressPercent}% Completed</span>
+          </div>
+          <div className={styles.progressBarTrack}>
+            <div
+              className={styles.progressBarFill}
+              style={{ width: `${progressPercent}%`, backgroundColor: progressPercent === 100 ? 'var(--color-success)' : 'var(--color-brand)' }}
+            />
+          </div>
+          
+          <ul className={styles.checklist}>
+            {checklist.map(item => (
+              <li key={item.id} className={styles.checklistItem}>
+                <label className={`${styles.checkboxLabel} ${item.completed ? styles.checkboxCompleted : ''}`}>
+                  <input
+                    type="checkbox"
+                    checked={item.completed}
+                    onChange={() => toggleCheck(item.id)}
+                    disabled={checklistUpdating || isResolved}
+                    className={styles.checkboxInput}
+                  />
+                  <span className={styles.checkboxText}>{item.text}</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </div>
+
         {/* Action buttons */}
         {!isResolved && (
           <div className={styles.cardActions}>
@@ -175,6 +241,8 @@ function OutbreakCard({ outbreak, onAction }) {
                 size="sm"
                 loading={actioning}
                 onClick={() => handleAction('Resolved')}
+                disabled={progressPercent < 100}
+                title={progressPercent < 100 ? "Complete the protocol checklist before resolving" : "Resolve Outbreak"}
               >
                 <CheckCircle2 size={13} aria-hidden="true" />
                 Mark Resolved
@@ -235,8 +303,15 @@ function ConfirmModal({ isOpen, onConfirm, onCancel, busy }) {
       }
     >
       <p className={styles.confirmText}>
-        Resolving this outbreak marks it as contained. This action can be reviewed
-        in the audit log but cannot be automatically undone.
+        Resolving this outbreak will automatically:
+      </p>
+      <ul className={styles.confirmList}>
+        <li>Mark all linked <strong>disease reports</strong> for this disease as <strong>Resolved</strong>.</li>
+        <li>Reset affected <strong>farms</strong> back to <strong>Active</strong> status — unless they have other active disease reports.</li>
+        <li>Update the <strong>map pins</strong> to reflect the new farm statuses.</li>
+      </ul>
+      <p className={styles.confirmText} style={{ marginTop: '0.75rem' }}>
+        This action cannot be automatically undone.
       </p>
     </Modal>
   );
@@ -303,6 +378,20 @@ export default function OutbreakAlerts() {
     return { error: updateError };
   }
 
+  async function handleChecklistUpdate(outbreakId, updatedChecklist) {
+    const payload = { response_checklist: updatedChecklist };
+    const { error } = await updateOutbreak(outbreakId, payload);
+    if (!error) {
+      setOutbreaks(prev =>
+        prev.map(o =>
+          o.outbreak_id === outbreakId
+            ? { ...o, response_checklist: updatedChecklist }
+            : o
+        )
+      );
+    }
+  }
+
   // Confirm modal — resolve
   async function confirmResolve() {
     if (!pendingResolve) return;
@@ -326,7 +415,7 @@ export default function OutbreakAlerts() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page} page-enter`}>
 
       {/* ── Page Header ────────────────────────────────────────────────────── */}
       <header className={styles.pageHeader}>
@@ -395,9 +484,7 @@ export default function OutbreakAlerts() {
           </Card.Body>
         </Card>
       ) : loading ? (
-        <div className={styles.loadingWrapper}>
-          <LoadingSpinner size={36} />
-        </div>
+        <SkeletonLoader rows={4} columns={4} type="card" />
       ) : sorted.length === 0 ? (
         <EmptyState hasFilters={hasFilters} onClear={() => setStatusFilter('')} />
       ) : (
@@ -411,6 +498,7 @@ export default function OutbreakAlerts() {
               key={outbreak.outbreak_id}
               outbreak={outbreak}
               onAction={handleAction}
+              onChecklistUpdate={handleChecklistUpdate}
             />
           ))}
         </div>

@@ -1,0 +1,432 @@
+/* ============================================================
+   FarmDossierModal.module.css
+   Farm 360° Dossier — veterinary identity palette
+   ============================================================ */
+
+/* ── Backdrop ──────────────────────────────────────────────── */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 20, 25, 0.60);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 1rem;
+  animation: fadeIn 180ms ease both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Panel — slides in from the right ─────────────────────── */
+.panel {
+  width: 480px;
+  max-width: 100vw;
+  height: calc(100vh - 2rem);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideIn 220ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ── Header ────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+  background: var(--color-brand);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.headerIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.headerEyebrow {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.1rem;
+}
+
+.headerTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+.closeBtn {
+  width: 34px;
+  height: 34px;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-md);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.closeBtn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ── Body (scrollable) ─────────────────────────────────────── */
+.body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Loading / Error States ────────────────────────────────── */
+.loadingState,
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  height: 100%;
+  padding: 3rem;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+.errorState { color: var(--color-danger); }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spinner {
+  animation: spin 0.9s linear infinite;
+  color: var(--color-brand);
+}
+
+/* ── Profile Section ───────────────────────────────────────── */
+.profileSection {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-overlay);
+}
+
+.profileTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  gap: 0.5rem;
+}
+
+.farmStatusBadge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+}
+
+.farmStatusActive     { background: var(--badge-mild-bg);    color: var(--badge-mild-text); }
+.farmStatusQuarantine { background: var(--badge-crit-bg);    color: var(--badge-crit-text); }
+.farmStatusClosed     { background: var(--badge-default-bg); color: var(--badge-default-text); }
+.farmStatusDefault    { background: var(--badge-default-bg); color: var(--badge-default-text); }
+
+.farmType {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-top: 0.35rem;
+}
+
+.coordsBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-xs);
+  color: var(--color-brand-mid);
+  font-family: monospace;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  text-decoration: none;
+  transition: background var(--transition-fast);
+  white-space: nowrap;
+}
+
+.coordsBadge:hover { background: var(--color-brand-light); }
+
+/* ── Info Grid ─────────────────────────────────────────────── */
+.infoGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.infoRow {
+  display: grid;
+  grid-template-columns: 18px auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.infoIcon {
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.infoLabel {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.infoValue {
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  font-weight: 500;
+  text-align: right;
+}
+
+/* ── Stats Strip ───────────────────────────────────────────── */
+.statsStrip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.statItem {
+  padding: 1rem 0.75rem;
+  text-align: center;
+  border-right: 1px solid var(--color-border);
+}
+.statItem:last-child { border-right: none; }
+
+.statValue {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.statLabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.statDanger .statValue { color: var(--color-danger); }
+
+/* ── Timeline Section ──────────────────────────────────────── */
+.timelineSection {
+  padding: 1.25rem 1.5rem;
+  flex: 1;
+}
+
+.timelineTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.timelineTitleIcon { color: var(--color-brand-mid); }
+
+.timelineTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  flex: 1;
+}
+
+.timelineCount {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+/* ── Timeline empty state ──────────────────────────────────── */
+.timelineEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.timelineEmptyIcon { color: var(--color-success); opacity: 0.6; }
+
+.timelineEmptySubtext {
+  font-size: var(--text-xs);
+  color: var(--color-success);
+  font-weight: 500;
+}
+
+/* ── Timeline list ─────────────────────────────────────────── */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.timelineItem {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 0;
+}
+
+.timelineIconCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.timelineDot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.dotActive   { border-color: var(--color-danger);  background: var(--color-danger-light);  }
+.dotResolved { border-color: var(--color-success); background: var(--color-success-light); }
+
+.iconActive   { color: var(--color-danger);  }
+.iconResolved { color: var(--color-success); }
+.iconDefault  { color: var(--color-text-muted); }
+
+.timelineConnector {
+  width: 2px;
+  flex: 1;
+  background: var(--color-border);
+  margin: 2px 0;
+  min-height: 16px;
+}
+
+.timelineContent {
+  padding: 0 0 1.25rem 0.85rem;
+}
+
+.timelineHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.timelineDisease {
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+}
+
+/* ── Severity badges ───────────────────────────────────────── */
+.badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.sevMild     { background: var(--badge-mild-bg);    color: var(--badge-mild-text);  }
+.sevModerate { background: var(--badge-mod-bg);     color: var(--badge-mod-text);   }
+.sevSevere   { background: var(--badge-sev-bg);     color: var(--badge-sev-text);   }
+.sevCritical { background: var(--badge-crit-bg);    color: var(--badge-crit-text);  }
+
+/* ── Timeline meta ─────────────────────────────────────────── */
+.timelineMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.timelineMeta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.mortalityBadge {
+  color: var(--color-danger) !important;
+  font-weight: 600;
+}
+
+.timelineNotes {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  padding: 0.5rem 0.75rem;
+  background: var(--color-overlay);
+  border-left: 3px solid var(--color-border-strong);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin-bottom: 0.35rem;
+}
+
+.timelineEncodedBy {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-style: italic;
+}

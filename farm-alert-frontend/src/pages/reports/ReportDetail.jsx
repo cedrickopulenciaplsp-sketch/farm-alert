@@ -16,6 +16,8 @@ import {
   Clock,
 } from 'lucide-react';
 import { getReportById, updateReport } from '../../services/reports';
+import { writeAuditLog } from '../../services/admin';
+import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/shared/Button';
 import Card from '../../components/shared/Card';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
@@ -25,17 +27,17 @@ import styles from './ReportDetail.module.css';
 // Severity colour map
 // ---------------------------------------------------------------------------
 const SEVERITY_COLORS = {
-  Low:      { bg: 'hsl(145, 55%, 92%)', color: 'hsl(145, 60%, 28%)' },
-  Medium:   { bg: 'hsl(48,  90%, 92%)', color: 'hsl(38,  80%, 32%)' },
-  High:     { bg: 'hsl(25,  90%, 92%)', color: 'hsl(25,  80%, 35%)' },
-  Critical: { bg: 'hsl(4,   74%, 94%)', color: 'hsl(4,   74%, 40%)' },
+  Low:      { bg: 'var(--badge-mild-bg)',  color: 'var(--badge-mild-text)'  },
+  Medium:   { bg: 'var(--badge-mod-bg)',   color: 'var(--badge-mod-text)'   },
+  High:     { bg: 'var(--badge-sev-bg)',   color: 'var(--badge-sev-text)'   },
+  Critical: { bg: 'var(--badge-crit-bg)',  color: 'var(--badge-crit-text)'  },
 };
 
 // ---------------------------------------------------------------------------
 // Severity badge
 // ---------------------------------------------------------------------------
 function SeverityBadge({ severity }) {
-  const p = SEVERITY_COLORS[severity] ?? { bg: 'hsl(0,0%,92%)', color: 'hsl(0,0%,40%)' };
+  const p = SEVERITY_COLORS[severity] ?? { bg: 'var(--badge-default-bg)', color: 'var(--badge-default-text)' };
   return (
     <span className={styles.severityBadge} style={{ background: p.bg, color: p.color }}>
       <span className={styles.badgeDot} style={{ background: p.color }} aria-hidden="true" />
@@ -91,6 +93,7 @@ export default function ReportDetail() {
   const [error,       setError]       = useState(null);
   const [updating,    setUpdating]    = useState(false);
   const [updateError, setUpdateError] = useState('');
+  const { profile } = useAuth();
 
   // ── Load report ───────────────────────────────────────────────────────────
   async function loadReport() {
@@ -117,6 +120,13 @@ export default function ReportDetail() {
     } else {
       // Merge updated fields so we don't need a full re-fetch
       setReport(prev => ({ ...prev, ...data, status: newStatus }));
+      // Audit log — human-readable description
+      await writeAuditLog({
+        userId:      profile?.user_id,
+        action:      `Changed report #${id.slice(0, 8)} status to '${newStatus}' (${report?.disease_name ?? 'Disease'} — ${report?.farm_name ?? 'Farm'})`,
+        targetTable: 'disease_reports',
+        targetId:    id,
+      });
     }
     setUpdating(false);
   }
