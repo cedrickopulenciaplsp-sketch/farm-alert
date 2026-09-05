@@ -39,6 +39,8 @@ function resolveIcon(farm) {
   return safeIcon;
 }
 
+import MapLockControl from './MapLockControl';
+
 // Center of San Pablo City
 const MAP_CENTER = [14.0722, 121.3253];
 
@@ -57,6 +59,7 @@ export default function MapWidget({ farms = [], zoom = 13, className = '', style
     <MapContainer
       center={MAP_CENTER}
       zoom={zoom}
+      scrollWheelZoom={false} // Initially false, managed by MapLockControl
       className={className}
       style={{ height: '100%', width: '100%', ...style }}
     >
@@ -64,6 +67,9 @@ export default function MapWidget({ farms = [], zoom = 13, className = '', style
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+
+      {/* Lock Toggle for Scroll Zoom */}
+      <MapLockControl />
 
       {/* ── Buffer Zones (Underneath Markers) ── */}
       {validFarms.map(farm => {

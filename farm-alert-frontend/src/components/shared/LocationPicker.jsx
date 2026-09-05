@@ -11,6 +11,8 @@ L.Icon.Default.mergeOptions({
   shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
+import MapLockControl from '../map/MapLockControl';
+
 // Default center: San Pablo City, Laguna
 const DEFAULT_CENTER = [14.0722, 121.3253];
 const DEFAULT_ZOOM   = 13;
@@ -152,13 +154,14 @@ export default function LocationPicker({ latitude, longitude, onChange, disabled
       <MapContainer
         center={position || DEFAULT_CENTER}
         zoom={DEFAULT_ZOOM}
-        scrollWheelZoom={true}
+        scrollWheelZoom={false} // Initially false, managed by MapLockControl
         className={styles.map}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        <MapLockControl />
         {position && <Marker position={position} />}
         {position && <MapFlyTo position={position} />}
         {!disabled && <MapEventHandler onLocationSelect={handleMapClick} />}

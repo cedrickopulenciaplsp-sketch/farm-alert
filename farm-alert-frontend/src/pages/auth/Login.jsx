@@ -456,7 +456,7 @@ export default function Login() {
                   lineHeight: 1.5,
                 }}>
                   Only <strong style={{ color: '#1a4731', fontWeight: 600 }}>
-                    sanielken2@gmail.com
+                    sanpablo.cvo.farmalert@gmail.com
                   </strong> may access this system.
                 </p>
               </div>
