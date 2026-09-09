@@ -383,3 +383,12 @@ export async function getComplianceBreakdown() {
   const result = Object.entries(map).map(([status, count]) => ({ status, count }));
   return { data: result, error: null };
 }
+
+/**
+ * Fetch recent login events (timestamp + IP) from the secure RPC.
+ */
+export async function getRecentLogins() {
+  const { data, error } = await supabase.rpc('get_recent_logins');
+  if (error) return { data: null, error };
+  return { data: data ?? [], error: null };
+}

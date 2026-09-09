@@ -14,7 +14,6 @@ import ReportDetail from './pages/reports/ReportDetail';
 import OutbreakAlerts from './pages/outbreaks/OutbreakAlerts';
 import Dashboard from './pages/Dashboard/Dashboard';
 import DiseaseMap from './pages/Map/DiseaseMap';
-import Analytics from './pages/Analytics/Analytics';
 import ComplianceLogs from './pages/compliance/ComplianceLogs';
 import SystemSettings from './pages/admin/SystemSettings';
 import AuditLogs from './pages/admin/AuditLogs';
@@ -67,7 +66,7 @@ function App() {
               <Route path="/outbreaks"      element={<OutbreakAlerts />} />
               <Route path="/map"            element={<DiseaseMap />} />
               <Route path="/compliance"            element={<ComplianceLogs />} />
-              <Route path="/analytics"             element={<Analytics />} />
+              <Route path="/analytics"             element={<Navigate to="/dashboard" replace />} />
 
               {/* Settings & Audit Logs — no longer behind AdminLayout (Phase 10 pivot) */}
               <Route path="/settings" element={<SystemSettings />} />

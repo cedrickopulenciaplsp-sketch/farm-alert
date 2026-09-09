@@ -30,7 +30,6 @@ const NAV_ITEMS = [
   { to: '/outbreaks',      icon: AlertTriangle,   label: 'Outbreak Alerts' },
   { to: '/map',            icon: Map,             label: 'Disease Map' },
   { to: '/compliance',     icon: ShieldCheck,     label: 'Compliance Logs' },
-  { to: '/analytics',      icon: BarChart2,       label: 'Analytics' },
   { to: '/settings',      icon: Settings,        label: 'System Settings' },
   { to: '/logs',          icon: ClipboardList,   label: 'Audit Logs' },
 ];
