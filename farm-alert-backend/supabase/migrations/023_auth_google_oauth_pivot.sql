@@ -2,7 +2,7 @@
 -- Migration 023: Google OAuth Single-Account Pivot
 -- =============================================================================
 -- 1. Adds a BEFORE INSERT trigger on auth.users that rejects any Google sign-in
---    from an email address other than sanpablocityveterinary@gmail.com.
+--    from an email address other than the whitelisted team accounts.
 -- 2. Adds an AFTER INSERT trigger on auth.users that automatically syncs the
 --    newly authenticated Google user into the public.users table with the
 --    default admin role, so manual user creation is no longer needed.
@@ -20,7 +20,7 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  IF NEW.email IS DISTINCT FROM 'sanpablocityveterinary@gmail.com' THEN
+  IF NEW.email NOT IN ('sanielken2@gmail.com', 'mjhorcelt@gmail.com') THEN
     RAISE EXCEPTION 'Access restricted to authorized personnel only.';
   END IF;
   RETURN NEW;
