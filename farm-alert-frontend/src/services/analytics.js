@@ -385,10 +385,18 @@ export async function getComplianceBreakdown() {
 }
 
 /**
- * Fetch recent login events (timestamp + IP) from the secure RPC.
+ * Fetch recent login events (timestamp + IP) from the public login_logs table.
  */
 export async function getRecentLogins() {
-  const { data, error } = await supabase.rpc('get_recent_logins');
-  if (error) return { data: null, error };
+  const { data, error } = await supabase
+    .from('login_logs')
+    .select('login_time, ip_address')
+    .order('login_time', { ascending: false })
+    .limit(10);
+    
+  if (error) {
+    console.error("Error fetching login logs:", error);
+    return { data: null, error };
+  }
   return { data: data ?? [], error: null };
 }

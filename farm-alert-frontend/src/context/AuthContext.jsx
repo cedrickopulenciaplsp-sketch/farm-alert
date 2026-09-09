@@ -64,6 +64,27 @@ export function AuthProvider({ children }) {
         setRole(parseRole(newSession, null));
         if (!newSession?.user) setProfileLoaded(true);
         fetchProfile(newSession?.user ?? null);
+
+        // Record IP on actual login
+        if (_event === 'SIGNED_IN' && newSession?.user) {
+          fetch('https://api.ipify.org?format=json')
+            .then(res => res.json())
+            .then(data => {
+              if (data.ip) {
+                // Save to dedicated Security Logs table
+                supabase.from('login_logs').insert([{ ip_address: data.ip }]).then();
+                
+                // Save to main Audit Logs page
+                supabase.from('audit_logs').insert([{
+                  user_id: newSession.user.id,
+                  action: `System Login (IP: ${data.ip})`,
+                  target_table: 'system',
+                  target_id: null
+                }]).then();
+              }
+            })
+            .catch(err => console.error("Could not fetch IP:", err));
+        }
       }
     );
 
