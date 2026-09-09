@@ -455,9 +455,9 @@ export default function Login() {
                   fontSize: '0.8rem', color: '#64748b',
                   lineHeight: 1.5,
                 }}>
-                  Only <strong style={{ color: '#1a4731', fontWeight: 600 }}>
-                    sanpablocityveterinary@gmail.com
-                  </strong> may access this system.
+                  Only authorized team accounts may access this system:<br />
+                  <strong style={{ color: '#1a4731', fontWeight: 600 }}>sanielken2@gmail.com</strong><br />
+                  <strong style={{ color: '#1a4731', fontWeight: 600 }}>mjhorcelt@gmail.com</strong>
                 </p>
               </div>
             </div>
