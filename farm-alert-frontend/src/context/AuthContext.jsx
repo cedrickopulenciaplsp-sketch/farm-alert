@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { getUserProfile } from '../services/auth';
+import { writeAuditLog } from '../services/admin';
 
 // ---------------------------------------------------------------------------
 // Context definition
@@ -65,22 +66,46 @@ export function AuthProvider({ children }) {
         if (!newSession?.user) setProfileLoaded(true);
         fetchProfile(newSession?.user ?? null);
 
-        // Record IP on actual login
+        // Record IP + device on actual login
         if (_event === 'SIGNED_IN' && newSession?.user) {
+          // Detect browser & OS from User-Agent
+          const ua = navigator.userAgent;
+          const getBrowser = () => {
+            if (ua.includes('Edg/'))    return 'Edge';
+            if (ua.includes('OPR/') || ua.includes('Opera')) return 'Opera';
+            if (ua.includes('Chrome'))  return 'Chrome';
+            if (ua.includes('Firefox')) return 'Firefox';
+            if (ua.includes('Safari'))  return 'Safari';
+            return 'Unknown Browser';
+          };
+          const getOS = () => {
+            if (ua.includes('Windows'))    return 'Windows';
+            if (ua.includes('Mac OS'))     return 'macOS';
+            if (ua.includes('Android'))    return 'Android';
+            if (ua.includes('iPhone') || ua.includes('iPad')) return 'iOS';
+            if (ua.includes('Linux'))      return 'Linux';
+            return 'Unknown OS';
+          };
+          const deviceInfo = `${getBrowser()} on ${getOS()}`;
+
           fetch('https://api.ipify.org?format=json')
             .then(res => res.json())
-            .then(data => {
+            .then(async (data) => {
               if (data.ip) {
+                console.log("✅ IP fetched:", data.ip, "Device:", deviceInfo);
+                
                 // Save to dedicated Security Logs table
-                supabase.from('login_logs').insert([{ ip_address: data.ip }]).then();
+                const { error: loginErr } = await supabase.from('login_logs').insert([{ ip_address: data.ip, device_info: deviceInfo }]);
+                console.log("Login logs insert:", loginErr ? `❌ ${loginErr.message}` : "✅ success");
                 
                 // Save to main Audit Logs page
-                supabase.from('audit_logs').insert([{
-                  user_id: newSession.user.id,
-                  action: `System Login (IP: ${data.ip})`,
-                  target_table: 'system',
-                  target_id: null
-                }]).then();
+                const { error: auditErr } = await writeAuditLog({
+                  userId: null,
+                  action: `System Login (IP: ${data.ip}) via ${deviceInfo}`,
+                  targetTable: 'system',
+                  targetId: null,
+                });
+                console.log("Audit logs insert:", auditErr ? `❌ ${auditErr.message}` : "✅ success");
               }
             })
             .catch(err => console.error("Could not fetch IP:", err));

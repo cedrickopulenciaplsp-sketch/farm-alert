@@ -8,11 +8,11 @@
    Brand: Deep agricultural navy & earthy tones.
    ============================================================ */
 :root {
-  /* Brand — Deep Navy */
-  --color-brand:        #1d3557;
-  --color-brand-hover:  #14253d;
-  --color-brand-light:  #e5ecf5;
-  --color-brand-mid:    #457b9d;
+  /* Brand — Agricultural Green */
+  --color-brand:        #166534; /* Green 800 */
+  --color-brand-hover:  #14532d; /* Green 900 */
+  --color-brand-light:  #dcfce7; /* Green 100 */
+  --color-brand-mid:    #22c55e; /* Green 500 */
 
   /* Surfaces — 60% canvas, 30% secondary */
   --color-canvas:   #f7f9f9;   /* Page background */
@@ -111,11 +111,11 @@
    Applied when <html class="dark"> is set by ThemeContext.
    ============================================================ */
 html.dark {
-  /* Brand — navy brightened for dark bg */
-  --color-brand:        #6ea4c9;
-  --color-brand-hover:  #8bbbd8;
-  --color-brand-light:  rgba(69, 123, 157, 0.15);
-  --color-brand-mid:    #457b9d;
+  /* Brand — green brightened for dark bg */
+  --color-brand:        #4ade80; /* Green 400 */
+  --color-brand-hover:  #86efac; /* Green 300 */
+  --color-brand-light:  rgba(34, 197, 94, 0.15); /* Green 500 @ 15% */
+  --color-brand-mid:    #22c55e; /* Green 500 */
 
   /* Surfaces — deep dark slate */
   --color-canvas:   #0f1419;
@@ -362,9 +362,81 @@ button, a, [role="button"], input, select, textarea {
 .fa-animate-in-delay-3 { animation-delay: 180ms; }
 .fa-animate-in-delay-4 { animation-delay: 240ms; }
 
+/* ── ENTRY ANIMATIONS ── */
+
+/* Cards: subtle pop/scale */
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Large modules: simple fade */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Side panels: slide from right */
+@keyframes slide-right {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Charts: slide from left */
+@keyframes slide-left {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.anim-pop {
+  opacity: 0;
+  animation: pop-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.anim-fade {
+  opacity: 0;
+  animation: fade-in 0.5s ease forwards;
+}
+
+.anim-slide-right {
+  opacity: 0;
+  animation: slide-right 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.anim-slide-left {
+  opacity: 0;
+  animation: slide-left 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.delay-1 { animation-delay: 40ms; }
+.delay-2 { animation-delay: 80ms; }
+.delay-3 { animation-delay: 120ms; }
+.delay-4 { animation-delay: 160ms; }
+.delay-5 { animation-delay: 200ms; }
+.delay-6 { animation-delay: 240ms; }
+.delay-7 { animation-delay: 280ms; }
+.delay-8 { animation-delay: 320ms; }
+.delay-9 { animation-delay: 360ms; }
+.delay-10 { animation-delay: 400ms; }
+
 /* ============================================================
    GLOBAL KEYFRAMES (referenced by JS inline styles)
    ============================================================ */
 @keyframes btn-spin {
   to { transform: rotate(360deg); }
+}
+
+@keyframes app-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.app-startup-animation {
+  animation: app-fade-in 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

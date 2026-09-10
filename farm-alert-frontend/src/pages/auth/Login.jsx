@@ -156,7 +156,7 @@ function BrandPanel() {
           fontFamily: 'var(--font-display)', fontWeight: 800,
           fontSize: '1.25rem', color: '#ffffff', letterSpacing: '-0.01em',
         }}>
-          FarmAlert
+          Farm Alert
         </span>
       </div>
 

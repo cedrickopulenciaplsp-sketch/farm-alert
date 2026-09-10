@@ -28,9 +28,9 @@ import styles from './FarmList.module.css';
 // ---------------------------------------------------------------------------
 function StatusBadge({ status }) {
   const cls =
-    status === 'Active'     ? styles.badgeActive     :
-    status === 'Quarantine' ? styles.badgeQuarantine :
-                              styles.badgeInactive;
+    status === 'Active' ? styles.badgeActive :
+      status === 'Quarantine' ? styles.badgeQuarantine :
+        styles.badgeInactive;
   return (
     <span className={`${styles.badge} ${cls}`}>
       {status}
@@ -148,22 +148,22 @@ export default function FarmList() {
   const navigate = useNavigate();
 
   // Data state
-  const [farms, setFarms]               = useState([]);
-  const [barangays, setBarangays]       = useState([]);
+  const [farms, setFarms] = useState([]);
+  const [barangays, setBarangays] = useState([]);
   const [livestockTypes, setLivestockTypes] = useState([]);
-  const [loading, setLoading]           = useState(true);
-  const [error, setError]               = useState(null);
-  const [isExporting, setIsExporting]   = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Dossier modal state
   const [dossierFarmId, setDossierFarmId] = useState(null);
 
   // Filter state
-  const [search, setSearch]             = useState('');
-  const [barangayId, setBarangayId]     = useState('');
+  const [search, setSearch] = useState('');
+  const [barangayId, setBarangayId] = useState('');
   const [livestockTypeId, setLivestockTypeId] = useState('');
-  const [status, setStatus]             = useState('');
-  const [sortBy, setSortBy]             = useState('name_asc');
+  const [status, setStatus] = useState('');
+  const [sortBy, setSortBy] = useState('name_asc');
 
   // ---------------------------------------------------------------------------
   // Load reference data (barangays, livestock types) once on mount
@@ -171,7 +171,7 @@ export default function FarmList() {
   useEffect(() => {
     async function loadRefs() {
       const [bRes, ltRes] = await Promise.all([getBarangays(), getLivestockTypes()]);
-      if (!bRes.error)  setBarangays(bRes.data ?? []);
+      if (!bRes.error) setBarangays(bRes.data ?? []);
       if (!ltRes.error) setLivestockTypes(ltRes.data ?? []);
     }
     loadRefs();
@@ -238,7 +238,7 @@ export default function FarmList() {
 
       const date = new Date().toISOString().slice(0, 10);
       const blob = data instanceof Blob ? data : new Blob([data], { type: 'text/csv;charset=utf-8;' });
-      const url  = URL.createObjectURL(blob);
+      const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `farms_export_${date}.csv`);

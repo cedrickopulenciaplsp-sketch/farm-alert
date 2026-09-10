@@ -51,8 +51,8 @@ export default function MiniTrendChart({ trends = [], loading = false, height = 
       <LineChart data={trends} margin={{ top: 10, right: 20, bottom: 0, left: -10 }}>
         <defs>
           <linearGradient id="caseGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%"  stopColor="#1d3557" stopOpacity={0.25} />
-            <stop offset="95%" stopColor="#1d3557" stopOpacity={0} />
+            <stop offset="5%"  stopColor="#166534" stopOpacity={0.25} />
+            <stop offset="95%" stopColor="#166534" stopOpacity={0} />
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
@@ -93,9 +93,9 @@ export default function MiniTrendChart({ trends = [], loading = false, height = 
         <Line
           type="monotone"
           dataKey="cases"
-          stroke="#1d3557"
+          stroke="#166534"
           strokeWidth={2.5}
-          dot={{ r: 3, fill: '#1d3557' }}
+          dot={{ r: 3, fill: '#166534' }}
           activeDot={{ r: 5 }}
         />
         <Line

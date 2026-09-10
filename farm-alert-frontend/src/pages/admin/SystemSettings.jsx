@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Settings, Save, RefreshCw, AlertCircle,
-  CheckCircle2, Edit2, X,
+  CheckCircle2, Edit2, X, Minus, Plus,
 } from 'lucide-react';
 import { getSettings, updateSetting } from '../../services/admin';
 import { writeAuditLog } from '../../services/admin';
@@ -37,10 +37,11 @@ function SettingRow({ setting, onSave }) {
   // Keep local value in sync if parent reloads data
   useEffect(() => { setValue(setting.setting_value); }, [setting.setting_value]);
 
-  async function handleSave() {
+  async function handleSave(newVal) {
+    const saveVal = newVal ?? value;
     setSaving(true);
     setError('');
-    const { error: saveErr } = await onSave(setting.setting_id, value);
+    const { error: saveErr } = await onSave(setting.setting_id, saveVal);
     setSaving(false);
     if (saveErr) { setError(saveErr.message); return; }
     setEditing(false);
@@ -60,20 +61,98 @@ function SettingRow({ setting, onSave }) {
     : '—';
 
   const meta = SETTING_LABELS[setting.setting_key];
+  const isBoolean = setting.setting_value === 'true' || setting.setting_value === 'false';
+  const isNumeric = !isBoolean && /^\d+$/.test(setting.setting_value);
 
+  // ── Toggle Switch for boolean settings ──
+  if (isBoolean) {
+    const isOn = value === 'true';
+    async function handleToggle() {
+      const newVal = isOn ? 'false' : 'true';
+      setValue(newVal);
+      await handleSave(newVal);
+    }
+    return (
+      <div className={styles.settingRow}>
+        <div className={styles.settingInfo}>
+          <p className={styles.settingKey}>{meta?.label ?? setting.setting_key}</p>
+          {meta?.description && <p className={styles.settingDesc}>{meta.description}</p>}
+          <p className={styles.settingMeta}>Last updated: {updatedAt}</p>
+          {error && <p className={styles.settingError}><AlertCircle size={12} /> {error}</p>}
+        </div>
+        <button
+          className={`${styles.toggle} ${isOn ? styles.toggleOn : ''}`}
+          onClick={handleToggle}
+          disabled={saving}
+          title={isOn ? 'Disable' : 'Enable'}
+        >
+          <span className={styles.toggleThumb}>
+            {saving && <RefreshCw size={10} className={styles.spin} />}
+          </span>
+          <span className={styles.toggleLabel}>{isOn ? 'ON' : 'OFF'}</span>
+        </button>
+      </div>
+    );
+  }
+
+  // ── Stepper for numeric settings ──
+  if (isNumeric) {
+    const numVal = parseInt(value, 10);
+    function increment() { setValue(String(numVal + 1)); }
+    function decrement() { if (numVal > 1) setValue(String(numVal - 1)); }
+
+    return (
+      <div className={styles.settingRow}>
+        <div className={styles.settingInfo}>
+          <p className={styles.settingKey}>{meta?.label ?? setting.setting_key}</p>
+          {meta?.description && <p className={styles.settingDesc}>{meta.description}</p>}
+          <p className={styles.settingMeta}>Last updated: {updatedAt}</p>
+          {error && <p className={styles.settingError}><AlertCircle size={12} /> {error}</p>}
+        </div>
+
+        {editing ? (
+          <div className={styles.editArea}>
+            <div className={styles.stepper}>
+              <button className={styles.stepperBtn} onClick={decrement} disabled={numVal <= 1} title="Decrease">
+                <Minus size={14} />
+              </button>
+              <span className={styles.stepperValue}>{value}</span>
+              <button className={styles.stepperBtn} onClick={increment} title="Increase">
+                <Plus size={14} />
+              </button>
+            </div>
+            <button
+              className={`${styles.iconBtn} ${styles.iconBtnSave}`}
+              onClick={() => handleSave()}
+              disabled={saving}
+              title="Save"
+            >
+              {saving ? <RefreshCw size={14} className={styles.spin} /> : <Save size={14} />}
+            </button>
+            <button className={styles.iconBtn} onClick={handleCancel} title="Cancel">
+              <X size={14} />
+            </button>
+          </div>
+        ) : (
+          <div className={styles.viewArea}>
+            <span className={styles.settingValue}>{setting.setting_value}</span>
+            <button className={styles.iconBtn} onClick={() => setEditing(true)} title="Edit">
+              <Edit2 size={14} />
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ── Fallback: plain text input for other settings ──
   return (
     <div className={styles.settingRow}>
       <div className={styles.settingInfo}>
         <p className={styles.settingKey}>{meta?.label ?? setting.setting_key}</p>
-        {meta?.description && (
-          <p className={styles.settingDesc}>{meta.description}</p>
-        )}
+        {meta?.description && <p className={styles.settingDesc}>{meta.description}</p>}
         <p className={styles.settingMeta}>Last updated: {updatedAt}</p>
-        {error && (
-          <p className={styles.settingError}>
-            <AlertCircle size={12} /> {error}
-          </p>
-        )}
+        {error && <p className={styles.settingError}><AlertCircle size={12} /> {error}</p>}
       </div>
 
       {editing ? (
@@ -86,32 +165,21 @@ function SettingRow({ setting, onSave }) {
             autoFocus
           />
           <button
-            id={`setting-save-${setting.setting_id}`}
             className={`${styles.iconBtn} ${styles.iconBtnSave}`}
-            onClick={handleSave}
+            onClick={() => handleSave()}
             disabled={saving}
             title="Save"
           >
             {saving ? <RefreshCw size={14} className={styles.spin} /> : <Save size={14} />}
           </button>
-          <button
-            id={`setting-cancel-${setting.setting_id}`}
-            className={styles.iconBtn}
-            onClick={handleCancel}
-            title="Cancel"
-          >
+          <button className={styles.iconBtn} onClick={handleCancel} title="Cancel">
             <X size={14} />
           </button>
         </div>
       ) : (
         <div className={styles.viewArea}>
           <span className={styles.settingValue}>{setting.setting_value}</span>
-          <button
-            id={`setting-edit-${setting.setting_id}`}
-            className={styles.iconBtn}
-            onClick={() => setEditing(true)}
-            title="Edit"
-          >
+          <button className={styles.iconBtn} onClick={() => setEditing(true)} title="Edit">
             <Edit2 size={14} />
           </button>
         </div>

@@ -390,7 +390,7 @@ export async function getComplianceBreakdown() {
 export async function getRecentLogins() {
   const { data, error } = await supabase
     .from('login_logs')
-    .select('login_time, ip_address')
+    .select('login_time, ip_address, device_info')
     .order('login_time', { ascending: false })
     .limit(10);
     

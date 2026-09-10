@@ -10,7 +10,7 @@ import {
   Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
 
-const COLORS = ['#1d3557', '#e07a5f', '#2a9d8f', '#e9c46a', '#457b9d', '#264653'];
+const COLORS = ['#166534', '#e07a5f', '#2a9d8f', '#e9c46a', '#22c55e', '#264653'];
 
 function EmptyChart() {
   return (

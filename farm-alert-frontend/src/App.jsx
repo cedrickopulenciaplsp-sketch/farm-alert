@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useState } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -17,6 +18,7 @@ import DiseaseMap from './pages/Map/DiseaseMap';
 import ComplianceLogs from './pages/compliance/ComplianceLogs';
 import SystemSettings from './pages/admin/SystemSettings';
 import AuditLogs from './pages/admin/AuditLogs';
+import SplashScreen from './components/shared/SplashScreen';
 
 // ---------------------------------------------------------------------------
 // Temporary placeholder pages — replaced in Phase 5+ with real components
@@ -43,10 +45,13 @@ function PlaceholderPage({ name }) {
 // App — root router shell
 // ---------------------------------------------------------------------------
 function App() {
+  const [splashDone, setSplashDone] = useState(false);
+
   return (
     <ThemeProvider>
     <AuthProvider>
     <NotificationProvider>
+      {!splashDone && <SplashScreen onFinish={() => setSplashDone(true)} />}
       <Router>
         <Routes>
           {/* Public routes */}

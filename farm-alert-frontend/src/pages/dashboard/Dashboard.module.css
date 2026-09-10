@@ -54,7 +54,6 @@
   display: flex;
   flex-direction: column;
   gap: 1.75rem;
-  animation: slideInUp 320ms ease both;
 }
 
 /* ── Header ────────────────────────────────────────────────── */
@@ -121,7 +120,6 @@
     border-color 200ms ease,
     background-color var(--transition-slow);
   overflow: hidden;
-  animation: slideInUp 340ms ease both;
 }
 
 .metricCard:hover {

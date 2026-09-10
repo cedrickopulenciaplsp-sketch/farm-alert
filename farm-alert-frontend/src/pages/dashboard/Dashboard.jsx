@@ -420,7 +420,7 @@ export default function Dashboard() {
 
       {/* ── Metric Cards ────────────────────────────────────────── */}
       <div className={styles.metricsGrid}>
-        <Card className={styles.metricCard}>
+        <Card className={`${styles.metricCard} anim-pop delay-1`}>
           <div className={styles.metricIconBox} style={{ color: 'var(--icon-green-text)', background: 'var(--icon-green-bg)' }}>
             <Warehouse size={20} />
           </div>
@@ -430,7 +430,7 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        <Card className={styles.metricCard}>
+        <Card className={`${styles.metricCard} anim-pop delay-2`}>
           <div className={styles.metricIconBox} style={{ color: 'var(--icon-amber-text)', background: 'var(--icon-amber-bg)' }}>
             <Thermometer size={20} />
           </div>
@@ -440,7 +440,7 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        <Card className={styles.metricCard}>
+        <Card className={`${styles.metricCard} anim-pop delay-3`}>
           <div className={styles.metricIconBox} style={{ color: '#c0392b', background: 'rgba(192, 57, 43, 0.1)' }}>
             <Siren size={20} />
           </div>
@@ -452,7 +452,7 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        <Card className={styles.metricCard}>
+        <Card className={`${styles.metricCard} anim-pop delay-4`}>
           <div className={styles.metricIconBox} style={{ color: 'var(--icon-red-text)', background: 'var(--icon-red-bg)' }}>
             <HeartPulse size={20} />
           </div>
@@ -466,7 +466,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── Tab Switcher ──────────────────────────────────────── */}
-      <div className={styles.tabBar}>
+      <div className={`${styles.tabBar} anim-fade delay-5`}>
         <button
           className={`${styles.tabBtn} ${activeTab === 'operational' ? styles.tabBtnActive : ''}`}
           onClick={() => setActiveTab('operational')}
@@ -488,7 +488,7 @@ export default function Dashboard() {
         <>
           <div className={styles.contentRow}>
             {/* Map */}
-            <Card className={styles.mapCard}>
+            <Card className={`${styles.mapCard} anim-fade delay-6`}>
               <div className={styles.sectionHeader}>
                 <p className={styles.chartTitle}>Barangay Disease Map</p>
                 <span className={styles.sectionLink} onClick={() => navigate('/map')}>Expand Map &rarr;</span>
@@ -501,20 +501,20 @@ export default function Dashboard() {
 
             <div className={styles.rightColumn}>
               {/* Recent Activity */}
-              <Card className={styles.activityCard}>
+              <Card className={`${styles.activityCard} anim-slide-right delay-7`}>
                 <div className={styles.activityHeader}>
                   <p className={styles.chartTitle}>Field Activity Log</p>
                 </div>
                 {recentActivity.length === 0 ? (
                   <div className={styles.emptyState}>No recent activity found.</div>
                 ) : (
-                  <ul className={styles.activityList}>
+                  <ul className={styles.activityList} style={{ maxHeight: '280px', overflowY: 'auto' }}>
                     {recentActivity.map((act) => (
                       <li key={act.id} className={styles.activityItem} onClick={() => navigate(act.path)}>
                         <div className={styles.activityIconWrapper}>
                           {act.type === 'Outbreak'
                             ? <Siren size={15} color="#e07a5f" />
-                            : <FileText size={15} color="#1d3557" />
+                            : <FileText size={15} color="#166534" />
                           }
                         </div>
                         <div className={styles.activityDetails}>
@@ -536,22 +536,22 @@ export default function Dashboard() {
               </Card>
 
               {/* Security Access Logs */}
-              <Card className={styles.activityCard}>
+              <Card className={`${styles.activityCard} anim-slide-right delay-8`}>
                 <div className={styles.activityHeader}>
                   <p className={styles.chartTitle}>Security & Access Logs</p>
                 </div>
                 {loginLogs.length === 0 ? (
                   <div className={styles.emptyState}>No login history found.</div>
                 ) : (
-                  <ul className={styles.activityList}>
-                    {loginLogs.map((log, i) => (
+                  <ul className={styles.activityList} style={{ maxHeight: '220px', overflowY: 'auto' }}>
+                    {loginLogs.slice(0, 5).map((log, i) => (
                       <li key={i} className={styles.activityItem}>
                         <div className={styles.activityIconWrapper} style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}>
                           <Lock size={14} color="var(--color-text-secondary)" />
                         </div>
                         <div className={styles.activityDetails}>
                           <p className={styles.activityTitle}>System Login</p>
-                          <p className={styles.activitySubtitle}>IP: {log.ip_address}</p>
+                          <p className={styles.activitySubtitle}>IP: {log.ip_address}{log.device_info ? ` · ${log.device_info}` : ''}</p>
                         </div>
                         <div className={styles.activityStatus}>
                           <span className={styles.activityDate}>
@@ -567,12 +567,12 @@ export default function Dashboard() {
           </div>
 
           <div className={styles.contentRow}>
-            <Card className={styles.chartCard}>
+            <Card className={`${styles.chartCard} anim-slide-left delay-9`}>
               <p className={styles.chartTitle}>Monthly Case &amp; Mortality Trend</p>
               <p className={styles.chartSubtitle}>Reported cases and livestock deaths across all barangays</p>
               <MiniTrendChart trends={trends} loading={loadingCharts} height={240} />
             </Card>
-            <Card className={styles.chartCard}>
+            <Card className={`${styles.chartCard} anim-slide-right delay-10`}>
               <p className={styles.chartTitle}>Cases by Disease</p>
               <p className={styles.chartSubtitle}>Top diseases reported in San Pablo City</p>
               <MiniDiseaseChart data={diseaseData} loading={loadingCharts} height={240} />
@@ -584,7 +584,7 @@ export default function Dashboard() {
       {activeTab === 'analytics' && (
         <div className={analyticsStyles.page} style={{ paddingTop: 0, animation: 'none' }}>
           {/* Filter Bar */}
-          <Card className={analyticsStyles.filterBar}>
+          <Card className={`${analyticsStyles.filterBar} anim-fade delay-1`}>
             <div className={analyticsStyles.filterBarInner}>
               <div className={analyticsStyles.filterGroup}>
                 <Calendar size={14} className={analyticsStyles.filterIcon} />
@@ -634,21 +634,21 @@ export default function Dashboard() {
           </Card>
 
           {/* Summary Stats */}
-          <div className={analyticsStyles.statsRow}>
+          <div className={`${analyticsStyles.statsRow} anim-pop delay-2`}>
             <StatCard label="Total Cases (Period)"      value={totalCases}       icon={FileText}      iconBg="var(--icon-green-bg)"  iconColor="var(--icon-green-text)"  loading={loadingMonthly} />
             <StatCard label="Total Mortalities (Period)" value={totalMortalities} icon={Skull}         iconBg="var(--icon-red-bg)"    iconColor="var(--icon-red-text)"    loading={loadingMonthly} sub={totalMortalities > 0 ? 'Deaths in selected period' : 'No deaths recorded'} />
             <StatCard label="Active Outbreaks"           value={activeOutbreaksAnalytics}  icon={AlertTriangle} iconBg="var(--icon-orange-bg)" iconColor="var(--icon-orange-text)" loading={activeOutbreaksAnalytics === null} sub={activeOutbreaksAnalytics > 0 ? 'Requires immediate attention' : 'No active outbreaks'} />
             <StatCard label="Hotspot Barangay"           value={topBarangay}      icon={MapPin}        iconBg="var(--icon-amber-bg)"  iconColor="var(--icon-amber-text)"  loading={loadingBarangay} />
           </div>
 
-          <div className={analyticsStyles.sectionHeader}>
+          <div className={`${analyticsStyles.sectionHeader} anim-fade delay-3`}>
             <span className={analyticsStyles.sectionTitle}>📊 Disease Analytics</span>
             <div className={analyticsStyles.sectionLine} />
           </div>
 
           <div className={analyticsStyles.grid}>
             {/* Monthly Case & Mortality Trends */}
-            <Card className={analyticsStyles.fullCard}>
+            <Card className={`${analyticsStyles.fullCard} anim-slide-left delay-4`}>
               <Card.Header
                 title={
                   <div className={analyticsStyles.chartTitle}>
@@ -700,7 +700,7 @@ export default function Dashboard() {
             </Card>
 
             {/* Disease Density by Barangay */}
-            <Card className={analyticsStyles.twoThirdCard}>
+            <Card className={`${analyticsStyles.twoThirdCard} anim-slide-left delay-5`}>
               <Card.Header title={<div className={analyticsStyles.chartTitle}><MapPin size={15} /><span>Disease Density by Barangay</span></div>} />
               <Card.Body>
                 {loadingBarangay ? <SkeletonChart height={280} /> : filteredBarangays.length === 0 ? <EmptyChart message="No cases by location yet." /> : (
@@ -730,7 +730,7 @@ export default function Dashboard() {
             </Card>
 
             {/* Cases by Disease */}
-            <Card className={analyticsStyles.thirdCard}>
+            <Card className={`${analyticsStyles.thirdCard} anim-slide-right delay-6`}>
               <Card.Header title={<div className={analyticsStyles.chartTitle}><BarChart2 size={15} /><span>Cases by Disease</span></div>} />
               <Card.Body>
                 {loadingDisease ? <SkeletonChart height={220} /> : diseaseDataAnalytics.length === 0 ? <EmptyChart /> : (
@@ -757,7 +757,7 @@ export default function Dashboard() {
             </Card>
 
             {/* Report Status */}
-            <Card className={analyticsStyles.thirdCard}>
+            <Card className={`${analyticsStyles.thirdCard} anim-pop delay-7`}>
               <Card.Header title={<div className={analyticsStyles.chartTitle}><ClipboardList size={15} /><span>Report Status</span></div>} />
               <Card.Body>
                 <StackedBar
@@ -771,7 +771,7 @@ export default function Dashboard() {
             </Card>
 
             {/* Cases by Severity */}
-            <Card className={analyticsStyles.thirdCard}>
+            <Card className={`${analyticsStyles.thirdCard} anim-pop delay-8`}>
               <Card.Header title={<div className={analyticsStyles.chartTitle}><AlertTriangle size={15} /><span>Cases by Severity</span></div>} />
               <Card.Body>
                 <StackedBar
@@ -785,7 +785,7 @@ export default function Dashboard() {
             </Card>
 
             {/* Security Access Logs (Filling the 1/3 empty space) */}
-            <Card className={analyticsStyles.thirdCard}>
+            <Card className={`${analyticsStyles.thirdCard} anim-slide-right delay-9`}>
               <Card.Header title={<div className={analyticsStyles.chartTitle}><Lock size={15} /><span>Security Logs</span></div>} />
               <Card.Body>
                 {loginLogs.length === 0 ? (
@@ -802,7 +802,7 @@ export default function Dashboard() {
                           </div>
                           <div>
                             <p style={{ fontWeight: 600, fontSize: 'var(--text-sm)', color: 'var(--color-text-primary)' }}>System Login</p>
-                            <p style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>IP: {log.ip_address}</p>
+                            <p style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>IP: {log.ip_address}{log.device_info ? ` · ${log.device_info}` : ''}</p>
                           </div>
                         </div>
                         <span style={{ fontSize: '10px', color: 'var(--color-text-secondary)', fontWeight: 600, background: 'var(--color-overlay)', padding: '2px 8px', borderRadius: '12px' }}>
@@ -816,19 +816,19 @@ export default function Dashboard() {
             </Card>
           </div>
 
-          <div className={analyticsStyles.sectionHeader}>
+          <div className={`${analyticsStyles.sectionHeader} anim-fade delay-10`}>
             <span className={analyticsStyles.sectionTitle}>🛡️ Farm Compliance</span>
             <div className={analyticsStyles.sectionLine} />
           </div>
 
-          <div className={analyticsStyles.statsRow}>
+          <div className={`${analyticsStyles.statsRow} anim-pop delay-10`}>
             <StatCard label="Compliant"        value={compliantCount}     icon={ShieldCheck}   iconBg="var(--badge-compliant-bg)"     iconColor="var(--badge-compliant-text)"     loading={loadingExtra} sub={compliantCount > 0 ? 'Fully compliant farms' : 'None recorded'} />
             <StatCard label="Semi-Compliant"   value={semiCompliantCount} icon={ShieldCheck}   iconBg="var(--badge-semi-bg)"          iconColor="var(--badge-semi-text)"          loading={loadingExtra} sub={semiCompliantCount > 0 ? 'Partially compliant' : 'None'} />
             <StatCard label="Non-Compliant"    value={nonCompliantCount}  icon={AlertTriangle} iconBg="var(--badge-noncompliant-bg)"  iconColor="var(--badge-noncompliant-text)"  loading={loadingExtra} sub={nonCompliantCount > 0 ? 'Requires follow-up' : 'All compliant'} />
             <StatCard label="Total Evaluations" value={totalEvaluations}  icon={ShieldCheck}   iconBg="var(--icon-green-bg)"          iconColor="var(--icon-green-text)"          loading={loadingExtra} />
           </div>
 
-          <div className={analyticsStyles.grid}>
+          <div className={`${analyticsStyles.grid} anim-slide-left delay-10`}>
             <Card className={analyticsStyles.fullCard}>
               <Card.Header title={<div className={analyticsStyles.chartTitle}><ShieldCheck size={15} /><span>Pest Control Compliance Breakdown</span></div>} />
               <Card.Body>
@@ -848,3 +848,4 @@ export default function Dashboard() {
     </div>
   );
 }
+
