@@ -56,7 +56,28 @@ export default function DiseaseMap() {
 
         {/* ── Sidebar ─────────────────────────────────────────────────────── */}
         <div className={styles.sidebar}>
-          <Card className={styles.legendCard}>
+          <Card className={styles.hotspotsCard}>
+            <Card.Header title="Active Incidents" />
+            <Card.Body className={styles.hotspotsBody}>
+              {infectedFarms.length === 0 ? (
+                <p className={styles.noIncidents}>No active incidents mapped.</p>
+              ) : (
+                <ul className={styles.incidentList}>
+                  {infectedFarms.map(f => (
+                    <li key={f.farm_id} className={styles.incidentItem}>
+                      <Activity size={14} color="var(--color-danger)" />
+                      <div>
+                        <strong>{f.farm_name}</strong>
+                        <p>{f.latest_disease} ({f.barangay_name})</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card.Body>
+          </Card>
+
+          <Card>
             <Card.Header title="Map Legend" />
             <Card.Body>
               <ul className={styles.legendList}>
@@ -66,7 +87,7 @@ export default function DiseaseMap() {
                     <span className={styles.legendLabel}>Healthy / Active</span>
                     <span className={styles.legendDesc}>Farm is operational with no active disease incident.</span>
                   </div>
-                  <span className={styles.legendCount}>{farms.filter(f => f.farm_status === 'Active' && f.latest_report_status !== 'Active').length}</span>
+                  <span className={styles.legendCount}>{farms.filter(f => f.farm_status === 'Active' && f.health_status === 'Healthy').length}</span>
                 </li>
                 <li className={styles.legendItem}>
                   <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png" alt="Red marker" className={styles.legendPin} />
@@ -74,7 +95,7 @@ export default function DiseaseMap() {
                     <span className={styles.legendLabel}>Active Incident / Quarantine</span>
                     <span className={styles.legendDesc}>Farm has an active disease report or is under quarantine.</span>
                   </div>
-                  <span className={styles.legendCount}>{farms.filter(f => f.farm_status === 'Quarantine' || f.latest_report_status === 'Active').length}</span>
+                  <span className={styles.legendCount}>{infectedFarms.length}</span>
                 </li>
                 <li className={styles.legendItem}>
                   <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-black.png" alt="Black marker" className={styles.legendPin} />
@@ -99,27 +120,6 @@ export default function DiseaseMap() {
                   </div>
                 </li>
               </ul>
-            </Card.Body>
-          </Card>
-
-          <Card className={styles.hotspotsCard}>
-            <Card.Header title="Active Incidents" />
-            <Card.Body className={styles.hotspotsBody}>
-              {infectedFarms.length === 0 ? (
-                <p className={styles.noIncidents}>No active incidents mapped.</p>
-              ) : (
-                <ul className={styles.incidentList}>
-                  {infectedFarms.map(f => (
-                    <li key={f.farm_id} className={styles.incidentItem}>
-                      <Activity size={14} color="var(--color-danger)" />
-                      <div>
-                        <strong>{f.farm_name}</strong>
-                        <p>{f.latest_disease} ({f.barangay_name})</p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
             </Card.Body>
           </Card>
         </div>

@@ -127,7 +127,7 @@
 .hotspotsBody {
   flex: 1;
   overflow-y: auto;
-  max-height: 350px;
+  min-height: 200px;
 }
 
 .noIncidents {
