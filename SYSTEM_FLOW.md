@@ -125,3 +125,34 @@ This document details the end-to-end system flow, user interactions, and technic
 5. **Zoning:** A 1km red circle and 3km orange circle are drawn on the map around San Cristobal.
 6. **Dashboard Alert:** The Dashboard Threat Level badge changes to `Critical`.
 7. **Resolution:** 30 days later, the area is cleared. The officer marks the outbreak as "Resolved". The map circles disappear, the pins turn green, and the threat level returns to `Normal`.
+
+---
+
+## Appendix A: Disease Severity Algorithm & Epidemiological References
+
+FarmAlert automates the calculation of disease severity to eliminate human error and ensure standardized outbreak detection. The system uses a **Syndromic Early Warning Baseline** based on global veterinary standards.
+
+### 1. The Core Formulas
+Severity is calculated using standard epidemiological rates relative to the specific farm's total registered population (`head_count`).
+* **Morbidity Rate (%)** = `(Sick Animals ÷ Total Farm Population) × 100`
+* **Mortality Rate (%)** = `(Dead Animals ÷ Total Farm Population) × 100`
+
+### 2. Algorithmic Thresholds & Justification
+The automated percentage brackets are designed to catch both highly lethal diseases (like ASF) and highly contagious but less lethal diseases (like FMD).
+
+* ?? **Critical:** Mortality > 20% **-OR-** Morbidity > 60%
+  * *Justification (ASF Catch):* African Swine Fever is characterized by rapid onset and mortality rates approaching 100%. A >20% mortality trigger ensures early detection before total farm wipeout.
+  * *Justification (FMD Catch):* Foot-and-Mouth Disease is highly contagious (approaching 100% morbidity) but has very low adult mortality (1-5%). The >60% morbidity trigger ensures FMD is flagged as Critical even if few animals are dying.
+* ?? **Severe:** Mortality >= 6% **-OR-** Morbidity >= 30%
+* ?? **Moderate:** Mortality >= 1% **-OR-** Morbidity >= 10%
+* ?? **Mild:** Below Moderate thresholds (isolated cases).
+
+### 3. Global References
+The definitions and behavioral traits of these diseases used to formulate the baseline model are sourced from the **World Organisation for Animal Health (WOAH)**:
+* **WOAH African Swine Fever (ASF) Guidelines:** Notes that acute forms result in high mortality approaching 100%. 
+  * *Link:* [https://www.woah.org/en/disease/african-swine-fever/](https://www.woah.org/en/disease/african-swine-fever/)
+* **WOAH Foot and Mouth Disease (FMD) Guidelines:** Notes that the disease is highly transmissible (morbidity near 100%) while lethality is low in adults (1-5%).
+  * *Link:* [https://www.woah.org/en/disease/foot-and-mouth-disease/](https://www.woah.org/en/disease/foot-and-mouth-disease/)
+* **FAO Animal Health Manuals:** Standardizes the use of Case Fatality, Morbidity, and Mortality rates for syndromic surveillance.
+  * *Link:* [https://www.fao.org/animal-health/en/](https://www.fao.org/animal-health/en/)
+
