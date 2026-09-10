@@ -56,9 +56,9 @@ export default function DiseaseMap() {
 
         {/* ── Sidebar ─────────────────────────────────────────────────────── */}
         <div className={styles.sidebar}>
-          <Card className={styles.hotspotsCard}>
+          <Card className={styles.sidebarCard}>
             <Card.Header title="Active Incidents" />
-            <Card.Body className={styles.hotspotsBody}>
+            <Card.Body className={styles.sidebarBody}>
               {infectedFarms.length === 0 ? (
                 <p className={styles.noIncidents}>No active incidents mapped.</p>
               ) : (
@@ -77,9 +77,9 @@ export default function DiseaseMap() {
             </Card.Body>
           </Card>
 
-          <Card>
+          <Card className={styles.sidebarCard}>
             <Card.Header title="Map Legend" />
-            <Card.Body>
+            <Card.Body className={styles.sidebarBody}>
               <ul className={styles.legendList}>
                 <li className={styles.legendItem}>
                   <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png" alt="Green marker" className={styles.legendPin} />
