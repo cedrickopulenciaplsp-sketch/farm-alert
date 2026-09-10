@@ -156,3 +156,32 @@ The definitions and behavioral traits of these diseases used to formulate the ba
 * **FAO Animal Health Manuals:** Standardizes the use of Case Fatality, Morbidity, and Mortality rates for syndromic surveillance.
   * *Link:* [https://www.fao.org/animal-health/en/](https://www.fao.org/animal-health/en/)
 
+
+---
+
+## Appendix B: Technology Stack
+
+FarmAlert is built using a modern, scalable, and real-time tech stack optimized for performance and rapid deployment.
+
+### 1. Frontend Architecture
+* **React.js:** The core JavaScript library for building the interactive user interface.
+* **Vite:** The build tool and development server, ensuring lightning-fast hot module replacement and highly optimized production builds.
+* **React Router DOM:** Handles seamless client-side routing (Single Page Application architecture), allowing navigation between modules without page reloads.
+* **CSS Modules:** Scoped, modular CSS architecture used to prevent style leaking and maintain clean, easily updatable UI components.
+
+### 2. Backend & Database
+* **Supabase:** The open-source Backend-as-a-Service (BaaS) powering the system.
+* **PostgreSQL:** The robust relational database hosted by Supabase, storing all farms, disease reports, compliance data, and audit logs.
+* **Supabase Realtime:** Uses PostgreSQL logical replication via WebSockets to push live database changes to the dashboard's Activity Feed instantly.
+* **Supabase Auth (Google OAuth):** Manages secure user authentication, restricting system access strictly to authorized personnel.
+* **PostgreSQL Triggers:** Automated server-side SQL functions (e.g., automatically calculating disease severity and generating immutable audit logs the exact millisecond data is inserted).
+
+### 3. Geospatial & Analytics Libraries
+* **Leaflet.js (React-Leaflet):** The open-source mapping library used for the `/map` module. It handles plotting farms, rendering color-coded pins, and automatically drawing the 1km/3km outbreak radius zones based on geographical coordinates.
+* **Recharts:** A composable charting library built on React components, powering the complex Data & Analytics dashboard (Area trends, Bar charts, and Stacked compliance charts).
+* **Lucide-React:** The modern, lightweight SVG icon library used uniformly across the application interface.
+
+### 4. Hosting, CI/CD & Version Control
+* **Vercel:** Hosts the frontend React application, providing automated Continuous Integration / Continuous Deployment (CI/CD) directly from the GitHub repository.
+* **GitHub:** Version control and source code repository.
+
