@@ -467,7 +467,9 @@ export default function FarmForm() {
                 onBlur={handleBlur}
                 error={fieldError('contact_number')}
                 hint="Optional — Philippine mobile format (09xxxxxxxxx)"
-                maxLength={20}
+                maxLength={11}
+                type="tel"
+                inputMode="numeric"
               />
               <Select
                 id="status"
