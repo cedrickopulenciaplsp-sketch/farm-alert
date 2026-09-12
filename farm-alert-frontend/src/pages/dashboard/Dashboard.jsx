@@ -421,7 +421,7 @@ export default function Dashboard() {
       {/* ── Metric Cards ────────────────────────────────────────── */}
       <div className={styles.metricsGrid}>
         <Card className={`${styles.metricCard} anim-pop delay-1`}>
-          <div className={styles.metricIconBox} style={{ color: 'var(--icon-green-text)', background: 'var(--icon-green-bg)' }}>
+          <div className={styles.metricIconBox} style={{ color: 'var(--color-text-secondary)', background: 'var(--color-overlay)' }}>
             <Warehouse size={20} />
           </div>
           <div className={styles.metricContent}>
@@ -431,7 +431,7 @@ export default function Dashboard() {
         </Card>
 
         <Card className={`${styles.metricCard} anim-pop delay-2`}>
-          <div className={styles.metricIconBox} style={{ color: 'var(--icon-amber-text)', background: 'var(--icon-amber-bg)' }}>
+          <div className={styles.metricIconBox} style={{ color: 'var(--color-text-secondary)', background: 'var(--color-overlay)' }}>
             <Thermometer size={20} />
           </div>
           <div className={styles.metricContent}>
@@ -454,7 +454,7 @@ export default function Dashboard() {
 
         <Card className={`${styles.metricCard} anim-pop delay-4`}>
           <div className={styles.metricIconBox} style={{ color: 'var(--icon-red-text)', background: 'var(--icon-red-bg)' }}>
-            <HeartPulse size={20} />
+            <Skull size={20} />
           </div>
           <div className={styles.metricContent}>
             <p className={styles.metricValue} style={{ color: summary?.totalMortalities > 0 ? 'var(--color-danger)' : 'inherit' }}>
