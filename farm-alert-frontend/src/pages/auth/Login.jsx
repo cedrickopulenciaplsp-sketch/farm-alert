@@ -457,7 +457,8 @@ export default function Login() {
                 }}>
                   Only authorized team accounts may access this system:<br />
                   <strong style={{ color: '#1a4731', fontWeight: 600 }}>sanielken2@gmail.com</strong><br />
-                  <strong style={{ color: '#1a4731', fontWeight: 600 }}>mjhorcelt@gmail.com</strong>
+                  <strong style={{ color: '#1a4731', fontWeight: 600 }}>mjhorcelt@gmail.com</strong><br />
+                  <strong style={{ color: '#1a4731', fontWeight: 600 }}>morenongkups@gmail.com</strong>
                 </p>
               </div>
             </div>

@@ -20,7 +20,7 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  IF NEW.email NOT IN ('sanielken2@gmail.com', 'mjhorcelt@gmail.com') THEN
+  IF NEW.email NOT IN ('sanielken2@gmail.com', 'mjhorcelt@gmail.com', 'morenongkups@gmail.com') THEN
     RAISE EXCEPTION 'Access restricted to authorized personnel only.';
   END IF;
   RETURN NEW;
