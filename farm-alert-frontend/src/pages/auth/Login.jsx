@@ -289,7 +289,7 @@ export default function Login() {
           background: '#ffffff',
           boxShadow: '-10px 0 40px rgba(0,0,0,0.06)',
           zIndex: 20,
-          overflowY: 'auto',
+          overflow: 'hidden',
           position: 'relative',
         }}>
           {/* Faint animated virus icons */}
