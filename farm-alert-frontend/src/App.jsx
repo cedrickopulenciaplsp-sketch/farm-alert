@@ -45,13 +45,18 @@ function PlaceholderPage({ name }) {
 // App — root router shell
 // ---------------------------------------------------------------------------
 function App() {
-  const [splashDone, setSplashDone] = useState(false);
+  const [splashDone, setSplashDone] = useState(() => sessionStorage.getItem('splashDone') === '1');
+
+  const handleSplashFinish = () => {
+    sessionStorage.setItem('splashDone', '1');
+    setSplashDone(true);
+  };
 
   return (
     <ThemeProvider>
     <AuthProvider>
     <NotificationProvider>
-      {!splashDone && <SplashScreen onFinish={() => setSplashDone(true)} />}
+      {!splashDone && <SplashScreen onFinish={handleSplashFinish} />}
       <Router>
         <Routes>
           {/* Public routes */}
