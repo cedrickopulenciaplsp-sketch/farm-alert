@@ -23,8 +23,8 @@ import { useInactivityTimeout } from '../hooks/useInactivityTimeout';
 export default function ProtectedRoute() {
   const { session, loading } = useAuth();
 
-  // Enforce a 2-minute inactivity auto-logout (for demo/security purposes)
-  useInactivityTimeout(2);
+  // Enforce a 4-minute inactivity auto-logout (for demo/security purposes)
+  useInactivityTimeout(4);
 
   // While the initial session check is still running, render nothing.
   if (loading) {
