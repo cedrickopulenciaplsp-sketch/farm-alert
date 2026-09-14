@@ -109,6 +109,7 @@ function FarmRow({ farm, onEdit, onViewDossier }) {
           title="Edit farm"
         >
           <Edit2 size={14} />
+          <span>Edit</span>
         </button>
       </td>
     </tr>
