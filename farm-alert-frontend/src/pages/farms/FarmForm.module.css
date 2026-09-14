@@ -122,10 +122,22 @@
   box-shadow: 0 0 0 1px hsl(24, 60%, 92%) inset;
 }
 
+:global(html.dark) .swineCard {
+  border-color: rgba(234, 151, 107, 0.2);
+  background: rgba(234, 151, 107, 0.05);
+  box-shadow: none;
+}
+
 .poultryCard {
   border: 1.5px solid hsl(200, 65%, 78%);
   background: hsl(200, 65%, 98%);
   box-shadow: 0 0 0 1px hsl(200, 55%, 92%) inset;
+}
+
+:global(html.dark) .poultryCard {
+  border-color: rgba(144, 199, 232, 0.2);
+  background: rgba(144, 199, 232, 0.05);
+  box-shadow: none;
 }
 
 .coordsBody {
