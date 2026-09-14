@@ -148,6 +148,14 @@ export default function ReportForm({ onSuccess, onCancel }) {
     [form.animals_affected, form.mortalities, headCount],
   );
 
+  const filteredDiseases = useMemo(() => {
+    if (!selectedFarm) return diseases;
+    if (selectedFarm.livestock_type_id === 3) return diseases; // Farm raises 'Both', show all
+    return diseases.filter(d => 
+      d.livestock_type_id === selectedFarm.livestock_type_id || d.livestock_type_id === 3
+    );
+  }, [diseases, selectedFarm]);
+
   // ── Handle field changes ────────────────────────────────────────────
   function handleChange(e) {
     const { name, value } = e.target;
@@ -179,6 +187,22 @@ export default function ReportForm({ onSuccess, onCancel }) {
         }
       } else if (name !== 'animals_affected') {
         setErrors(e => ({ ...e, [name]: '' }));
+      }
+
+      // Smart Filtering: if farm changes, clear disease if the new farm's livestock type is incompatible
+      if (name === 'farm_id') {
+        const newFarm = farms.find(f => f.farm_id === value);
+        if (newFarm && prev.disease_id) {
+          const currentDisease = diseases.find(d => d.disease_id === prev.disease_id);
+          if (
+            currentDisease &&
+            newFarm.livestock_type_id !== 3 && // If farm is not 'Both'
+            currentDisease.livestock_type_id !== 3 && // If disease is not 'Both'
+            currentDisease.livestock_type_id !== newFarm.livestock_type_id
+          ) {
+            next.disease_id = ''; // Clear incompatible disease
+          }
+        }
       }
 
       return next;
@@ -310,7 +334,7 @@ export default function ReportForm({ onSuccess, onCancel }) {
         <option value="" disabled>
           {loading ? 'Loading diseases…' : 'Select a disease'}
         </option>
-        {diseases.map(d => (
+        {filteredDiseases.map(d => (
           <option key={d.disease_id} value={d.disease_id}>
             {d.disease_name}
           </option>
