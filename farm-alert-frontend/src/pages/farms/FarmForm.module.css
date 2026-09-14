@@ -124,7 +124,7 @@
 
 :global(html.dark) .swineCard {
   border: 1.5px solid rgba(234, 151, 107, 0.35);
-  background: rgba(234, 151, 107, 0.08);
+  background: var(--color-surface);
   box-shadow: none;
 }
 
@@ -136,7 +136,7 @@
 
 :global(html.dark) .poultryCard {
   border: 1.5px solid rgba(144, 199, 232, 0.35);
-  background: rgba(144, 199, 232, 0.08);
+  background: var(--color-surface);
   box-shadow: none;
 }
 

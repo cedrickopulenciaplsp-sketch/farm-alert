@@ -175,6 +175,9 @@ html.dark {
   --icon-red-text:   #e8947d;
   --icon-orange-bg:  rgba(224, 122, 95, 0.2);
   --icon-orange-text:#e8947d;
+
+  /* Tell the browser to use dark-themed native controls (number spinners, scrollbars, etc.) */
+  color-scheme: dark;
 }
 
 /* ============================================================
