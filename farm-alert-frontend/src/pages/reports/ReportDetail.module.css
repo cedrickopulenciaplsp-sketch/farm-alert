@@ -20,19 +20,23 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  background: none;
-  border: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: var(--text-sm);
   font-weight: 500;
   color: var(--color-text-secondary);
-  padding: 0.25rem 0;
-  border-radius: var(--radius-xs);
-  transition: color var(--transition-fast);
+  padding: 0.35rem 0.75rem;
+  box-shadow: var(--shadow-xs);
+  transition: all var(--transition-fast);
+  width: fit-content;
 }
 
 .backBtn:hover {
-  color: var(--color-brand);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-strong);
+  background: var(--color-overlay);
 }
 
 /* ── Page Header ─────────────────────────────────────────── */
