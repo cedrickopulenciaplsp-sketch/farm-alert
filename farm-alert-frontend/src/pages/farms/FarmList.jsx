@@ -99,6 +99,7 @@ function FarmRow({ farm, onEdit, onViewDossier }) {
           title="View 360° Dossier"
         >
           <BookOpen size={14} />
+          <span>Dossier</span>
         </button>
         <button
           id={`edit-farm-${farm.farm_id}`}
@@ -109,7 +110,6 @@ function FarmRow({ farm, onEdit, onViewDossier }) {
         >
           <Edit2 size={14} />
         </button>
-        <ChevronRight size={14} className={styles.chevron} aria-hidden="true" />
       </td>
     </tr>
   );
