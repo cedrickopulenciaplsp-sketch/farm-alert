@@ -411,6 +411,26 @@ input[type="date"].sopInput {
   min-width: 160px;
 }
 
+/* Style the individual date segments (MM / DD / YYYY) when typing */
+input[type="date"].sopInput::-webkit-datetime-edit-month-field,
+input[type="date"].sopInput::-webkit-datetime-edit-day-field,
+input[type="date"].sopInput::-webkit-datetime-edit-year-field {
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+input[type="date"].sopInput::-webkit-datetime-edit-month-field:focus,
+input[type="date"].sopInput::-webkit-datetime-edit-day-field:focus,
+input[type="date"].sopInput::-webkit-datetime-edit-year-field:focus {
+  background: var(--color-brand);
+  color: #fff;
+}
+
+input[type="date"].sopInput::-webkit-datetime-edit-text {
+  color: var(--color-text-muted);
+  padding: 0 2px;
+}
+
 input[type="date"].sopInput::-webkit-calendar-picker-indicator {
   cursor: pointer;
   opacity: 0.6;
