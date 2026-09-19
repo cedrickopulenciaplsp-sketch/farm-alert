@@ -78,14 +78,14 @@ export default function MiniTrendChart({ trends = [], loading = false, height = 
             fontSize: 12,
             padding: '8px 12px',
           }}
-          formatter={(value, name) => [value, name === 'cases' ? 'Reported Cases' : 'Livestock Deaths']}
+          formatter={(value) => [value, 'Reported Cases']}
         />
         <Legend
           iconType="circle"
           iconSize={8}
           formatter={name => (
             <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
-              {name === 'cases' ? 'Reported Cases' : 'Livestock Deaths'}
+              Reported Cases
             </span>
           )}
           wrapperStyle={{ paddingTop: 4 }}
@@ -93,17 +93,9 @@ export default function MiniTrendChart({ trends = [], loading = false, height = 
         <Line
           type="monotone"
           dataKey="cases"
-          stroke="#166534"
-          strokeWidth={2.5}
-          dot={{ r: 3, fill: '#166534' }}
-          activeDot={{ r: 5 }}
-        />
-        <Line
-          type="monotone"
-          dataKey="deaths"
-          stroke="#e07a5f"
+          stroke="var(--color-brand)"
           strokeWidth={2}
-          dot={{ r: 3, fill: '#e07a5f' }}
+          dot={{ r: 3, fill: 'var(--color-brand)' }}
           activeDot={{ r: 5 }}
         />
       </LineChart>

@@ -450,17 +450,7 @@ export default function Dashboard() {
           </div>
         </Card>
 
-        <Card className={`${styles.metricCard} anim-pop delay-4`}>
-          <div className={styles.metricIconBox} style={{ color: 'var(--icon-red-text)', background: 'var(--icon-red-bg)' }}>
-            <Skull size={20} />
-          </div>
-          <div className={styles.metricContent}>
-            <p className={styles.metricValue} style={{ color: summary?.totalMortalities > 0 ? 'var(--color-danger)' : 'inherit' }}>
-              {summary?.totalMortalities}
-            </p>
-            <p className={styles.metricLabel}>Livestock Deaths</p>
-          </div>
-        </Card>
+
       </div>
 
       {/* ── Tab Switcher ──────────────────────────────────────── */}
@@ -566,8 +556,8 @@ export default function Dashboard() {
 
           <div className={styles.contentRow}>
             <Card className={`${styles.chartCard} anim-slide-left delay-9`}>
-              <p className={styles.chartTitle}>Monthly Case &amp; Mortality Trend</p>
-              <p className={styles.chartSubtitle}>Reported cases and livestock deaths across all barangays</p>
+              <p className={styles.chartTitle}>Monthly Case Trend</p>
+              <p className={styles.chartSubtitle}>Reported cases across all barangays</p>
               <MiniTrendChart trends={trends} loading={loadingCharts} height={240} />
             </Card>
             <Card className={`${styles.chartCard} anim-slide-right delay-10`}>
@@ -632,9 +622,8 @@ export default function Dashboard() {
           </Card>
 
           {/* Summary Stats */}
-          <div className={`${analyticsStyles.statsRow} anim-pop delay-2`}>
+          <div className={`${analyticsStyles.statsRowThree} anim-pop delay-2`}>
             <StatCard label="Total Cases (Period)"      value={totalCases}       icon={FileText}      iconBg="var(--icon-green-bg)"  iconColor="var(--icon-green-text)"  loading={loadingMonthly} />
-            <StatCard label="Total Mortalities (Period)" value={totalMortalities} icon={Skull}         iconBg="var(--icon-red-bg)"    iconColor="var(--icon-red-text)"    loading={loadingMonthly} sub={totalMortalities > 0 ? 'Deaths in selected period' : 'No deaths recorded'} />
             <StatCard label="Active Outbreaks"           value={activeOutbreaksAnalytics}  icon={AlertTriangle} iconBg="var(--icon-orange-bg)" iconColor="var(--icon-orange-text)" loading={activeOutbreaksAnalytics === null} sub={activeOutbreaksAnalytics > 0 ? 'Requires immediate attention' : 'No active outbreaks'} />
             <StatCard label="Hotspot Barangay"           value={topBarangay}      icon={MapPin}        iconBg="var(--icon-amber-bg)"  iconColor="var(--icon-amber-text)"  loading={loadingBarangay} />
           </div>
@@ -645,13 +634,13 @@ export default function Dashboard() {
           </div>
 
           <div className={analyticsStyles.grid}>
-            {/* Monthly Case & Mortality Trends */}
+            {/* Monthly Case Trends */}
             <Card className={`${analyticsStyles.fullCard} anim-slide-left delay-4`}>
               <Card.Header
                 title={
                   <div className={analyticsStyles.chartTitle}>
                     <TrendingUp size={15} />
-                    <span>Monthly Case &amp; Mortality Trends</span>
+                    <span>Monthly Case Trends</span>
                     {trendIndicator && (
                       <span className={`${analyticsStyles.trendBadge} ${trendIndicator.up ? analyticsStyles.trendUp : analyticsStyles.trendDown}`}>
                         {trendIndicator.up ? <ChevronUp size={12} /> : trendIndicator.same ? <Minus size={12} /> : <ChevronDown size={12} />}
@@ -671,25 +660,21 @@ export default function Dashboard() {
                             <stop offset="5%"  stopColor="hsl(152,58%,28%)" stopOpacity={0.25} />
                             <stop offset="95%" stopColor="hsl(152,58%,28%)" stopOpacity={0} />
                           </linearGradient>
-                          <linearGradient id="gradDeaths" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%"  stopColor="#ef4444" stopOpacity={0.18} />
-                            <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                          </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
                         <XAxis dataKey="month_label" tick={{ fontSize: 12, fill: tickColor }} tickLine={false} axisLine={false} />
                         <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: tickColor }} tickLine={false} axisLine={false} />
                         <RechartsTooltip
                           contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-md)', backgroundColor: tooltipBg, color: tooltipText }}
-                          formatter={(value, name) => [value, name === 'total_reports' ? 'Cases' : 'Deaths']}
+                          formatter={(value) => [value, 'Cases']}
+                          cursor={{ stroke: 'var(--color-border-strong)', strokeWidth: 1, strokeDasharray: '4 4' }}
                         />
                         <Legend
                           iconType="circle" iconSize={9}
-                          formatter={name => <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{name === 'total_reports' ? 'Cases' : 'Deaths'}</span>}
+                          formatter={name => <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>Cases</span>}
                           wrapperStyle={{ paddingTop: 6 }}
                         />
                         <Area type="monotone" dataKey="total_reports" stroke="hsl(152,58%,28%)" strokeWidth={2.5} fill="url(#gradCases)" dot={{ r: 4, fill: 'hsl(152,58%,28%)' }} activeDot={{ r: 6 }} />
-                        <Area type="monotone" dataKey="total_mortalities" stroke="#ef4444" strokeWidth={2} strokeDasharray="4 2" fill="url(#gradDeaths)" dot={{ r: 3, fill: '#ef4444' }} activeDot={{ r: 5 }} />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
@@ -710,16 +695,15 @@ export default function Dashboard() {
                         <YAxis dataKey="barangay_name" type="category" tick={{ fontSize: 11, fill: tickColor }} axisLine={false} tickLine={false} width={90} />
                         <RechartsTooltip
                           contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-md)', backgroundColor: tooltipBg, color: tooltipText }}
-                          formatter={(value, name) => [value, name === 'total_reports' ? 'Cases' : 'Deaths']}
+                          formatter={(value) => [value, 'Cases']}
                           cursor={{ fill: 'var(--color-overlay)' }}
                         />
                         <Legend
                           iconType="circle" iconSize={9}
-                          formatter={name => <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{name === 'total_reports' ? 'Cases' : 'Deaths'}</span>}
+                          formatter={name => <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>Cases</span>}
                           wrapperStyle={{ paddingTop: 6 }}
                         />
                         <Bar dataKey="total_reports"     name="total_reports"     radius={[0, 4, 4, 0]} barSize={12} fill="hsl(152,58%,40%)" />
-                        <Bar dataKey="total_mortalities" name="total_mortalities" radius={[0, 4, 4, 0]} barSize={12} fill="#ef4444" />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
