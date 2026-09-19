@@ -359,6 +359,7 @@ export default function OutbreakAlerts() {
   const [resolving,      setResolving]      = useState(false);
 
   // ── Load outbreaks ────────────────────────────────────────────────────────
+  // Initial load — shows skeleton
   const loadOutbreaks = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -368,11 +369,17 @@ export default function OutbreakAlerts() {
     setLoading(false);
   }, []);
 
+  // Silent refresh — updates data without skeleton flash
+  const silentRefresh = useCallback(async () => {
+    const { data, error: fetchError } = await getOutbreaks();
+    if (!fetchError && data) setOutbreaks(data);
+  }, []);
+
   useEffect(() => { loadOutbreaks(); }, [loadOutbreaks]);
 
   // Auto-refresh when outbreak_alerts or disease_reports change in DB
-  useRealtime('outbreak_alerts',  () => loadOutbreaks());
-  useRealtime('disease_reports',  () => loadOutbreaks());
+  useRealtime('outbreak_alerts',  () => silentRefresh());
+  useRealtime('disease_reports',  () => silentRefresh());
 
   // ── Handle action (acknowledge / resolve) ─────────────────────────────────
   async function handleAction(outbreakId, newStatus) {
