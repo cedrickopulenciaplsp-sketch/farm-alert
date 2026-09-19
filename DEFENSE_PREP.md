@@ -49,3 +49,50 @@ This document contains the most likely "Trap Questions" and loopholes a capstone
 > **Panelist:** *"Your UI looks very modern, but government offices often have older staff members who aren't tech-savvy and prefer Microsoft Excel or paper. How do you expect them to use this without breaking it?"*
 
 * **Your Defense:** *"That is exactly why we intentionally designed the User Interface to be extremely restrictive. We removed complicated IT features like 'Super Admin Roles' and replaced manual typing with Toggles, Steppers, and Dropdowns. The automated severity math prevents them from making calculation errors. We designed it so that if they know how to use Facebook or Google Maps, they already know how to use FarmAlert."*
+
+## PART 3: UI/UX & System Logic Defenses (Recent Updates)
+
+### ?? 9. The "System Settings / Threshold" Trap
+> **Panelist:** *"Why do we have a System Settings page where users can change the outbreak thresholds? The Department of Agriculture (DA) already dictates that even 1 farm with disease means we are on alert. Isn't this feature nonsense?"*
+
+* **Your Defense:** *"Sir/Ma'am, the DA protocols are strict today, but government mandates change. If we hardcoded the threshold to '1' in the source code, and the DA updates their protocol in 3 years to require '3 cases' before declaring a regional crisis, the system would immediately become obsolete. The CVO does not have an IT staff to rewrite the code. By placing the thresholds in a System Settings panel, we future-proofed the system. The CVO Director can update the logic themselves to comply with future DA policies without needing to hire a software developer."*
+
+### ?? 10. The "Dummy Data" Trap
+> **Panelist:** *"I noticed the data in your demonstration is completely fake. Are we supposed to evaluate a system based on dummy data? Will the panel accept this?"*
+
+* **Your Defense:** *"Yes, sir/ma'am. We intentionally utilized dummy data specifically to comply with the Data Privacy Act of 2012 (RA 10173). Using real names and exact coordinates of local farmers without their explicit consent for a public capstone defense would be a direct violation of their privacy. The dummy data perfectly mirrors the structure and logic of real-world scenarios to prove the system works, while keeping us legally and ethically compliant."*
+
+### ?? 11. The "Temporarily Closed / Soft-Delete" Logic
+> **Panelist:** *"Why is there no 'Delete Farm' button? What if a farm goes bankrupt?"*
+
+* **Your Defense:** *"We implemented a 'Temporarily Closed' status instead of a permanent delete button as a 'Soft-Delete' mechanism. In epidemiology, historical data is critical. If a farm is permanently deleted from the database, all its past outbreak history vanishes. By marking them as Temporarily Closed, we hide them from active metrics but preserve their history for future pattern analysis, and prevent rogue staff from permanently deleting records."*
+
+### ?? 12. The "4-Minute Auto Logout" Logic
+> **Panelist:** *"Why does the system automatically log me out after 4 minutes of inactivity?"*
+
+* **Your Defense:** *"Because this system contains sensitive government intelligence and farmer PII (Personally Identifiable Information). If an officer steps away from their desk for a coffee break, anyone could walk up and steal data or falsify an outbreak report. We calculated 4 minutes as the perfect balance between user convenience and strict cybersecurity protocol."*
+
+### ?? 13. Swine vs. Poultry Color Coding (UI/UX)
+> **Panelist:** *"Why do the Swine Details and Poultry Details boxes have different colored borders?"*
+
+* **Your Defense:** *"That is an intentional UX design choice for error prevention. Because our system allows farms to be registered as 'Both', both data entry panels render simultaneously. We assigned specific colors (warm orange for swine, cool blue for poultry) to visually separate them. This prevents cognitive overload and drastically reduces the chance of an encoder accidentally inputting swine data into the poultry fields during rapid data entry."*
+
+### ?? 14. The "Clear Filters" Button
+> **Panelist:** *"Is the 'Clear' button next to the filters really necessary?"*
+
+* **Your Defense:** *"Yes, it is a standard UI/UX fail-safe designed to prevent 'Zero Results Panic'. When users apply multiple stacked filters, forcing them to manually reset each dropdown is poor design. The Clear button provides a one-click reset, ensuring officers don't mistakenly believe data is missing just because they forgot a hidden filter was left active."*
+
+### ?? 15. The Farm 360° Dossier Pop-up
+> **Panelist:** *"Why do we need this Farm Dossier pop-up when all this data is already saved in the database or the Edit page?"*
+
+* **Your Defense:** *"The database stores raw data, but the Farm 360° Dossier transforms it into actionable intelligence. It acts as a complete 'medical chart' for a farm. By aggregating contact info, live head count, and chronological disease history into a single modal, the City Veterinarian can perform instant triage without losing their place on the map."*
+
+### ?? 16. Smart Disease Filtering
+> **Panelist:** *"How does the system prevent someone from reporting Avian Flu for a pig farm?"*
+
+* **Your Defense:** *"We implemented Smart Filtering at the UI level. If an encoder selects a Swine farm, the system actively filters the disease dropdown to only show Swine diseases. If they accidentally select African Swine Fever and then switch the farm to a Poultry farm, the system automatically clears the disease selection to prevent them from submitting an impossible biological record."*
+
+### ?? 17. The "Rate Limiting & DDoS" Trap
+> **Panelist:** *"Does your system have rate limiting? What stops a hacker from running a script to spam your database with 10,000 fake disease reports and crashing the system?"*
+
+* **Your Defense:** *"We implemented rate limiting at the infrastructure layer. Our backend is powered by Supabase, which utilizes an API Gateway (Kong) that natively rate-limits excessive requests. Furthermore, because our API is locked behind strict Row Level Security (RLS) and a Google OAuth whitelist, any unauthenticated spam requests are rejected at the edge—meaning they never even reach the database to slow it down. Finally, our frontend is hosted on Vercel, which provides automatic DDoS mitigation and IP blocking for abusive traffic."*

@@ -60,7 +60,8 @@ export async function getComplianceLogById(id) {
  *
  * @param {object} logData
  * @param {string} logData.farm_id
- * @param {string} logData.compliance_status - 'Compliant' | 'Semi-Compliant' | 'Non-Compliant'
+ * @param {boolean} logData.passed_physical_inspection
+ * @param {boolean} logData.passed_documentation
  * @param {string} logData.evaluation_date
  * @param {string} [logData.notes]
  * @returns {Promise<{ data: object|null, error: object|null }>}

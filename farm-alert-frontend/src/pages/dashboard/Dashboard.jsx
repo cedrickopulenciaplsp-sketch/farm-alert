@@ -47,10 +47,9 @@ const LIVESTOCK_TYPES = ['all', 'Swine', 'Poultry'];
 const DISEASE_COLORS  = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#14b8a6'];
 const SEVERITY_COLORS = { Mild: '#10b981', Moderate: '#f59e0b', Severe: '#f97316', Critical: '#ef4444' };
 
-const COMPLIANCE_ORDER = ['Compliant', 'Semi-Compliant', 'Non-Compliant'];
+const COMPLIANCE_ORDER = ['Compliant', 'Non-Compliant'];
 const COMPLIANCE_META  = {
   'Compliant':      { color: '#10b981' },
-  'Semi-Compliant': { color: '#f59e0b' },
   'Non-Compliant':  { color: '#ef4444' },
 };
 
@@ -366,7 +365,6 @@ export default function Dashboard() {
   const topBarangay    = barangayData[0]?.barangay_name ?? '—';
 
   const compliantCount     = complianceData.find(d => d.status === 'Compliant')?.count ?? 0;
-  const semiCompliantCount = complianceData.find(d => d.status === 'Semi-Compliant')?.count ?? 0;
   const nonCompliantCount  = complianceData.find(d => d.status === 'Non-Compliant')?.count ?? 0;
   const totalEvaluations   = complianceData.reduce((s, d) => s + d.count, 0);
 
@@ -757,7 +755,7 @@ export default function Dashboard() {
             </Card>
 
             {/* Report Status */}
-            <Card className={`${analyticsStyles.thirdCard} anim-pop delay-7`}>
+            <Card className={`${analyticsStyles.twoThirdCard} anim-pop delay-7`}>
               <Card.Header title={<div className={analyticsStyles.chartTitle}><ClipboardList size={15} /><span>Report Status</span></div>} />
               <Card.Body>
                 <StackedBar
@@ -766,20 +764,6 @@ export default function Dashboard() {
                   meta={STATUS_META}
                   emptyMessage="No reports filed yet."
                   loading={loadingExtra}
-                />
-              </Card.Body>
-            </Card>
-
-            {/* Cases by Severity */}
-            <Card className={`${analyticsStyles.thirdCard} anim-pop delay-8`}>
-              <Card.Header title={<div className={analyticsStyles.chartTitle}><AlertTriangle size={15} /><span>Cases by Severity</span></div>} />
-              <Card.Body>
-                <StackedBar
-                  data={severityPieData}
-                  order={Object.keys(SEVERITY_COLORS)}
-                  meta={Object.fromEntries(Object.entries(SEVERITY_COLORS).map(([k, color]) => [k, { color, label: k }]))}
-                  emptyMessage="No severity data yet."
-                  loading={loadingSeverity}
                 />
               </Card.Body>
             </Card>
@@ -821,11 +805,10 @@ export default function Dashboard() {
             <div className={analyticsStyles.sectionLine} />
           </div>
 
-          <div className={`${analyticsStyles.statsRow} anim-pop delay-10`}>
+          <div className={`${analyticsStyles.statsRowThree} anim-pop delay-10`}>
             <StatCard label="Compliant"        value={compliantCount}     icon={ShieldCheck}   iconBg="var(--badge-compliant-bg)"     iconColor="var(--badge-compliant-text)"     loading={loadingExtra} sub={compliantCount > 0 ? 'Fully compliant farms' : 'None recorded'} />
-            <StatCard label="Semi-Compliant"   value={semiCompliantCount} icon={ShieldCheck}   iconBg="var(--badge-semi-bg)"          iconColor="var(--badge-semi-text)"          loading={loadingExtra} sub={semiCompliantCount > 0 ? 'Partially compliant' : 'None'} />
             <StatCard label="Non-Compliant"    value={nonCompliantCount}  icon={AlertTriangle} iconBg="var(--badge-noncompliant-bg)"  iconColor="var(--badge-noncompliant-text)"  loading={loadingExtra} sub={nonCompliantCount > 0 ? 'Requires follow-up' : 'All compliant'} />
-            <StatCard label="Total Evaluations" value={totalEvaluations}  icon={ShieldCheck}   iconBg="var(--icon-green-bg)"          iconColor="var(--icon-green-text)"          loading={loadingExtra} />
+            <StatCard label="Total Inspections" value={totalEvaluations}  icon={ShieldCheck}   iconBg="var(--icon-green-bg)"          iconColor="var(--icon-green-text)"          loading={loadingExtra} />
           </div>
 
           <div className={`${analyticsStyles.grid} anim-slide-left delay-10`}>

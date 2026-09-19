@@ -9,90 +9,14 @@ import { useAuth } from '../../context/AuthContext';
 import styles from './ReportForm.module.css';
 
 // ---------------------------------------------------------------------------
-// Severity matrix — mirrors the DB trigger trg_calculate_report_severity()
-// Morbidity % = (animals_affected / head_count) * 100
-// Mortality % = (mortalities      / head_count) * 100
-// ---------------------------------------------------------------------------
-const SEVERITY_META = {
-  Critical: { color: 'var(--color-danger)',           bg: 'hsl(4, 74%, 94%)' },
-  Severe:   { color: 'hsl(25, 95%, 53%)',             bg: 'hsl(25, 90%, 92%)' },
-  Moderate: { color: 'hsl(38, 80%, 38%)',             bg: 'hsl(48, 90%, 92%)' },
-  Mild:     { color: 'var(--color-success)',           bg: 'hsl(145, 55%, 92%)' },
-};
-
-function calculateSeverity(animalsAffected, mortalities, headCount) {
-  // Guard: need a farm selected and a non-empty animals_affected value
-  if (!headCount || headCount === 0) return null;
-  if (animalsAffected === '' || animalsAffected === null || animalsAffected === undefined) return null;
-
-  const affected = Number(animalsAffected);
-  const deaths   = mortalities === '' || mortalities === null ? 0 : Number(mortalities);
-
-  if (isNaN(affected) || affected < 0) return null;
-  if (isNaN(deaths)   || deaths   < 0) return null;
-
-  const morbidity = (affected / headCount) * 100;
-  const mortality  = (deaths   / headCount) * 100;
-
-  let level;
-  if (mortality > 20 || morbidity > 60)        level = 'Critical';
-  else if (mortality >= 6 || morbidity >= 30)  level = 'Severe';
-  else if (mortality >= 1 || morbidity >= 10)  level = 'Moderate';
-  else                                          level = 'Mild';
-
-  return { level, morbidity: morbidity.toFixed(1), mortality: mortality.toFixed(1) };
-}
-
-
-// ---------------------------------------------------------------------------
-// Read-only severity display panel
-// ---------------------------------------------------------------------------
-function SeverityDisplay({ result }) {
-  if (!result) {
-    return (
-      <div className={styles.severityPending}>
-        <Activity size={14} aria-hidden="true" className={styles.severityPendingIcon} />
-        <span>Severity calculated automatically after entering affected animals &amp; farm</span>
-      </div>
-    );
-  }
-
-  const meta = SEVERITY_META[result.level];
-  return (
-    <div
-      className={styles.severityResult}
-      style={{ background: meta.bg, borderColor: `${meta.color}40` }}
-      role="status"
-      aria-live="polite"
-    >
-      {/* Badge */}
-      <div className={styles.severityBadge} style={{ color: meta.color }}>
-        <span className={styles.severityDot} style={{ background: meta.color }} aria-hidden="true" />
-        {result.level}
-      </div>
-
-      {/* Calculated percentages */}
-      <div className={styles.severityStats}>
-        <span className={styles.severityStat}>
-          <strong>Morbidity:</strong> {result.morbidity}%
-        </span>
-        <span className={styles.severityStatDivider} aria-hidden="true">·</span>
-        <span className={styles.severityStat}>
-          <strong>Mortality:</strong> {result.mortality}%
-        </span>
-      </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Form initial state
 // ---------------------------------------------------------------------------
 const INITIAL_FORM = {
   farm_id:          '',
   disease_id:       '',
-  animals_affected: '',
-  mortalities:      '',
+  animals_affected: 0,
+  mortalities:      0,
+  severity:         'Severe',
   date_reported:    new Date().toISOString().slice(0, 10),
   additional_notes: '',
   status:           'Active',
@@ -101,8 +25,6 @@ const INITIAL_FORM = {
 const INITIAL_ERRORS = {
   farm_id:          '',
   disease_id:       '',
-  animals_affected: '',
-  mortalities:      '',
   date_reported:    '',
 };
 
@@ -138,15 +60,7 @@ export default function ReportForm({ onSuccess, onCancel }) {
     loadDropdowns();
   }, []);
 
-  // ── Auto-calculate severity from inputs ──────────────────────────────────
-  // Use primitive head_count so useMemo re-runs reliably on value changes
-  const selectedFarm   = farms.find(f => f.farm_id === form.farm_id) ?? null;
-  const headCount      = selectedFarm?.head_count ?? 0;
-  const severityResult = useMemo(
-    () => calculateSeverity(form.animals_affected, form.mortalities, headCount),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [form.animals_affected, form.mortalities, headCount],
-  );
+  const selectedFarm = farms.find(f => f.farm_id === form.farm_id) ?? null;
 
   const filteredDiseases = useMemo(() => {
     if (!selectedFarm) return diseases;
@@ -223,28 +137,6 @@ export default function ReportForm({ onSuccess, onCancel }) {
       valid = false;
     }
 
-    // animals_affected
-    if (!form.animals_affected || Number(form.animals_affected) < 0) {
-      newErrors.animals_affected = 'Please provide a valid number of animals affected.';
-      valid = false;
-    } else if (selectedFarm && Number(form.animals_affected) > selectedFarm.head_count) {
-      newErrors.animals_affected = `Cannot exceed the farm's total head count (${selectedFarm.head_count}).`;
-      valid = false;
-    }
-
-    // mortalities — cannot exceed animals_affected
-    if (form.mortalities !== '' && Number(form.mortalities) < 0) {
-      newErrors.mortalities = 'Mortalities cannot be a negative number.';
-      valid = false;
-    } else if (
-      form.animals_affected !== '' &&
-      form.mortalities !== '' &&
-      Number(form.mortalities) > Number(form.animals_affected)
-    ) {
-      newErrors.mortalities = 'Mortalities cannot exceed the number of animals affected.';
-      valid = false;
-    }
-
     if (!form.date_reported) {
       newErrors.date_reported = 'Please provide the date this was reported.';
       valid = false;
@@ -261,14 +153,8 @@ export default function ReportForm({ onSuccess, onCancel }) {
 
     setSubmit(true);
     setApiError('');
-
-    // Severity is determined server-side by the DB trigger.
-    // We pass a placeholder so the NOT NULL constraint is satisfied
-    // in the rare case the trigger does not fire (edge case guard).
     const payload = {
       ...form,
-      mortalities: form.mortalities === '' ? 0 : Number(form.mortalities),
-      severity: severityResult?.level ?? 'Mild',
     };
 
     const { data, error } = await createReport(payload);
@@ -324,7 +210,7 @@ export default function ReportForm({ onSuccess, onCancel }) {
       <Select
         id="report-disease"
         name="disease_id"
-        label="Disease"
+        label="Suspected Disease"
         required
         value={form.disease_id}
         onChange={handleChange}
@@ -332,7 +218,7 @@ export default function ReportForm({ onSuccess, onCancel }) {
         disabled={loading || submit}
       >
         <option value="" disabled>
-          {loading ? 'Loading diseases…' : 'Select a disease'}
+          {loading ? 'Loading diseases…' : 'Select a suspected disease'}
         </option>
         {filteredDiseases.map(d => (
           <option key={d.disease_id} value={d.disease_id}>
@@ -340,46 +226,6 @@ export default function ReportForm({ onSuccess, onCancel }) {
           </option>
         ))}
       </Select>
-
-      {/* Animals affected */}
-      <Input
-        id="report-animals"
-        name="animals_affected"
-        type="number"
-        min="0"
-        max={headCount > 0 ? headCount : undefined}
-        label="Animals Affected"
-        required
-        value={form.animals_affected}
-        onChange={handleChange}
-        error={errors.animals_affected}
-        disabled={submit}
-        placeholder="E.g., 10"
-        hint={selectedFarm && headCount > 0 ? `Max: ${headCount} (farm's total head count)` : undefined}
-      />
-
-      {/* Mortalities (deaths) */}
-      <Input
-        id="report-mortalities"
-        name="mortalities"
-        type="number"
-        min="0"
-        label="Mortalities (Deaths)"
-        value={form.mortalities}
-        onChange={handleChange}
-        error={errors.mortalities}
-        disabled={submit}
-        placeholder="E.g., 2  (0 if none)"
-      />
-
-      {/* Auto-calculated severity display */}
-      <div className={styles.fieldBlock}>
-        <label className={styles.fieldLabel}>
-          Severity
-          <span className={styles.autoTag} aria-label="Auto-calculated">Auto</span>
-        </label>
-        <SeverityDisplay result={severityResult} />
-      </div>
 
       {/* Date reported */}
       <Input

@@ -105,24 +105,6 @@ function ReportRow({ report }) {
         </div>
       </td>
 
-      {/* Animals affected */}
-      <td className={styles.cell}>
-        <span className={styles.statPrimary}>{report.animals_affected ?? '—'}</span>
-      </td>
-
-      {/* Mortalities */}
-      <td className={styles.cell}>
-        {Number(report.mortalities) > 0
-          ? <span className={styles.statDanger}>{report.mortalities}</span>
-          : <span className={styles.statMuted}>0</span>
-        }
-      </td>
-
-      {/* Severity */}
-      <td className={styles.cell}>
-        <SeverityBadge severity={report.severity} />
-      </td>
-
       {/* Status */}
       <td className={styles.cell}>
         <StatusBadge status={report.status} />
@@ -184,7 +166,6 @@ export default function DiseaseReports() {
   // Filter state
   const [search,   setSearch]   = useState('');
   const [status,   setStatus]   = useState('');
-  const [severity, setSeverity] = useState('');
 
   // New-report modal
   const [showModal, setShowModal] = useState(false);
@@ -198,7 +179,6 @@ export default function DiseaseReports() {
 
     const { data, error: fetchError } = await getReports({
       status:   status   || null,
-      severity: severity || null,
     });
 
     if (fetchError) {
@@ -221,7 +201,7 @@ export default function DiseaseReports() {
 
     setReports(result);
     setLoading(false);
-  }, [search, status, severity]);
+  }, [search, status]);
 
   // Debounce search field
   useEffect(() => {
@@ -235,7 +215,6 @@ export default function DiseaseReports() {
   const handleClearFilters = () => {
     setSearch('');
     setStatus('');
-    setSeverity('');
   };
 
   const handleReportSuccess = () => {
@@ -243,7 +222,7 @@ export default function DiseaseReports() {
     loadReports();
   };
 
-  const hasFilters = !!(search || status || severity);
+  const hasFilters = !!(search || status);
 
   // ---------------------------------------------------------------------------
   // CSV Export — invokes the server-side Edge Function
@@ -253,7 +232,7 @@ export default function DiseaseReports() {
     try {
       const { data, error: fnError } = await supabase.functions.invoke(
         'export-reports-csv',
-        { body: { search, status: status || null, severity: severity || null } }
+        { body: { search, status: status || null } }
       );
       if (fnError) throw fnError;
 
@@ -365,22 +344,6 @@ export default function DiseaseReports() {
             <option value="Under Monitoring">Under Monitoring</option>
           </Select>
 
-          {/* Severity filter */}
-          <Select
-            id="filter-report-severity"
-            label=""
-            value={severity}
-            onChange={(e) => setSeverity(e.target.value)}
-            aria-label="Filter by severity"
-            className={styles.filterSelect}
-          >
-            <option value="">All Severities</option>
-            <option value="Mild">Mild</option>
-            <option value="Moderate">Moderate</option>
-            <option value="Severe">Severe</option>
-            <option value="Critical">Critical</option>
-          </Select>
-
           {/* Filter icon + clear */}
           <div className={styles.filterActions}>
             <Filter size={15} className={styles.filterIcon} aria-hidden="true" />
@@ -423,9 +386,6 @@ export default function DiseaseReports() {
                 <tr>
                   <th className={styles.th}>Disease / Farm</th>
                   <th className={styles.th}>Barangay</th>
-                  <th className={styles.th}>Affected</th>
-                  <th className={styles.th}>Deaths</th>
-                  <th className={styles.th}>Severity</th>
                   <th className={styles.th}>Status</th>
                   <th className={styles.th}>Date Reported</th>
                   <th className={styles.th}>Encoded By</th>

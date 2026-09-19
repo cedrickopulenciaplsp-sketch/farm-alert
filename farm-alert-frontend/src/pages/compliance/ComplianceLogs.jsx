@@ -24,7 +24,6 @@ import styles from './ComplianceLogs.module.css';
 // ---------------------------------------------------------------------------
 const STATUS_COLORS = {
   'Compliant':       { bg: 'var(--badge-compliant-bg)',     color: 'var(--badge-compliant-text)'     },
-  'Semi-Compliant':  { bg: 'var(--badge-semi-bg)',          color: 'var(--badge-semi-text)'          },
   'Non-Compliant':   { bg: 'var(--badge-noncompliant-bg)',  color: 'var(--badge-noncompliant-text)'  },
 };
 
@@ -125,12 +124,12 @@ function EmptyState({ hasFilters, onClear }) {
         <ShieldCheck size={28} aria-hidden="true" />
       </div>
       <h3 className={styles.emptyTitle}>
-        {hasFilters ? 'No records match your filters' : 'No compliance evaluations yet'}
+        {hasFilters ? 'No records match your filters' : 'No compliance inspections yet'}
       </h3>
       <p className={styles.emptyDesc}>
         {hasFilters
           ? 'Try adjusting or clearing your active filters.'
-          : 'Record the first pest control evaluation using the button above.'}
+          : 'Record the first pest control inspection using the button above.'}
       </p>
       {hasFilters && (
         <Button variant="ghost" size="sm" id="clear-compliance-filters-btn" onClick={onClear}>
@@ -239,7 +238,7 @@ export default function ComplianceLogs() {
           <p className={styles.pageSubtitle}>
             {loading
               ? 'Loading…'
-              : `${logs.length} evaluation${logs.length !== 1 ? 's' : ''}${hasFilters ? ' (filtered)' : ''}`}
+              : `${logs.length} inspection${logs.length !== 1 ? 's' : ''}${hasFilters ? ' (filtered)' : ''}`}
           </p>
         </div>
         <Button
@@ -249,7 +248,7 @@ export default function ComplianceLogs() {
           onClick={handleAddNew}
         >
           <Plus size={16} aria-hidden="true" />
-          New Evaluation
+          New Inspection
         </Button>
       </header>
 
@@ -324,7 +323,7 @@ export default function ComplianceLogs() {
                 <tr>
                   <th className={styles.th}>Farm</th>
                   <th className={styles.th}>Status</th>
-                  <th className={styles.th}>Evaluation Date</th>
+                  <th className={styles.th}>Inspection Date</th>
                   <th className={styles.th}>Notes</th>
                   <th className={styles.th}>Encoded By</th>
                   <th className={`${styles.th} ${styles.thAction}`} />
@@ -352,7 +351,7 @@ export default function ComplianceLogs() {
       <Modal
         isOpen={showModal}
         onClose={() => { setShowModal(false); setEditingLog(null); }}
-        title={editingLog ? 'Edit Compliance Record' : 'Log New Evaluation'}
+        title={editingLog ? 'Edit Compliance Record' : 'Log New Inspection'}
         size="md"
       >
         <ComplianceModal
@@ -380,7 +379,7 @@ export default function ComplianceLogs() {
         title="Delete Compliance Record"
       >
         <p className={styles.deleteModalBody}>
-          Are you sure you want to delete this evaluation record? This action cannot be undone.
+          Are you sure you want to delete this inspection record? This action cannot be undone.
         </p>
         <div className={styles.deleteModalFooter}>
           <Button variant="ghost" onClick={() => setShowDeleteModal(false)}>Cancel</Button>

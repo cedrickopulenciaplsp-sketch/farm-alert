@@ -106,8 +106,6 @@ export default function FarmDossierModal({ farmId, onClose }) {
   const totalCases      = reports.length;
   const activeCases     = reports.filter(r => r.status === 'Active').length;
   const resolvedCases   = reports.filter(r => r.status === 'Resolved').length;
-  const totalMortalities = reports.reduce((s, r) => s + (r.mortalities || 0), 0);
-
   return createPortal(
     <div
       className={styles.backdrop}
@@ -130,6 +128,9 @@ export default function FarmDossierModal({ farmId, onClose }) {
               <p className={styles.headerEyebrow}>Farm 360° Dossier</p>
               <h2 className={styles.headerTitle}>
                 {loading ? 'Loading…' : (farm?.farm_name ?? 'Farm Details')}
+                {farm?.has_active_checkpoint && (
+                  <span className={styles.checkpointBadge}>🚧 CHECKPOINT ACTIVE</span>
+                )}
               </h2>
             </div>
           </div>
@@ -199,10 +200,6 @@ export default function FarmDossierModal({ farmId, onClose }) {
                   <p className={styles.statValue}>{resolvedCases}</p>
                   <p className={styles.statLabel}>Resolved</p>
                 </div>
-                <div className={`${styles.statItem} ${totalMortalities > 0 ? styles.statDanger : ''}`}>
-                  <p className={styles.statValue}>{totalMortalities}</p>
-                  <p className={styles.statLabel}>Deaths Recorded</p>
-                </div>
               </section>
 
               {/* ── Chronological Timeline ───────────────────────── */}
@@ -238,16 +235,9 @@ export default function FarmDossierModal({ farmId, onClose }) {
                           <div className={styles.timelineContent}>
                             <div className={styles.timelineHeader}>
                               <span className={styles.timelineDisease}>{report.disease_name}</span>
-                              <SeverityBadge severity={report.severity} />
                             </div>
                             <div className={styles.timelineMeta}>
                               <span><Calendar size={11} /> {date}</span>
-                              {report.animals_affected > 0 && (
-                                <span>{report.animals_affected} affected</span>
-                              )}
-                              {report.mortalities > 0 && (
-                                <span className={styles.mortalityBadge}>{report.mortalities} dead</span>
-                              )}
                             </div>
                             {report.additional_notes && (
                               <p className={styles.timelineNotes}>{report.additional_notes}</p>

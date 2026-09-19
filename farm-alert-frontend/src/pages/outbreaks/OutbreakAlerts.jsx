@@ -75,20 +75,12 @@ function SummaryStats({ outbreaks }) {
   );
 }
 
-const DEFAULT_PROTOCOL = [
-  { id: 'step_1', text: 'Issue 1km Animal Movement Ban & Checkpoints', completed: false },
-  { id: 'step_2', text: 'Notify Barangay Captain & Municipal Health', completed: false },
-  { id: 'step_3', text: 'Dispatch CVO Disinfection & Biosecurity Team', completed: false },
-  { id: 'step_4', text: 'Conduct Ring Surveillance in 3km Buffer', completed: false },
-  { id: 'step_5', text: 'Issue Terminal Disinfection Clearance', completed: false },
-];
 
 // ---------------------------------------------------------------------------
 // OutbreakCard — individual alert card
 // ---------------------------------------------------------------------------
-function OutbreakCard({ outbreak, onAction, onChecklistUpdate }) {
+function OutbreakCard({ outbreak, onAction, onSopUpdate }) {
   const [actioning, setActioning] = useState(false);
-  const [checklistUpdating, setChecklistUpdating] = useState(false);
 
   const isActive       = outbreak.status === 'Active';
   const isAcknowledged = outbreak.status === 'Acknowledged';
@@ -106,30 +98,24 @@ function OutbreakCard({ outbreak, onAction, onChecklistUpdate }) {
     setActioning(false);
   }
 
-  // Seed checklist from prop — fall back to DEFAULT_PROTOCOL if empty/null
-  const initChecklist = () => {
-    if (Array.isArray(outbreak.response_checklist) && outbreak.response_checklist.length > 0) {
-      return outbreak.response_checklist;
-    }
-    return DEFAULT_PROTOCOL.map(item => ({ ...item }));
-  };
+  const [sopUpdating, setSopUpdating] = useState(false);
+  const [bloodDate, setBloodDate] = useState(outbreak.blood_sample_taken_date || '');
+  const [labResult, setLabResult] = useState(outbreak.lab_result || 'Pending');
+  const [checkpoint, setCheckpoint] = useState(outbreak.checkpoint_issued || false);
 
-  const [checklist, setChecklist] = useState(initChecklist);
-
-  const completedCount = checklist.filter(c => c.completed).length;
-  const progressPercent = Math.round((completedCount / checklist.length) * 100);
-
-  async function toggleCheck(stepId) {
-    // Immediately update local state so checkbox responds visually
-    const updated = checklist.map(item =>
-      item.id === stepId ? { ...item, completed: !item.completed } : item
-    );
-    setChecklist(updated);
-
-    // Persist to Supabase in background
-    setChecklistUpdating(true);
-    await onChecklistUpdate(outbreak.outbreak_id, updated);
-    setChecklistUpdating(false);
+  async function handleSopChange(field, value) {
+    if (field === 'bloodDate') setBloodDate(value);
+    if (field === 'labResult') setLabResult(value);
+    if (field === 'checkpoint') setCheckpoint(value);
+    
+    setSopUpdating(true);
+    const payload = {};
+    if (field === 'bloodDate') payload.blood_sample_taken_date = value || null;
+    if (field === 'labResult') payload.lab_result = value;
+    if (field === 'checkpoint') payload.checkpoint_issued = value;
+    
+    await onSopUpdate(outbreak.outbreak_id, payload);
+    setSopUpdating(false);
   }
 
   return (
@@ -188,35 +174,74 @@ function OutbreakCard({ outbreak, onAction, onChecklistUpdate }) {
           )}
         </div>
 
-        {/* ── Protocol Checklist Section ── */}
-        <div className={styles.checklistSection}>
-          <div className={styles.checklistHeader}>
-            <h4 className={styles.checklistTitle}>Containment Protocol</h4>
-            <span className={styles.checklistProgressText}>{progressPercent}% Completed</span>
-          </div>
-          <div className={styles.progressBarTrack}>
-            <div
-              className={styles.progressBarFill}
-              style={{ width: `${progressPercent}%`, backgroundColor: progressPercent === 100 ? 'var(--color-success)' : 'var(--color-brand)' }}
-            />
+        {/* ── Official CVO SOP Section ── */}
+        <div className={styles.sopSection}>
+          <div className={styles.sopHeader}>
+            <h4 className={styles.sopTitle}>Epidemiological Testing SOP</h4>
+            {checkpoint && (
+              <span className={styles.checkpointBadge}>🚧 CHECKPOINT ACTIVE</span>
+            )}
           </div>
           
-          <ul className={styles.checklist}>
-            {checklist.map(item => (
-              <li key={item.id} className={styles.checklistItem}>
-                <label className={`${styles.checkboxLabel} ${item.completed ? styles.checkboxCompleted : ''}`}>
-                  <input
-                    type="checkbox"
-                    checked={item.completed}
-                    onChange={() => toggleCheck(item.id)}
-                    disabled={checklistUpdating || isResolved}
-                    className={styles.checkboxInput}
-                  />
-                  <span className={styles.checkboxText}>{item.text}</span>
-                </label>
-              </li>
-            ))}
-          </ul>
+          <div className={styles.sopSteps}>
+            {/* Step 1: Blood Draw */}
+            <div className={styles.sopStep}>
+              <div className={styles.stepHeader}>
+                <span className={styles.stepNum}>1</span>
+                <span className={styles.stepName}>Blood Sample Collection</span>
+              </div>
+              <div className={styles.stepBody}>
+                <input 
+                  type="date" 
+                  className={styles.sopInput} 
+                  value={bloodDate}
+                  onChange={(e) => handleSopChange('bloodDate', e.target.value)}
+                  disabled={sopUpdating || isResolved}
+                />
+              </div>
+            </div>
+
+            {/* Step 2: Lab Result (only enable if blood drawn) */}
+            <div className={`${styles.sopStep} ${!bloodDate ? styles.stepDisabled : ''}`}>
+              <div className={styles.stepHeader}>
+                <span className={styles.stepNum}>2</span>
+                <span className={styles.stepName}>Lab Results</span>
+              </div>
+              <div className={styles.stepBody}>
+                <select 
+                  className={styles.sopInput}
+                  value={labResult}
+                  onChange={(e) => handleSopChange('labResult', e.target.value)}
+                  disabled={!bloodDate || sopUpdating || isResolved}
+                >
+                  <option value="Pending">Pending Result</option>
+                  <option value="Positive">Positive (Hold Quarantine)</option>
+                  <option value="Negative">Negative (Clear Alert)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Step 3: Checkpoint (if positive) */}
+            {labResult === 'Positive' && (
+              <div className={`${styles.sopStep} ${styles.stepDanger}`}>
+                <div className={styles.stepHeader}>
+                  <span className={styles.stepNum}>3</span>
+                  <span className={styles.stepName}>Issue Quarantine Checkpoint</span>
+                </div>
+                <div className={styles.stepBody}>
+                  <label className={styles.checkpointToggle}>
+                    <input 
+                      type="checkbox"
+                      checked={checkpoint}
+                      onChange={(e) => handleSopChange('checkpoint', e.target.checked)}
+                      disabled={sopUpdating || isResolved}
+                    />
+                    <span>Establish physical checkpoint around affected farms</span>
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Action buttons */}
@@ -234,18 +259,17 @@ function OutbreakCard({ outbreak, onAction, onChecklistUpdate }) {
                 Acknowledge
               </Button>
             )}
-            {(isActive || isAcknowledged) && (
+            {(isActive || isAcknowledged) && labResult === 'Negative' && (
               <Button
                 id={`resolve-outbreak-${outbreak.outbreak_id}`}
                 variant="primary"
                 size="sm"
                 loading={actioning}
                 onClick={() => handleAction('Resolved')}
-                disabled={progressPercent < 100}
-                title={progressPercent < 100 ? "Complete the protocol checklist before resolving" : "Resolve Outbreak"}
+                title="Lift Alert & Resolve"
               >
                 <CheckCircle2 size={13} aria-hidden="true" />
-                Mark Resolved
+                Lift Alert & Resolve
               </Button>
             )}
           </div>
@@ -378,14 +402,13 @@ export default function OutbreakAlerts() {
     return { error: updateError };
   }
 
-  async function handleChecklistUpdate(outbreakId, updatedChecklist) {
-    const payload = { response_checklist: updatedChecklist };
-    const { error } = await updateOutbreak(outbreakId, payload);
+  async function handleSopUpdate(outbreakId, sopPayload) {
+    const { error } = await updateOutbreak(outbreakId, sopPayload);
     if (!error) {
       setOutbreaks(prev =>
         prev.map(o =>
           o.outbreak_id === outbreakId
-            ? { ...o, response_checklist: updatedChecklist }
+            ? { ...o, ...sopPayload }
             : o
         )
       );
@@ -498,7 +521,7 @@ export default function OutbreakAlerts() {
               key={outbreak.outbreak_id}
               outbreak={outbreak}
               onAction={handleAction}
-              onChecklistUpdate={handleChecklistUpdate}
+              onSopUpdate={handleSopUpdate}
             />
           ))}
         </div>

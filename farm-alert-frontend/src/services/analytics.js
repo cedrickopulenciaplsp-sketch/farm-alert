@@ -367,7 +367,7 @@ export async function getReportStatusBreakdown() {
 }
 
 /**
- * Analytics: Pest control compliance distribution (Compliant / Semi-Compliant / Non-Compliant).
+ * Analytics: Pest control compliance distribution (Compliant / Non-Compliant).
  */
 export async function getComplianceBreakdown() {
   const { data, error } = await supabase

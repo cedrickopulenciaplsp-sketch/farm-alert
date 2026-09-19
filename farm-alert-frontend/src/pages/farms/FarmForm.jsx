@@ -703,15 +703,14 @@ export default function FarmForm() {
               <Card.Body className={styles.cardBody} style={{ padding: 0 }}>
                 {complianceLogs.length === 0 ? (
                   <div style={{ padding: '2rem 1rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-                    <p style={{ fontSize: 'var(--text-sm)' }}>No compliance evaluations on record.</p>
+                    <p style={{ fontSize: 'var(--text-sm)' }}>No compliance inspections on record.</p>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     {complianceLogs.slice(0, 4).map((log, idx) => {
                       const isCompliant = log.compliance_status === 'Compliant';
-                      const isSemi = log.compliance_status === 'Semi-Compliant';
-                      const dotColor = isCompliant ? 'var(--color-success)' : isSemi ? 'var(--color-warning)' : 'var(--color-danger)';
-                      const bgColor = isCompliant ? 'var(--color-success-light)' : isSemi ? 'var(--color-warning-light)' : 'var(--color-danger-light)';
+                      const dotColor = isCompliant ? 'var(--color-success)' : 'var(--color-danger)';
+                      const bgColor = isCompliant ? 'var(--color-success-light)' : 'var(--color-danger-light)';
 
                       return (
                         <div key={log.log_id} style={{
