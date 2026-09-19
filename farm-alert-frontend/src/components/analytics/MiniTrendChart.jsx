@@ -72,12 +72,13 @@ export default function MiniTrendChart({ trends = [], loading = false, height = 
           contentStyle={{
             borderRadius: '10px',
             border: '1px solid var(--color-border)',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.06)',
-            background: 'rgba(255,255,255,0.92)',
-            backdropFilter: 'blur(8px)',
+            boxShadow: 'var(--shadow-lg)',
+            background: 'var(--color-surface)',
             fontSize: 12,
             padding: '8px 12px',
           }}
+          itemStyle={{ color: 'var(--color-text-primary)' }}
+          labelStyle={{ color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: 4 }}
           formatter={(value) => [value, 'Reported Cases']}
         />
         <Legend

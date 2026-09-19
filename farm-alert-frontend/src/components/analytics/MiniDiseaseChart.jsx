@@ -79,10 +79,11 @@ export default function MiniDiseaseChart({ data = [], loading = false, height = 
             border: '1px solid var(--color-border)',
             boxShadow: 'var(--shadow-md)',
             background: 'var(--color-surface)',
-            color: 'var(--color-text-primary)',
             fontSize: 12,
             padding: '6px 10px',
           }}
+          itemStyle={{ color: 'var(--color-text-primary)' }}
+          labelStyle={{ color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: 4 }}
         />
         <Bar dataKey="case_count" radius={[0, 4, 4, 0]} barSize={18}>
           {chartData.map((_, i) => (

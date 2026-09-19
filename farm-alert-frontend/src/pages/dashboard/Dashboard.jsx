@@ -665,7 +665,9 @@ export default function Dashboard() {
                         <XAxis dataKey="month_label" tick={{ fontSize: 12, fill: tickColor }} tickLine={false} axisLine={false} />
                         <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: tickColor }} tickLine={false} axisLine={false} />
                         <RechartsTooltip
-                          contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-md)', backgroundColor: tooltipBg, color: tooltipText }}
+                          contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-md)', backgroundColor: tooltipBg }}
+                          itemStyle={{ color: tooltipText }}
+                          labelStyle={{ color: tooltipText, fontWeight: 600, marginBottom: 4 }}
                           formatter={(value) => [value, 'Cases']}
                           cursor={{ stroke: 'var(--color-border-strong)', strokeWidth: 1, strokeDasharray: '4 4' }}
                         />
@@ -694,7 +696,9 @@ export default function Dashboard() {
                         <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: tickColor }} tickLine={false} axisLine={false} />
                         <YAxis dataKey="barangay_name" type="category" tick={{ fontSize: 11, fill: tickColor }} axisLine={false} tickLine={false} width={90} />
                         <RechartsTooltip
-                          contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-md)', backgroundColor: tooltipBg, color: tooltipText }}
+                          contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-md)', backgroundColor: tooltipBg }}
+                          itemStyle={{ color: tooltipText }}
+                          labelStyle={{ color: tooltipText, fontWeight: 600, marginBottom: 4 }}
                           formatter={(value) => [value, 'Cases']}
                           cursor={{ fill: 'var(--color-overlay)' }}
                         />
@@ -723,7 +727,9 @@ export default function Dashboard() {
                         <XAxis dataKey="disease_name" tick={{ fontSize: 10, fill: tickColor }} tickLine={false} axisLine={false} angle={-35} textAnchor="end" interval={0} />
                         <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: tickColor }} tickLine={false} axisLine={false} />
                         <RechartsTooltip
-                          contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-md)', backgroundColor: tooltipBg, color: tooltipText }}
+                          contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-md)', backgroundColor: tooltipBg }}
+                          itemStyle={{ color: tooltipText }}
+                          labelStyle={{ color: tooltipText, fontWeight: 600, marginBottom: 4 }}
                           formatter={(v) => [`${v} cases`]}
                           cursor={{ fill: 'var(--color-overlay)' }}
                         />
