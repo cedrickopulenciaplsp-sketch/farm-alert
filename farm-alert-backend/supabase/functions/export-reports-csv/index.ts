@@ -35,9 +35,6 @@ function buildCsv(rows: Record<string, unknown>[]): string {
     { label: 'Disease',          key: 'disease_name' },
     { label: 'Farm',             key: 'farm_name' },
     { label: 'Barangay',         key: 'barangay_name' },
-    { label: 'Severity',         key: 'severity' },
-    { label: 'Animals Affected', key: 'animals_affected' },
-    { label: 'Mortalities',      key: (r: Record<string, unknown>) => r.mortalities ?? 0 },
     { label: 'Status',           key: 'status' },
     { label: 'Encoded By',       key: 'encoded_by_name' },
   ];
@@ -76,7 +73,7 @@ Deno.serve(async (req: Request) => {
 
     // Parse filter params from the request body
     const body = await req.json().catch(() => ({}));
-    const { search = '', status = null, severity = null } = body;
+    const { search = '', status = null } = body;
 
     // Build query — mirrors getReports() in reports.js
     let query = supabase
@@ -86,9 +83,6 @@ Deno.serve(async (req: Request) => {
 
     if (status) {
       query = query.eq('status', status);
-    }
-    if (severity) {
-      query = query.eq('severity', severity);
     }
 
     let { data, error } = await query;
