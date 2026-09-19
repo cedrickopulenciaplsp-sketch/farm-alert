@@ -13,6 +13,7 @@ import {
   Eye,
   Filter,
   Siren,
+  Tractor,
 } from 'lucide-react';
 import { getOutbreaks, updateOutbreak } from '../../services/outbreaks';
 import { useAuth } from '../../context/AuthContext';
@@ -154,8 +155,8 @@ function OutbreakCard({ outbreak, onAction, onSopUpdate }) {
             <span>Detected {dateDetected}</span>
           </div>
           <div className={styles.metaItem}>
-            <Bug size={12} aria-hidden="true" className={styles.metaIcon} />
-            <span>{outbreak.disease_name}</span>
+            <Tractor size={12} aria-hidden="true" className={styles.metaIcon} />
+            <span>{outbreak.affected_farms_list || 'Unknown Farm'}</span>
           </div>
           <div className={styles.metaItem}>
             <Users size={12} aria-hidden="true" className={styles.metaIcon} />
