@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useRealtime } from '../../hooks/useRealtime';
 import {
   ShieldAlert,
   MapPin,
@@ -367,6 +368,10 @@ export default function OutbreakAlerts() {
   }, []);
 
   useEffect(() => { loadOutbreaks(); }, [loadOutbreaks]);
+
+  // Auto-refresh when outbreak_alerts or disease_reports change in DB
+  useRealtime('outbreak_alerts',  () => loadOutbreaks());
+  useRealtime('disease_reports',  () => loadOutbreaks());
 
   // ── Handle action (acknowledge / resolve) ─────────────────────────────────
   async function handleAction(outbreakId, newStatus) {
