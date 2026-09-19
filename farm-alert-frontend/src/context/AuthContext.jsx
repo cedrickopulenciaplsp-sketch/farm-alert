@@ -68,6 +68,10 @@ export function AuthProvider({ children }) {
 
         // Record IP + device on actual login
         if (_event === 'SIGNED_IN' && newSession?.user) {
+          // Prevent duplicate login logs on page refreshes
+          if (sessionStorage.getItem('login_logged')) return;
+          sessionStorage.setItem('login_logged', 'true');
+
           // Detect browser & OS from User-Agent
           const ua = navigator.userAgent;
           const getBrowser = () => {
