@@ -121,7 +121,7 @@ export default function MapWidget({ farms = [], zoom = 13, className = '', style
                 <p style={{ fontSize: 12, margin: '2px 0' }}><strong>Owner:</strong> {farm.owner_name}</p>
                 <p style={{ fontSize: 12, margin: '2px 0' }}><strong>Barangay:</strong> {farm.barangay_name}</p>
                 <p style={{ fontSize: 12, margin: '2px 0' }}><strong>Livestock:</strong> {farm.livestock_type_name}</p>
-                <p style={{ fontSize: 12, margin: '2px 0' }}><strong>Status:</strong> {farm.farm_status}</p>
+                <p style={{ fontSize: 12, margin: '2px 0' }}><strong>Status:</strong> {farm.farm_status === 'Active/Quarantine' ? 'Active' : farm.farm_status}</p>
                 {isInfected && (
                   <div style={{ marginTop: 6, padding: '4px 8px', background: 'var(--color-danger-light)', borderRadius: 4 }}>
                     <p style={{ fontSize: 12, margin: '2px 0', color: 'var(--color-danger)' }}><strong>Active Incident:</strong> {farm.latest_disease}</p>

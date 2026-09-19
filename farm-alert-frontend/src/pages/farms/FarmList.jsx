@@ -27,14 +27,13 @@ import styles from './FarmList.module.css';
 // Status badge helper
 // ---------------------------------------------------------------------------
 function StatusBadge({ status }) {
+  const displayStatus = status === 'Active/Quarantine' ? 'Active' : status;
   const cls =
-    status === 'Active' ? styles.badgeActive :
-      status === 'Quarantine' ? styles.badgeQuarantine :
+    displayStatus === 'Active' ? styles.badgeActive :
+      displayStatus === 'Quarantine' ? styles.badgeQuarantine :
         styles.badgeInactive;
   return (
-    <span className={`${styles.badge} ${cls}`}>
-      {status}
-    </span>
+    <span className={`${styles.badge} ${cls}`}>{displayStatus}</span>
   );
 }
 
@@ -370,7 +369,7 @@ export default function FarmList() {
             className={styles.filterSelect}
           >
             <option value="">All Status</option>
-            <option value="Active/Quarantine">Active / Quarantine</option>
+            <option value="Active/Quarantine">Active</option>
             <option value="Inactive">Inactive</option>
             <option value="Temporarily Closed">Temporarily Closed</option>
           </Select>

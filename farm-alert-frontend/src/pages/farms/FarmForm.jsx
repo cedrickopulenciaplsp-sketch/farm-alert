@@ -481,7 +481,7 @@ export default function FarmForm() {
                 onBlur={handleBlur}
                 error={fieldError('status')}
               >
-                <option value="Active/Quarantine">Active / Quarantine</option>
+                <option value="Active/Quarantine">Active</option>
                 <option value="Inactive">Inactive</option>
                 <option value="Temporarily Closed">Temporarily Closed</option>
               </Select>
