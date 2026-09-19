@@ -722,9 +722,9 @@ export default function Dashboard() {
                 {loadingDisease ? <SkeletonChart height={220} /> : diseaseDataAnalytics.length === 0 ? <EmptyChart /> : (
                   <div className={analyticsStyles.chartWrapSm}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={diseaseDataAnalytics.slice(0, 6)} margin={{ top: 5, right: 10, left: -20, bottom: 40 }}>
+                      <BarChart data={diseaseDataAnalytics.slice(0, 6)} margin={{ top: 5, right: 20, left: -10, bottom: 20 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
-                        <XAxis dataKey="disease_name" tick={{ fontSize: 10, fill: tickColor }} tickLine={false} axisLine={false} angle={-35} textAnchor="end" interval={0} />
+                        <XAxis dataKey="disease_name" height={80} tick={{ fontSize: 10, fill: tickColor }} tickLine={false} axisLine={false} angle={-35} textAnchor="end" interval={0} />
                         <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: tickColor }} tickLine={false} axisLine={false} />
                         <RechartsTooltip
                           contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-md)', backgroundColor: tooltipBg }}
