@@ -33,7 +33,9 @@ export default function DiseaseMap() {
     );
   }
 
-  const infectedFarms    = farms.filter(f => f.latest_report_status === 'Active');
+  const infectedFarms = farms.filter(f => f.latest_report_status === 'Active');
+  const closedFarms   = farms.filter(f => f.farm_status === 'Temporarily Closed');
+  const healthyFarms  = farms.filter(f => f.farm_status !== 'Temporarily Closed' && f.latest_report_status !== 'Active');
 
   return (
     <div className={styles.page}>
@@ -87,7 +89,7 @@ export default function DiseaseMap() {
                     <span className={styles.legendLabel}>Healthy / Active</span>
                     <span className={styles.legendDesc}>Farm is operational with no active disease incident.</span>
                   </div>
-                  <span className={styles.legendCount}>{farms.filter(f => f.farm_status === 'Active' && f.health_status === 'Healthy').length}</span>
+                  <span className={styles.legendCount}>{healthyFarms.length}</span>
                 </li>
                 <li className={styles.legendItem}>
                   <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png" alt="Red marker" className={styles.legendPin} />
@@ -103,7 +105,7 @@ export default function DiseaseMap() {
                     <span className={styles.legendLabel}>Temporarily Closed</span>
                     <span className={styles.legendDesc}>Farm has been temporarily closed and is not operational.</span>
                   </div>
-                  <span className={styles.legendCount}>{farms.filter(f => f.farm_status === 'Temporarily Closed').length}</span>
+                  <span className={styles.legendCount}>{closedFarms.length}</span>
                 </li>
                 <li className={styles.legendItem}>
                   <div className={styles.legendZone} style={{ borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.25)' }}></div>

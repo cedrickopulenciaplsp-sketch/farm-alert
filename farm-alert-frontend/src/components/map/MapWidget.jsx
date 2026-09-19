@@ -125,7 +125,6 @@ export default function MapWidget({ farms = [], zoom = 13, className = '', style
                 {isInfected && (
                   <div style={{ marginTop: 6, padding: '4px 8px', background: 'var(--color-danger-light)', borderRadius: 4 }}>
                     <p style={{ fontSize: 12, margin: '2px 0', color: 'var(--color-danger)' }}><strong>Active Incident:</strong> {farm.latest_disease}</p>
-                    <p style={{ fontSize: 12, margin: '2px 0', color: 'var(--color-danger)' }}><strong>Severity:</strong> {farm.latest_severity}</p>
                   </div>
                 )}
               </div>
