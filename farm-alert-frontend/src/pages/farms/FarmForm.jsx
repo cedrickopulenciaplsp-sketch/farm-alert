@@ -514,7 +514,7 @@ export default function FarmForm() {
                 onBlur={handleBlur}
                 error={fieldError('barangay_id')}
               >
-                <option value="">— Select barangay —</option>
+                <option value="">Select barangay</option>
                 {barangays.map(b => (
                   <option key={b.barangay_id} value={b.barangay_id}>
                     {b.barangay_name}
@@ -531,7 +531,7 @@ export default function FarmForm() {
                 onBlur={handleBlur}
                 error={fieldError('livestock_type_id')}
               >
-                <option value="">— Select type —</option>
+                  <option value="">Select type</option>
                 {livestockTypes.map(lt => (
                   <option key={lt.livestock_type_id} value={lt.livestock_type_id}>
                     {lt.type_name}
@@ -618,7 +618,7 @@ export default function FarmForm() {
                   onBlur={handleBlur}
                   error={fieldError('production_type')}
                 >
-                  <option value="">— Select type —</option>
+                    <option value="">Select type</option>
                   <option value="Broiler">Broiler</option>
                   <option value="Layer">Layer</option>
                   <option value="Quail">Quail</option>
@@ -653,7 +653,7 @@ export default function FarmForm() {
                   onBlur={handleBlur}
                   error={fieldError('facility_status')}
                 >
-                  <option value="">— Select status —</option>
+                  <option value="">Select status</option>
                   <option value="Owned">Owned</option>
                   <option value="Rented/Leased">Rented / Leased</option>
                 </Select>

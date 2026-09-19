@@ -215,7 +215,7 @@ export default function PestControlForm() {
                 value={fields.farm_id}
                 onChange={handleChange}
               >
-                <option value="">— Select a farm —</option>
+                <option value="">Select a farm</option>
                 {farms.map(f => (
                   <option key={f.farm_id} value={f.farm_id}>
                     {f.farm_name} — {f.owner_name}
