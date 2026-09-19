@@ -396,6 +396,7 @@ export default function Analytics() {
                     <RechartsTooltip
                       contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-md)', backgroundColor: tooltipBg, color: tooltipText }}
                       formatter={(value, name) => [value, name === 'total_reports' ? 'Cases' : 'Deaths']}
+                      cursor={{ stroke: 'var(--color-border-strong)', strokeWidth: 1, strokeDasharray: '4 4' }}
                     />
                     <Legend
                       iconType="circle" iconSize={9}
@@ -466,6 +467,7 @@ export default function Analytics() {
                     <RechartsTooltip
                       contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-md)', backgroundColor: tooltipBg, color: tooltipText }}
                       formatter={(v) => [`${v} cases`]}
+                      cursor={{ fill: 'var(--color-overlay)' }}
                     />
                     <Bar dataKey="total_reports" radius={[4, 4, 0, 0]} barSize={28}>
                       {diseaseData.slice(0, 6).map((_, i) => (

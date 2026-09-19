@@ -725,6 +725,7 @@ export default function Dashboard() {
                         <RechartsTooltip
                           contentStyle={{ borderRadius: '8px', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-md)', backgroundColor: tooltipBg, color: tooltipText }}
                           formatter={(v) => [`${v} cases`]}
+                          cursor={{ fill: 'var(--color-overlay)' }}
                         />
                         <Bar dataKey="total_reports" radius={[4, 4, 0, 0]} barSize={28}>
                           {diseaseDataAnalytics.slice(0, 6).map((_, i) => (

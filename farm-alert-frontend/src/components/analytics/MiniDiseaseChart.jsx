@@ -72,12 +72,14 @@ export default function MiniDiseaseChart({ data = [], loading = false, height = 
           axisLine={false}
         />
         <Tooltip
+          cursor={{ fill: 'var(--color-overlay)' }}
           formatter={(v) => [`${v} case${v !== 1 ? 's' : ''}`, 'Reported']}
           contentStyle={{
             borderRadius: '8px',
             border: '1px solid var(--color-border)',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-            background: 'rgba(255,255,255,0.95)',
+            boxShadow: 'var(--shadow-md)',
+            background: 'var(--color-surface)',
+            color: 'var(--color-text-primary)',
             fontSize: 12,
             padding: '6px 10px',
           }}
