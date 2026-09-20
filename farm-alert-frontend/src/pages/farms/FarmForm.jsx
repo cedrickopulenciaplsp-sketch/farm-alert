@@ -3,11 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
   Tractor,
-  Save,
-  Trash2,
-  AlertCircle,
-  CheckCircle2,
-} from 'lucide-react';
+  FloppyDisk as Save,
+  Trash as Trash2,
+  WarningCircle as AlertCircle,
+  CheckCircle as CheckCircle2,
+} from '@phosphor-icons/react';
 import {
   getFarmById,
   createFarm,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useMap } from 'react-leaflet';
-import { Lock, Unlock } from 'lucide-react';
+import { Lock, LockOpen as Unlock } from '@phosphor-icons/react';
 
 export default function MapLockControl() {
   const map = useMap();

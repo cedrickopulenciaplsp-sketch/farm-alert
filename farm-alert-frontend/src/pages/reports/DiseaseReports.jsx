@@ -2,16 +2,16 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus,
-  Search,
-  Filter,
-  ClipboardList,
+  MagnifyingGlass as Search,
+  Funnel as Filter,
+  ClipboardText as ClipboardList,
   MapPin,
   Bug,
-  AlertCircle,
-  RefreshCw,
-  ChevronRight,
-  Download,
-} from 'lucide-react';
+  WarningCircle as AlertCircle,
+  ArrowsClockwise as RefreshCw,
+  CaretRight as ChevronRight,
+  DownloadSimple as Download,
+} from '@phosphor-icons/react';
 import { getReports } from '../../services/reports';
 import { supabase } from '../../lib/supabase';
 import Button from '../../components/shared/Button';

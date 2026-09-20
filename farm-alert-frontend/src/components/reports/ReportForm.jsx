@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { AlertTriangle, FileText, ClipboardList, Activity } from 'lucide-react';
+import { Warning as AlertTriangle, FileText, ClipboardText as ClipboardList, Heartbeat as Activity } from '@phosphor-icons/react';
 import { Input, Select } from '../shared/FormElements';
 import Button from '../shared/Button';
 import { getFarms } from '../../services/farms';

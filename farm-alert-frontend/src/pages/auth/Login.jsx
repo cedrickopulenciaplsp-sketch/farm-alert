@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Navigate, useLocation } from 'react-router-dom';
-import { AlertCircle, ShieldCheck, Leaf } from 'lucide-react';
+import { WarningCircle as AlertCircle, ShieldCheck, Leaf } from '@phosphor-icons/react';
 import { useAuth } from '../../context/AuthContext';
 import { loginWithGoogle } from '../../services/auth';
 

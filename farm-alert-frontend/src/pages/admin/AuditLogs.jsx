@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  ClipboardList, RefreshCw, AlertCircle,
-  ChevronLeft, ChevronRight, Activity,
-} from 'lucide-react';
+  ClipboardText as ClipboardList, ArrowsClockwise as RefreshCw, WarningCircle as AlertCircle,
+  CaretLeft as ChevronLeft, CaretRight as ChevronRight, Heartbeat as Activity,
+} from '@phosphor-icons/react';
 import { getAuditLogs } from '../../services/admin';
 import Card from '../../components/shared/Card';
 import Button from '../../components/shared/Button';

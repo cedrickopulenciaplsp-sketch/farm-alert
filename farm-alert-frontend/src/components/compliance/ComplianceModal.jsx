@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AlertTriangle, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { Warning as AlertTriangle, CheckCircle as CheckCircle2, ShieldCheck } from '@phosphor-icons/react';
 import { Input, Select, Textarea } from '../shared/FormElements';
 import Button from '../shared/Button';
 import { getFarms } from '../../services/farms';

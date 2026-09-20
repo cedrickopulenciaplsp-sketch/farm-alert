@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getMapFarms } from '../../services/analytics';
 import { useRealtime } from '../../hooks/useRealtime';
-import { Activity } from 'lucide-react';
+import { Heartbeat as Activity } from '@phosphor-icons/react';
 import MapWidget from '../../components/map/MapWidget';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import Card from '../../components/shared/Card';

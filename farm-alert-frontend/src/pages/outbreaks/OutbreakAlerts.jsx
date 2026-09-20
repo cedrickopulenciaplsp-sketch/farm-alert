@@ -1,20 +1,20 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRealtime } from '../../hooks/useRealtime';
 import {
-  ShieldAlert,
+  ShieldWarning as ShieldAlert,
   MapPin,
   Bug,
   Calendar,
   Users,
   Skull,
-  CheckCircle2,
-  AlertCircle,
-  RefreshCw,
+  CheckCircle as CheckCircle2,
+  WarningCircle as AlertCircle,
+  ArrowsClockwise as RefreshCw,
   Eye,
-  Filter,
+  Funnel as Filter,
   Siren,
   Tractor,
-} from 'lucide-react';
+} from '@phosphor-icons/react';
 import { getOutbreaks, updateOutbreak } from '../../services/outbreaks';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/shared/Button';

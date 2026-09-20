@@ -2,18 +2,18 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus,
-  Search,
-  Filter,
+  MagnifyingGlass as Search,
+  Funnel as Filter,
   Tractor,
   MapPin,
   Phone,
-  Edit2,
-  ChevronRight,
-  AlertCircle,
-  RefreshCw,
-  Download,
-  BookOpen,
-} from 'lucide-react';
+  PencilSimple as Edit2,
+  CaretRight as ChevronRight,
+  WarningCircle as AlertCircle,
+  ArrowsClockwise as RefreshCw,
+  DownloadSimple as Download,
+  BookOpenText as BookOpen,
+} from '@phosphor-icons/react';
 import { getFarms, getBarangays, getLivestockTypes } from '../../services/farms';
 import { supabase } from '../../lib/supabase';
 import Button from '../../components/shared/Button';

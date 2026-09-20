@@ -1,21 +1,21 @@
 import { useState, useEffect } from 'react';
 import {
-  Search,
-  BookOpen,
-  AlertCircle,
-  RefreshCw,
-  ChevronDown,
-  ChevronUp,
+  MagnifyingGlass as Search,
+  BookOpenText as BookOpen,
+  WarningCircle as AlertCircle,
+  ArrowsClockwise as RefreshCw,
+  CaretDown as ChevronDown,
+  CaretUp as ChevronUp,
   Stethoscope,
   Bug,
   ShieldCheck,
   FileText,
   Plus,
-  Edit2,
-  Trash2,
+  PencilSimple as Edit2,
+  Trash as Trash2,
   X,
-  Save,
-} from 'lucide-react';
+  FloppyDisk as Save,
+} from '@phosphor-icons/react';
 import { getDiseases, getDiseaseById, createDisease, updateDisease, deleteDisease } from '../../services/diseases';
 import { getLivestockTypes } from '../../services/farms';
 import { useAuth } from '../../context/AuthContext';

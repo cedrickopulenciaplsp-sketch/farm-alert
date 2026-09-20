@@ -10,7 +10,7 @@
 import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
 import React from 'react';
 import L from 'leaflet';
-import { ShieldAlert } from 'lucide-react';
+import { ShieldWarning as ShieldAlert } from '@phosphor-icons/react';
 
 // ── Fix default Leaflet icons (must run once, module-level) ──────────────────
 delete L.Icon.Default.prototype._getIconUrl;

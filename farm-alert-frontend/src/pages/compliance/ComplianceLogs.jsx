@@ -1,14 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Plus,
-  Edit2,
+  PencilSimple as Edit2,
   ShieldCheck,
   MapPin,
-  ChevronRight,
-  AlertCircle,
-  RefreshCw,
-  Trash2,
-} from 'lucide-react';
+  CaretRight as ChevronRight,
+  WarningCircle as AlertCircle,
+  ArrowsClockwise as RefreshCw,
+  Trash as Trash2,
+} from '@phosphor-icons/react';
 import { getComplianceLogs, deleteComplianceLog } from '../../services/compliance';
 import { getFarms, getBarangays } from '../../services/farms';
 import Button from '../../components/shared/Button';

@@ -1,20 +1,20 @@
 import { useState, useEffect } from 'react';
 import {
-  Search,
+  MagnifyingGlass as Search,
   Bug,
-  AlertCircle,
-  RefreshCw,
-  ChevronDown,
-  ChevronUp,
+  WarningCircle as AlertCircle,
+  ArrowsClockwise as RefreshCw,
+  CaretDown as ChevronDown,
+  CaretUp as ChevronUp,
   ShieldCheck,
   Eye,
   Plus,
-  Edit2,
-  Trash2,
+  PencilSimple as Edit2,
+  Trash as Trash2,
   X,
-  Save,
-  BookOpen,
-} from 'lucide-react';
+  FloppyDisk as Save,
+  BookOpenText as BookOpen,
+} from '@phosphor-icons/react';
 import { getPests, getPestById, createPest, updatePest, deletePest } from '../../services/pests';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/shared/Button';

@@ -8,13 +8,13 @@ import {
   Users,
   Skull,
   Calendar,
-  ClipboardList,
-  AlertCircle,
-  RefreshCw,
-  CheckCircle2,
-  Activity,
+  ClipboardText as ClipboardList,
+  WarningCircle as AlertCircle,
+  ArrowsClockwise as RefreshCw,
+  CheckCircle as CheckCircle2,
+  Heartbeat as Activity,
   Clock,
-} from 'lucide-react';
+} from '@phosphor-icons/react';
 import { getReportById, updateReport } from '../../services/reports';
 import { writeAuditLog } from '../../services/admin';
 import { useAuth } from '../../context/AuthContext';

@@ -19,10 +19,10 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import {
-  TrendingUp, MapPin, AlertTriangle, FileText,
-  BarChart2, Filter, Calendar,
-  ChevronUp, ChevronDown, Minus, ClipboardList, Skull, ShieldCheck,
-} from 'lucide-react';
+  TrendUp as TrendingUp, MapPin, Warning as AlertTriangle, FileText,
+  ChartBar as BarChart2, Funnel as Filter, Calendar,
+  CaretUp as ChevronUp, CaretDown as ChevronDown, Minus, ClipboardText as ClipboardList, Skull, ShieldCheck,
+} from '@phosphor-icons/react';
 import Card from '../../components/shared/Card';
 import styles from './Analytics.module.css';
 

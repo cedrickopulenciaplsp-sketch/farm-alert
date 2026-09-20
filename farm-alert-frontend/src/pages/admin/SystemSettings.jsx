@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  Settings, Save, RefreshCw, AlertCircle,
-  CheckCircle2, Edit2, X, Minus, Plus,
-} from 'lucide-react';
+  Gear as Settings, FloppyDisk as Save, ArrowsClockwise as RefreshCw, WarningCircle as AlertCircle,
+  CheckCircle as CheckCircle2, PencilSimple as Edit2, X, Minus, Plus,
+} from '@phosphor-icons/react';
 import { getSettings, updateSetting } from '../../services/admin';
 import { writeAuditLog } from '../../services/admin';
 import { useAuth } from '../../context/AuthContext';

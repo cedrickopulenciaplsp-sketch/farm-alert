@@ -6,10 +6,10 @@ import { getReports } from '../../services/reports';
 import { getOutbreaks } from '../../services/outbreaks';
 import { useRealtime } from '../../hooks/useRealtime';
 import { 
-  Warehouse, Siren, FileText, Thermometer, AlertCircle, Plus, HeartPulse, 
-  TrendingUp, MapPin, AlertTriangle, BarChart2, Filter, Calendar, 
-  ChevronUp, ChevronDown, Minus, ClipboardList, Skull, ShieldCheck, Lock
-} from 'lucide-react';
+  Warehouse, Siren, FileText, Thermometer, WarningCircle as AlertCircle, Plus, Heartbeat as HeartPulse, 
+  TrendUp as TrendingUp, MapPin, Warning as AlertTriangle, ChartBar as BarChart2, Funnel as Filter, Calendar, 
+  CaretUp as ChevronUp, CaretDown as ChevronDown, Minus, ClipboardText as ClipboardList, Skull, ShieldCheck, Lock
+} from '@phosphor-icons/react';
 import {
   AreaChart, Area, BarChart, Bar, Cell, Legend, Tooltip as RechartsTooltip,
   XAxis, YAxis, CartesianGrid, ResponsiveContainer

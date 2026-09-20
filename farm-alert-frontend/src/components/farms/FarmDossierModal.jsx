@@ -14,13 +14,13 @@ import {
   User,
   Stethoscope,
   Calendar,
-  AlertTriangle,
-  CheckCircle2,
+  Warning as AlertTriangle,
+  CheckCircle as CheckCircle2,
   Clock,
-  Navigation,
-  Loader2,
+  NavigationArrow as Navigation,
+  SpinnerGap as Loader2,
   FileText,
-} from 'lucide-react';
+} from '@phosphor-icons/react';
 import { getFarmDossier } from '../../services/farms';
 import styles from './FarmDossierModal.module.css';
 

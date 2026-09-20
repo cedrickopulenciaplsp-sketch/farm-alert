@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield } from 'lucide-react';
+import { Shield } from '@phosphor-icons/react';
 import styles from './SplashScreen.module.css';
 
 /**

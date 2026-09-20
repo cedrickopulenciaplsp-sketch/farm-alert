@@ -2,15 +2,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus,
-  Filter,
-  Edit2,
+  Funnel as Filter,
+  PencilSimple as Edit2,
   Bug,
   MapPin,
-  ChevronRight,
-  AlertCircle,
-  RefreshCw,
-  Download,
-} from 'lucide-react';
+  CaretRight as ChevronRight,
+  WarningCircle as AlertCircle,
+  ArrowsClockwise as RefreshCw,
+  DownloadSimple as Download,
+} from '@phosphor-icons/react';
 import { getPestControlLogs } from '../../services/pestControl';
 import { getFarms, getBarangays } from '../../services/farms';
 import { exportToCsv } from '../../utils/exportCsv';
