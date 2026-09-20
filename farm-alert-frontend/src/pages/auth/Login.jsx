@@ -124,7 +124,6 @@ function BrandPanel() {
       flexDirection: 'column',
       justifyContent: 'space-between',
       padding: '56px 64px',
-      borderRadius: '0 40px 40px 0',
     }}>
       {/* Subtle vignette overlay to deepen edges */}
       <div style={{
@@ -263,7 +262,7 @@ export default function Login() {
       <style>{`
         @media (max-width: 1024px) {
           .auth-layout { flex-direction: column !important; }
-          .auth-left { flex: none !important; height: auto !important; padding: 40px 32px !important; border-radius: 0 0 40px 40px !important; }
+          .auth-left { flex: none !important; height: auto !important; padding: 40px 32px !important; }
           .auth-right { flex: 1 !important; padding: 40px 32px !important; }
         }
         @keyframes login-spin {
