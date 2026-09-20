@@ -1,19 +1,19 @@
 import { NavLink } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import {
-  LayoutDashboard,
+  SquaresFour as LayoutDashboard,
   Tractor,
-  BookOpen,
+  BookOpenText as BookOpen,
   FileText,
-  AlertTriangle,
-  Map,
-  BarChart2,
-  Settings,
-  LogOut,
+  Warning as AlertTriangle,
+  MapTrifold as Map,
+  ChartBar as BarChart2,
+  Gear as Settings,
+  SignOut as LogOut,
   Shield,
   ShieldCheck,
-  ClipboardList,
-} from 'lucide-react';
+  ClipboardText as ClipboardList,
+} from '@phosphor-icons/react';
 import { signOut } from '../../services/auth';
 import { getActiveOutbreakCount } from '../../services/outbreaks';
 import { supabase } from '../../lib/supabase';
@@ -46,7 +46,7 @@ function NavItem({ to, icon: Icon, label }) {
           `${styles.navItem}${isActive ? ` ${styles.active}` : ''}`
         }
       >
-        <Icon size={18} className={styles.navIcon} aria-hidden="true" />
+        <Icon size={18} className={styles.navIcon} aria-hidden="true" weight="duotone" />
         {label}
       </NavLink>
     </li>
@@ -89,7 +89,7 @@ function OutbreakNavItem() {
         }
         aria-label={`Outbreak Alerts${activeCount > 0 ? ` — ${activeCount} active` : ''}`}
       >
-        <AlertTriangle size={18} className={styles.navIcon} aria-hidden="true" />
+        <AlertTriangle size={18} className={styles.navIcon} aria-hidden="true" weight="duotone" />
         Outbreak Alerts
         {activeCount > 0 && (
           <span className={styles.outbreakBadge} aria-hidden="true">
@@ -114,7 +114,7 @@ export default function Sidebar() {
       {/* Brand / CVO Institutional Crest */}
       <NavLink to="/dashboard" className={styles.brand}>
         <div className={styles.brandCrest}>
-          <Shield size={22} aria-hidden="true" />
+          <Shield size={22} aria-hidden="true" weight="duotone" />
         </div>
         <div className={styles.brandText}>
           <span className={styles.brandName}>FarmAlert</span>
@@ -141,7 +141,7 @@ export default function Sidebar() {
           onClick={handleLogout}
           aria-label="Sign out"
         >
-          <LogOut size={18} className={styles.navIcon} aria-hidden="true" />
+          <LogOut size={18} className={styles.navIcon} aria-hidden="true" weight="duotone" />
           Sign Out
         </button>
       </div>

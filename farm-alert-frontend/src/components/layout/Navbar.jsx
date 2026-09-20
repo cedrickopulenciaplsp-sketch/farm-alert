@@ -1,4 +1,4 @@
-import { Bell, Sun, Moon, X, CheckCheck, ShieldAlert, FileText, Clock, Shield } from 'lucide-react';
+import { Bell, Sun, Moon, X, Checks as CheckCheck, ShieldWarning as ShieldAlert, FileText, Clock, Shield } from '@phosphor-icons/react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -67,7 +67,7 @@ function NotificationItem({ notif, onRead, onClear, onNavigate }) {
 
       {/* Icon */}
       <div className={`${styles.notifIcon} ${isOutbreak ? styles.notifIconOutbreak : styles.notifIconReport}`}>
-        {isOutbreak ? <ShieldAlert size={15} /> : <FileText size={15} />}
+        {isOutbreak ? <ShieldAlert size={15} weight="duotone" /> : <FileText size={15} weight="duotone" />}
       </div>
 
       {/* Content */}
@@ -75,7 +75,7 @@ function NotificationItem({ notif, onRead, onClear, onNavigate }) {
         <p className={styles.notifTitle}>{notif.title}</p>
         <p className={styles.notifMessage}>{notif.message}</p>
         <span className={styles.notifTime}>
-          <Clock size={10} />
+          <Clock size={10} weight="duotone" />
           {formatTime(notif.timestamp)}
         </span>
       </div>
@@ -87,7 +87,7 @@ function NotificationItem({ notif, onRead, onClear, onNavigate }) {
         aria-label="Dismiss notification"
         title="Dismiss"
       >
-        <X size={12} />
+        <X size={12} weight="duotone" />
       </button>
     </div>
   );
@@ -110,7 +110,7 @@ function NotificationsPanel({ onClose }) {
       {/* Header */}
       <div className={styles.notifHeader}>
         <div className={styles.notifHeaderLeft}>
-          <Bell size={15} />
+          <Bell size={15} weight="duotone" />
           <span>Notifications</span>
           {unreadCount > 0 && (
             <span className={styles.notifHeaderBadge}>{unreadCount} new</span>
@@ -122,7 +122,7 @@ function NotificationsPanel({ onClose }) {
             onClick={markAllAsRead}
             title="Mark all as read"
           >
-            <CheckCheck size={13} />
+            <CheckCheck size={13} weight="duotone" />
             Mark all read
           </button>
         )}
@@ -132,7 +132,7 @@ function NotificationsPanel({ onClose }) {
       <div className={styles.notifList}>
         {notifications.length === 0 ? (
           <div className={styles.notifEmpty}>
-            <Bell size={28} />
+            <Bell size={28} weight="duotone" />
             <p>No active alerts</p>
             <span>Notifications will appear here when outbreaks or critical reports are detected.</span>
           </div>
@@ -235,7 +235,7 @@ export default function Navbar({ title = 'Dashboard' }) {
           title={`System Status: ${threat.label}`}
           aria-label={`System threat level: ${threat.label}`}
         >
-          <Shield size={12} aria-hidden="true" />
+          <Shield size={12} weight="duotone" aria-hidden="true" />
           <span>{threat.label}</span>
         </div>
       </div>
@@ -250,8 +250,8 @@ export default function Navbar({ title = 'Dashboard' }) {
           title={isDark ? 'Light mode' : 'Dark mode'}
         >
           {isDark
-            ? <Sun  size={16} aria-hidden="true" />
-            : <Moon size={16} aria-hidden="true" />}
+            ? <Sun size={16} weight="duotone" aria-hidden="true" />
+            : <Moon size={16} weight="duotone" aria-hidden="true" />}
         </button>
 
         {/* Notifications */}
@@ -264,7 +264,7 @@ export default function Navbar({ title = 'Dashboard' }) {
             aria-haspopup="dialog"
             aria-expanded={notifOpen}
           >
-            <Bell size={16} aria-hidden="true" />
+            <Bell size={16} weight="duotone" aria-hidden="true" />
             {unreadCount > 0 && (
               <span className={styles.badge} aria-hidden="true">
                 {unreadCount > 9 ? '9+' : unreadCount}
