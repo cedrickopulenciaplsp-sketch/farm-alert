@@ -180,6 +180,9 @@ function OutbreakCard({ outbreak, onAction, onSopUpdate }) {
         <div className={styles.sopSection}>
           <div className={styles.sopHeader}>
             <h4 className={styles.sopTitle}>Epidemiological Testing SOP</h4>
+            {isActive && (
+              <span className={styles.sopLockedHint}>🔒 Acknowledge to unlock</span>
+            )}
             {checkpoint && (
               <span className={styles.checkpointBadge}>🚧 CHECKPOINT ACTIVE</span>
             )}
@@ -187,7 +190,7 @@ function OutbreakCard({ outbreak, onAction, onSopUpdate }) {
           
           <div className={styles.sopSteps}>
             {/* Step 1: Blood Draw */}
-            <div className={styles.sopStep}>
+            <div className={`${styles.sopStep} ${isActive ? styles.stepDisabled : ''}`}>
               <div className={styles.stepHeader}>
                 <span className={styles.stepNum}>1</span>
                 <span className={styles.stepName}>Blood Sample Collection</span>
@@ -198,13 +201,13 @@ function OutbreakCard({ outbreak, onAction, onSopUpdate }) {
                   className={styles.sopInput} 
                   value={bloodDate}
                   onChange={(e) => handleSopChange('bloodDate', e.target.value)}
-                  disabled={sopUpdating || isResolved}
+                  disabled={isActive || sopUpdating || isResolved}
                 />
               </div>
             </div>
 
             {/* Step 2: Lab Result (only enable if blood drawn) */}
-            <div className={`${styles.sopStep} ${!bloodDate ? styles.stepDisabled : ''}`}>
+            <div className={`${styles.sopStep} ${(!bloodDate || isActive) ? styles.stepDisabled : ''}`}>
               <div className={styles.stepHeader}>
                 <span className={styles.stepNum}>2</span>
                 <span className={styles.stepName}>Lab Results</span>
@@ -214,7 +217,7 @@ function OutbreakCard({ outbreak, onAction, onSopUpdate }) {
                   className={styles.sopInput}
                   value={labResult}
                   onChange={(e) => handleSopChange('labResult', e.target.value)}
-                  disabled={!bloodDate || sopUpdating || isResolved}
+                  disabled={isActive || !bloodDate || sopUpdating || isResolved}
                 >
                   <option value="Pending">Pending Result</option>
                   <option value="Positive">Positive (Hold Quarantine)</option>
@@ -236,7 +239,7 @@ function OutbreakCard({ outbreak, onAction, onSopUpdate }) {
                       type="checkbox"
                       checked={checkpoint}
                       onChange={(e) => handleSopChange('checkpoint', e.target.checked)}
-                      disabled={sopUpdating || isResolved}
+                      disabled={isActive || sopUpdating || isResolved}
                     />
                     <span>Establish physical checkpoint around affected farms</span>
                   </label>
