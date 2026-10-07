@@ -117,7 +117,7 @@ export default function DiseaseMap() {
                 <li className={styles.legendItem}>
                   <div className={styles.legendZone} style={{ borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.15)', borderStyle: 'dashed', borderWidth: '1.5px' }}></div>
                   <div className={styles.legendText}>
-                    <span className={styles.legendLabel}>3km Surveillance Zone</span>
+                    <span className={styles.legendLabel}>7km Surveillance Zone</span>
                     <span className={styles.legendDesc}>Monitoring radius for potential disease spread. Requires elevated monitoring.</span>
                   </div>
                 </li>

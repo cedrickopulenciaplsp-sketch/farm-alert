@@ -77,10 +77,10 @@ export default function MapWidget({ farms = [], zoom = 13, className = '', style
         if (!isInfected) return null;
         return (
           <React.Fragment key={`buffers-${farm.farm_id}`}>
-            {/* 3km Surveillance Zone - Orange */}
+            {/* 7km Surveillance Zone - Orange */}
             <Circle
               center={[farm.latitude, farm.longitude]}
-              radius={3000} // 3km in meters
+              radius={7000} // 7km in meters
               pathOptions={{
                 color: '#f59e0b',
                 fillColor: '#f59e0b',
