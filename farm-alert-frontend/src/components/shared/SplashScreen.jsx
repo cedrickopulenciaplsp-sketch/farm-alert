@@ -11,13 +11,13 @@ export default function SplashScreen({ onFinish }) {
   const [unmounted, setUnmounted] = useState(false);
 
   useEffect(() => {
-    // Start fade-out after the loading bar finishes (~2s)
-    const fadeTimer = setTimeout(() => setHiding(true), 2000);
-    // Fully unmount after the 0.6s CSS fade transition
+    // Start fade-out after the loading bar finishes (~0.6s)
+    const fadeTimer = setTimeout(() => setHiding(true), 600);
+    // Fully unmount after the 0.3s CSS fade transition
     const unmountTimer = setTimeout(() => {
       setUnmounted(true);
       onFinish?.();
-    }, 2600);
+    }, 900);
 
     return () => {
       clearTimeout(fadeTimer);
