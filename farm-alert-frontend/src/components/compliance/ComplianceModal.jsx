@@ -219,11 +219,15 @@ export default function ComplianceModal({ onSuccess, onCancel, existing = null, 
         <option value="" disabled>
           {loading ? 'Loading farms…' : 'Select a farm'}
         </option>
-        {farms.map(f => (
-          <option key={f.farm_id} value={f.farm_id}>
-            {f.farm_name} — {f.owner_name}
-          </option>
-        ))}
+        {farms.map(f => {
+          const match = existingLogs.find(l => l.farm_id === f.farm_id);
+          const statusTag = match ? `(${match.compliance_status})` : '(New)';
+          return (
+            <option key={f.farm_id} value={f.farm_id}>
+              {f.farm_name} {statusTag} — {f.owner_name}
+            </option>
+          );
+        })}
       </Select>
 
       {/* Two-pronged evaluation checkboxes */}
