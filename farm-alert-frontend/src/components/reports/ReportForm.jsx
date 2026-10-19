@@ -131,6 +131,12 @@ export default function ReportForm({ onSuccess, onCancel }) {
     if (!form.farm_id) {
       newErrors.farm_id = 'Please select a farm.';
       valid = false;
+    } else {
+      const chosenFarm = farms.find(f => f.farm_id === form.farm_id);
+      if (chosenFarm?.farm_status === 'Temporarily Closed') {
+        newErrors.farm_id = 'This farm is Temporarily Closed and cannot file disease reports.';
+        valid = false;
+      }
     }
     if (!form.disease_id) {
       newErrors.disease_id = 'Please select a disease.';
@@ -199,11 +205,14 @@ export default function ReportForm({ onSuccess, onCancel }) {
         <option value="" disabled>
           {loading ? 'Loading farms…' : 'Select a farm'}
         </option>
-        {farms.map(f => (
-          <option key={f.farm_id} value={f.farm_id}>
-            {f.farm_name} — {f.barangay_name}
-          </option>
-        ))}
+        {farms.map(f => {
+          const isClosed = f.farm_status === 'Temporarily Closed';
+          return (
+            <option key={f.farm_id} value={f.farm_id} disabled={isClosed}>
+              {f.farm_name} — {f.barangay_name}{isClosed ? ' (Temporarily Closed — Inactive)' : ''}
+            </option>
+          );
+        })}
       </Select>
 
       {/* Disease select */}
