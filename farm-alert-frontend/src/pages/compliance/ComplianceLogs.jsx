@@ -152,6 +152,7 @@ export default function ComplianceLogs() {
 
   const [farmId, setFarmId]         = useState('');
   const [barangayId, setBarangayId] = useState('');
+  const [status, setStatus]         = useState('');
 
   // Modal state
   const [showModal, setShowModal]     = useState(false);
@@ -176,6 +177,7 @@ export default function ComplianceLogs() {
     const { data, error: fetchError } = await getComplianceLogs({
       farmId: farmId || null,
       barangayId: barangayId || null,
+      status: status || null,
     });
     if (fetchError) {
       setError(fetchError.message);
@@ -183,7 +185,7 @@ export default function ComplianceLogs() {
       setLogs(data ?? []);
     }
     setLoading(false);
-  }, [farmId, barangayId]);
+  }, [farmId, barangayId, status]);
 
   useEffect(() => {
     loadLogs();
@@ -192,6 +194,7 @@ export default function ComplianceLogs() {
   const handleClearFilters = () => {
     setFarmId('');
     setBarangayId('');
+    setStatus('');
   };
 
   const handleAddNew = () => {
@@ -227,7 +230,7 @@ export default function ComplianceLogs() {
     }
   };
 
-  const hasFilters = !!(farmId || barangayId);
+  const hasFilters = !!(farmId || barangayId || status);
 
   return (
     <div className={styles.page}>
@@ -281,6 +284,19 @@ export default function ComplianceLogs() {
             {barangays.map(b => (
               <option key={b.barangay_id} value={b.barangay_id}>{b.barangay_name}</option>
             ))}
+          </Select>
+
+          <Select
+            id="filter-compliance-status"
+            label=""
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            aria-label="Filter by compliance status"
+            className={styles.filterSelect}
+          >
+            <option value="">All Statuses</option>
+            <option value="Compliant">Compliant</option>
+            <option value="Non-Compliant">Non-Compliant</option>
           </Select>
 
           <div className={styles.filterActions}>

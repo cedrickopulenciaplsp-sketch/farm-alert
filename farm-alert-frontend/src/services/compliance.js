@@ -9,7 +9,7 @@ import { supabase } from '../lib/supabase';
  * @param {number} [options.barangayId] - filter by barangay
  * @returns {Promise<{ data: Array, error: object|null }>}
  */
-export async function getComplianceLogs({ farmId = null, barangayId = null } = {}) {
+export async function getComplianceLogs({ farmId = null, barangayId = null, status = null } = {}) {
   let query = supabase
     .from('pest_compliance_logs')
     .select(`
@@ -40,13 +40,18 @@ export async function getComplianceLogs({ farmId = null, barangayId = null } = {
   if (error) return { data, error };
 
   // Guarantee 1 row per farm: keep only the most recent evaluation
-  const uniqueLogs = [];
+  let uniqueLogs = [];
   const seenFarms = new Set();
   for (const log of (data || [])) {
     if (!seenFarms.has(log.farm_id)) {
       seenFarms.add(log.farm_id);
       uniqueLogs.push(log);
     }
+  }
+
+  // Filter by compliance status if specified
+  if (status) {
+    uniqueLogs = uniqueLogs.filter(log => log.compliance_status === status);
   }
 
   return { data: uniqueLogs, error: null };
