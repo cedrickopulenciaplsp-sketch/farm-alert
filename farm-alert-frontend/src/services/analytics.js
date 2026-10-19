@@ -372,11 +372,16 @@ export async function getReportStatusBreakdown() {
 export async function getComplianceBreakdown() {
   const { data, error } = await supabase
     .from('pest_compliance_logs')
-    .select('compliance_status');
+    .select('farm_id, compliance_status')
+    .order('evaluation_date', { ascending: false })
+    .order('created_at', { ascending: false });
   if (error) return { data: null, error };
 
+  const seenFarms = new Set();
   const map = {};
   (data ?? []).forEach(r => {
+    if (!r.farm_id || seenFarms.has(r.farm_id)) return;
+    seenFarms.add(r.farm_id);
     const key = r.compliance_status || 'Unknown';
     map[key] = (map[key] || 0) + 1;
   });

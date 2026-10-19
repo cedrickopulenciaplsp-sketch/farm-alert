@@ -34,12 +34,13 @@ const INITIAL_ERRORS = {
 // ---------------------------------------------------------------------------
 // ComplianceModal
 //
-// @param {function} onSuccess  - called after successful create/update
-// @param {function} onCancel   - called when user dismisses the form
-// @param {object}   [existing] - if provided, we're editing this record
-// @param {string}   [farmId]   - pre-select a farm (e.g. from FarmProfile)
+// @param {function} onSuccess    - called after successful create/update
+// @param {function} onCancel     - called when user dismisses the form
+// @param {object}   [existing]   - if provided, we're editing this record
+// @param {string}   [farmId]     - pre-select a farm (e.g. from FarmProfile)
+// @param {Array}    [existingLogs] - list of existing compliance logs for auto-detecting updates
 // ---------------------------------------------------------------------------
-export default function ComplianceModal({ onSuccess, onCancel, existing = null, farmId = null }) {
+export default function ComplianceModal({ onSuccess, onCancel, existing = null, farmId = null, existingLogs = [] }) {
   const isEdit = !!existing;
 
   const [form, setForm]       = useState(INITIAL_FORM);
@@ -48,6 +49,8 @@ export default function ComplianceModal({ onSuccess, onCancel, existing = null, 
   const [loading, setLoading] = useState(false);
   const [submit, setSubmit]   = useState(false);
   const [apiError, setApiError] = useState('');
+  const [targetLogId, setTargetLogId] = useState(existing?.log_id ?? null);
+  const [isUpdatingExisting, setIsUpdatingExisting] = useState(false);
 
   // ── Load dropdown data + prefill ────────────────────────────────────────
   useEffect(() => {
@@ -71,14 +74,57 @@ export default function ComplianceModal({ onSuccess, onCancel, existing = null, 
         evaluation_date:              existing.evaluation_date   ?? new Date().toISOString().slice(0, 10),
         notes:                        existing.notes             ?? '',
       });
+      setTargetLogId(existing.log_id);
     } else if (farmId) {
-      setForm(prev => ({ ...prev, farm_id: farmId }));
+      const matched = existingLogs.find(l => l.farm_id === farmId);
+      if (matched) {
+        const physical = matched.passed_physical_inspection ?? false;
+        const docs     = matched.passed_documentation ?? false;
+        setForm({
+          farm_id:                      farmId,
+          passed_physical_inspection:   physical,
+          passed_documentation:         docs,
+          compliance_status:            (physical && docs) ? 'Compliant' : 'Non-Compliant',
+          evaluation_date:              matched.evaluation_date ?? new Date().toISOString().slice(0, 10),
+          notes:                        matched.notes ?? '',
+        });
+        setTargetLogId(matched.log_id);
+        setIsUpdatingExisting(true);
+      } else {
+        setForm(prev => ({ ...prev, farm_id: farmId }));
+      }
     }
-  }, [existing, farmId]);
+  }, [existing, farmId, existingLogs]);
 
   // ── Handle field changes ────────────────────────────────────────────────
   function handleChange(e) {
     const { name, value } = e.target;
+
+    // When selecting a farm in new inspection mode, check if it already has a record
+    if (name === 'farm_id' && !isEdit) {
+      const matched = existingLogs.find(l => l.farm_id === value);
+      if (matched) {
+        const physical = matched.passed_physical_inspection ?? false;
+        const docs     = matched.passed_documentation ?? false;
+        setForm({
+          farm_id:                      value,
+          passed_physical_inspection:   physical,
+          passed_documentation:         docs,
+          compliance_status:            (physical && docs) ? 'Compliant' : 'Non-Compliant',
+          evaluation_date:              new Date().toISOString().slice(0, 10),
+          notes:                        matched.notes ?? '',
+        });
+        setTargetLogId(matched.log_id);
+        setIsUpdatingExisting(true);
+        if (errors.farm_id) setErrors(prev => ({ ...prev, farm_id: '' }));
+        if (apiError) setApiError('');
+        return;
+      } else {
+        setTargetLogId(null);
+        setIsUpdatingExisting(false);
+      }
+    }
+
     setForm(prev => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
     if (apiError)     setApiError('');
@@ -111,9 +157,10 @@ export default function ComplianceModal({ onSuccess, onCancel, existing = null, 
     setApiError('');
 
     const payload = { ...form };
+    const activeLogId = isEdit ? existing.log_id : targetLogId;
 
-    const { data, error } = isEdit
-      ? await updateComplianceLog(existing.log_id, payload)
+    const { data, error } = activeLogId
+      ? await updateComplianceLog(activeLogId, payload)
       : await createComplianceLog(payload);
 
     if (error) {
@@ -250,6 +297,14 @@ export default function ComplianceModal({ onSuccess, onCancel, existing = null, 
         </div>
       )}
 
+      {/* Update notice when farm already has a record */}
+      {isUpdatingExisting && (
+        <div className={styles.updateNotice} role="status">
+          <ShieldCheck size={16} aria-hidden="true" />
+          <span>This farm already has a compliance record. Saving will update its existing status.</span>
+        </div>
+      )}
+
       {/* Actions */}
       <div className={styles.actions}>
         <Button
@@ -267,7 +322,7 @@ export default function ComplianceModal({ onSuccess, onCancel, existing = null, 
           variant="primary"
           loading={submit}
         >
-          {isEdit ? 'Save Changes' : 'Record Inspection'}
+          {isEdit || isUpdatingExisting ? 'Save Changes' : 'Record Inspection'}
         </Button>
       </div>
     </form>

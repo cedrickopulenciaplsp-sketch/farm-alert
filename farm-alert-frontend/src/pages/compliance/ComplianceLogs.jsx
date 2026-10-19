@@ -238,7 +238,7 @@ export default function ComplianceLogs() {
           <p className={styles.pageSubtitle}>
             {loading
               ? 'Loading…'
-              : `${logs.length} inspection${logs.length !== 1 ? 's' : ''}${hasFilters ? ' (filtered)' : ''}`}
+              : `${logs.length} farm${logs.length !== 1 ? 's' : ''}${hasFilters ? ' (filtered)' : ''}`}
           </p>
         </div>
         <Button
@@ -248,7 +248,7 @@ export default function ComplianceLogs() {
           onClick={handleAddNew}
         >
           <Plus size={16} aria-hidden="true" />
-          New Inspection
+          Record Inspection
         </Button>
       </header>
 
@@ -351,11 +351,12 @@ export default function ComplianceLogs() {
       <Modal
         isOpen={showModal}
         onClose={() => { setShowModal(false); setEditingLog(null); }}
-        title={editingLog ? 'Edit Compliance Record' : 'Log New Inspection'}
+        title={editingLog ? 'Edit Compliance Record' : 'Record Inspection'}
         size="md"
       >
         <ComplianceModal
           existing={editingLog}
+          existingLogs={logs}
           onSuccess={handleModalSuccess}
           onCancel={() => { setShowModal(false); setEditingLog(null); }}
         />
