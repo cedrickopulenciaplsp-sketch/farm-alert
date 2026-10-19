@@ -133,8 +133,12 @@ export default function ReportForm({ onSuccess, onCancel }) {
       valid = false;
     } else {
       const chosenFarm = farms.find(f => f.farm_id === form.farm_id);
-      if (chosenFarm?.farm_status === 'Temporarily Closed') {
-        newErrors.farm_id = 'This farm is Temporarily Closed and cannot file disease reports.';
+      const isClosed = chosenFarm?.status === 'Temporarily Closed' || chosenFarm?.farm_status === 'Temporarily Closed';
+      const isInactive = chosenFarm?.status === 'Inactive';
+      if (isClosed || isInactive) {
+        newErrors.farm_id = isClosed
+          ? 'This farm is Temporarily Closed and cannot file disease reports.'
+          : 'This farm is Inactive and cannot file disease reports.';
         valid = false;
       }
     }
@@ -206,10 +210,17 @@ export default function ReportForm({ onSuccess, onCancel }) {
           {loading ? 'Loading farms…' : 'Select a farm'}
         </option>
         {farms.map(f => {
-          const isClosed = f.farm_status === 'Temporarily Closed';
+          const isClosed = f.status === 'Temporarily Closed' || f.farm_status === 'Temporarily Closed';
+          const isInactive = f.status === 'Inactive';
+          const isDisabled = isClosed || isInactive;
+          const statusSuffix = isClosed
+            ? ' (Temporarily Closed — Inactive)'
+            : isInactive
+            ? ' (Inactive)'
+            : '';
           return (
-            <option key={f.farm_id} value={f.farm_id} disabled={isClosed}>
-              {f.farm_name} — {f.barangay_name}{isClosed ? ' (Temporarily Closed — Inactive)' : ''}
+            <option key={f.farm_id} value={f.farm_id} disabled={isDisabled}>
+              {f.farm_name} — {f.barangay_name}{statusSuffix}
             </option>
           );
         })}
