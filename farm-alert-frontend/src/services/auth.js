@@ -1,6 +1,20 @@
 import { supabase } from '../lib/supabase';
 
 /**
+ * Whitelist of authorized City Veterinary Office Google accounts.
+ */
+export const AUTHORIZED_EMAILS = [
+  'sanielken2@gmail.com',
+  'mjhorcelt@gmail.com',
+  'morenongkups@gmail.com',
+];
+
+export function isAuthorizedEmail(email) {
+  if (!email) return false;
+  return AUTHORIZED_EMAILS.some(e => e.toLowerCase() === email.trim().toLowerCase());
+}
+
+/**
  * Initiate Google OAuth sign-in flow.
  * Redirects the browser to Google's consent screen.
  * On success, Supabase redirects back to /dashboard with a valid session.

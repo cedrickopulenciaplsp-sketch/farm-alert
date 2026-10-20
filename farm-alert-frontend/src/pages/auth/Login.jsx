@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { WarningCircle as AlertCircle, ShieldCheck, Leaf } from '@phosphor-icons/react';
 import { useAuth } from '../../context/AuthContext';
-import { loginWithGoogle } from '../../services/auth';
+import { loginWithGoogle, isAuthorizedEmail } from '../../services/auth';
 
 // ---------------------------------------------------------------------------
 // Google "G" logo SVG
@@ -223,25 +223,44 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [oauthError, setOauthError] = useState('');
 
-  if (!loading && session && profileLoaded) {
+  // Only redirect to dashboard if the account is confirmed authorized
+  if (!loading && session && profileLoaded && isAuthorizedEmail(session.user?.email)) {
     return <Navigate to="/dashboard" replace />;
   }
 
   // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const errCode = params.get('error');
-    const errDesc = params.get('error_description');
+    // 1. Check if AuthContext rejected an unauthorized account
+    const rejectedEmail = sessionStorage.getItem('unauthorized_login_email');
+    if (rejectedEmail) {
+      sessionStorage.removeItem('unauthorized_login_email');
+      setOauthError(`Access restricted: "${rejectedEmail}" is not an authorized City Veterinary Office account. Please select an authorized account.`);
+      return;
+    }
 
-    if (errCode) {
+    // 2. Parse OAuth errors from query string or URL hash fragment
+    const searchParams = new URLSearchParams(location.search);
+    const hash = window.location.hash.startsWith('#')
+      ? window.location.hash.substring(1)
+      : window.location.hash;
+    const hashParams = new URLSearchParams(hash);
+
+    const errCode = searchParams.get('error') || hashParams.get('error') || searchParams.get('error_code') || hashParams.get('error_code');
+    const errDesc = searchParams.get('error_description') || hashParams.get('error_description');
+
+    if (errCode || errDesc) {
+      const descLower = errDesc?.toLowerCase() || '';
       if (
         errCode === 'access_denied' ||
-        errDesc?.toLowerCase().includes('authorized') ||
-        errDesc?.toLowerCase().includes('restricted')
+        errCode === 'unexpected_failure' ||
+        errCode === 'server_error' ||
+        descLower.includes('authorized') ||
+        descLower.includes('restricted') ||
+        descLower.includes('database error')
       ) {
         setOauthError('Access restricted to authorized personnel only. Please use the official CVO Google account.');
       } else {
-        setOauthError(errDesc ?? 'Authentication failed. Please try again.');
+        setOauthError(decodeURIComponent((errDesc ?? 'Authentication failed. Please try again.').replace(/\+/g, ' ')));
       }
       navigate('/login', { replace: true });
     }

@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { getUserProfile } from '../services/auth';
+import { getUserProfile, isAuthorizedEmail } from '../services/auth';
 import { writeAuditLog } from '../services/admin';
 
 // ---------------------------------------------------------------------------
@@ -49,6 +49,20 @@ export function AuthProvider({ children }) {
     // 1. Fetch existing session immediately — don't await profile here
     supabase.auth.getSession().then(({ data }) => {
       const s = data?.session ?? null;
+
+      // Reject unauthorized accounts immediately
+      if (s?.user?.email && !isAuthorizedEmail(s.user.email)) {
+        sessionStorage.setItem('unauthorized_login_email', s.user.email);
+        supabase.auth.signOut().finally(() => {
+          setSession(null);
+          setUser(null);
+          setRole(null);
+          setProfile(null);
+          setProfileLoaded(true);
+        });
+        return;
+      }
+
       setSession(s);                           // ← unblocks loading immediately
       setUser(s?.user ?? null);
       setRole(parseRole(s, null));             // set role from JWT first
@@ -59,6 +73,19 @@ export function AuthProvider({ children }) {
     // 2. Subscribe to future auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, newSession) => {
+        // Reject unauthorized accounts immediately
+        if (newSession?.user?.email && !isAuthorizedEmail(newSession.user.email)) {
+          sessionStorage.setItem('unauthorized_login_email', newSession.user.email);
+          supabase.auth.signOut().finally(() => {
+            setSession(null);
+            setUser(null);
+            setRole(null);
+            setProfile(null);
+            setProfileLoaded(true);
+          });
+          return;
+        }
+
         setProfileLoaded(false);               // reset while new profile loads
         setSession(newSession);
         setUser(newSession?.user ?? null);

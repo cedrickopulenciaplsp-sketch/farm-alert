@@ -1,6 +1,7 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useInactivityTimeout } from '../hooks/useInactivityTimeout';
+import { isAuthorizedEmail } from '../services/auth';
 
 /**
  * ProtectedRoute
@@ -22,6 +23,7 @@ import { useInactivityTimeout } from '../hooks/useInactivityTimeout';
  */
 export default function ProtectedRoute() {
   const { session, loading } = useAuth();
+  const location = useLocation();
 
   // Enforce a 4-minute inactivity auto-logout (for demo/security purposes)
   useInactivityTimeout(4);
@@ -31,9 +33,12 @@ export default function ProtectedRoute() {
     return null;
   }
 
-  // Not logged in → send to login page
-  if (!session) {
-    return <Navigate to="/login" replace />;
+  // Not logged in or unauthorized email → send to login page (preserve error parameters if any)
+  if (!session || (session?.user?.email && !isAuthorizedEmail(session.user.email))) {
+    const search = location.search;
+    const hash = window.location.hash ? `?${window.location.hash.replace(/^#/, '')}` : '';
+    const query = search || hash;
+    return <Navigate to={`/login${query}`} replace />;
   }
 
   // Authorised → render child routes
