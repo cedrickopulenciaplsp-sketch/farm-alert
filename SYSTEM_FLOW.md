@@ -72,7 +72,7 @@ This document details the end-to-end system flow, user interactions, and technic
 * **How it works:** When multiple high-severity reports of the same disease cluster in a specific timeframe/location, the system escalates this to an **Outbreak**.
 * **When an Outbreak is declared:**
   1. It appears on the `/outbreaks` screen in bright red.
-  2. The system calculates a **1km Infected Zone** (strict quarantine) and a **3km Surveillance Zone** (elevated monitoring) around the epicenter.
+  2. The system calculates a **1km Infected Zone** (strict quarantine) and a **7km Surveillance Zone** (elevated monitoring) around the epicenter.
 * **When you click "Resolve" on an Outbreak:** The zone circles are removed from the map, and the status changes to historical.
 
 ---
@@ -94,7 +94,7 @@ This document details the end-to-end system flow, user interactions, and technic
 
 ---
 
-## 6. Pest Control Compliance (`/compliance`)
+## 6. Biosecurity Compliance (`/compliance`)
 *Tracks biosecurity and hygiene standards.*
 
 * **What you see:** A log of all farm inspections.
@@ -122,7 +122,7 @@ This document details the end-to-end system flow, user interactions, and technic
 2. **Logging:** Officer logs into FarmAlert (IP is logged). They go to `/reports` and create a "High Severity" ASF report for *CediBOY Farm*.
 3. **Map Update:** On `/map`, *CediBOY Farm* instantly turns Red. It jumps to the top of the "Active Incidents" sidebar.
 4. **Outbreak Trigger:** Because 2 other farms nearby reported ASF yesterday, the system flags an **Active Outbreak**.
-5. **Zoning:** A 1km red circle and 3km orange circle are drawn on the map around San Cristobal.
+5. **Zoning:** A 1km red circle and 7km orange circle are drawn on the map around San Cristobal.
 6. **Dashboard Alert:** The Dashboard Threat Level badge changes to `Critical`.
 7. **Resolution:** 30 days later, the area is cleared. The officer marks the outbreak as "Resolved". The map circles disappear, the pins turn green, and the threat level returns to `Normal`.
 
@@ -134,8 +134,8 @@ FarmAlert automates the calculation of disease severity to eliminate human error
 
 ### 1. The Core Formulas
 Severity is calculated using standard epidemiological rates relative to the specific farm's total registered population (`head_count`).
-* **Morbidity Rate (%)** = `(Sick Animals ÷ Total Farm Population) × 100`
-* **Mortality Rate (%)** = `(Dead Animals ÷ Total Farm Population) × 100`
+* **Morbidity Rate (%)** = `(Sick Animals Ã· Total Farm Population) Ã— 100`
+* **Mortality Rate (%)** = `(Dead Animals Ã· Total Farm Population) Ã— 100`
 
 ### 2. Algorithmic Thresholds & Justification
 The automated percentage brackets are designed to catch both highly lethal diseases (like ASF) and highly contagious but less lethal diseases (like FMD).
@@ -177,7 +177,7 @@ FarmAlert is built using a modern, scalable, and real-time tech stack optimized 
 * **PostgreSQL Triggers:** Automated server-side SQL functions (e.g., automatically calculating disease severity and generating immutable audit logs the exact millisecond data is inserted).
 
 ### 3. Geospatial & Analytics Libraries
-* **Leaflet.js (React-Leaflet):** The open-source mapping library used for the `/map` module. It handles plotting farms, rendering color-coded pins, and automatically drawing the 1km/3km outbreak radius zones based on geographical coordinates.
+* **Leaflet.js (React-Leaflet):** The open-source mapping library used for the `/map` module. It handles plotting farms, rendering color-coded pins, and automatically drawing the 1km/7km outbreak radius zones based on geographical coordinates.
 * **Recharts:** A composable charting library built on React components, powering the complex Data & Analytics dashboard (Area trends, Bar charts, and Stacked compliance charts).
 * **Lucide-React:** The modern, lightweight SVG icon library used uniformly across the application interface.
 

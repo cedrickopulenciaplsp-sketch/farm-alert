@@ -804,7 +804,7 @@ export default function Dashboard() {
 
           <div className={`${analyticsStyles.grid} anim-slide-left delay-10`}>
             <Card className={analyticsStyles.fullCard}>
-              <Card.Header title={<div className={analyticsStyles.chartTitle}><ShieldCheck size={15} /><span>Pest Control Compliance Breakdown</span></div>} />
+              <Card.Header title={<div className={analyticsStyles.chartTitle}><ShieldCheck size={15} /><span>Biosecurity Compliance Breakdown</span></div>} />
               <Card.Body>
                 <StackedBar
                   data={complianceData}

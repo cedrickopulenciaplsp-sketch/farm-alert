@@ -129,7 +129,7 @@ function EmptyState({ hasFilters, onClear }) {
       <p className={styles.emptyDesc}>
         {hasFilters
           ? 'Try adjusting or clearing your active filters.'
-          : 'Record the first pest control inspection using the button above.'}
+          : 'Record the first biosecurity inspection using the button above.'}
       </p>
       {hasFilters && (
         <Button variant="ghost" size="sm" id="clear-compliance-filters-btn" onClick={onClear}>
@@ -237,7 +237,7 @@ export default function ComplianceLogs() {
       {/* ── Page Header ─────────────────────────────────────────────────── */}
       <header className={styles.pageHeader}>
         <div>
-          <h1 className={styles.pageTitle}>Pest Control Compliance</h1>
+          <h1 className={styles.pageTitle}>Biosecurity Compliance</h1>
           <p className={styles.pageSubtitle}>
             {loading
               ? 'Loading…'
@@ -334,7 +334,7 @@ export default function ComplianceLogs() {
       ) : (
         <Card className={styles.tableCard}>
           <div className={styles.tableWrapper}>
-            <table className={styles.table} aria-label="Pest control compliance table">
+            <table className={styles.table} aria-label="Biosecurity compliance table">
               <thead>
                 <tr>
                   <th className={styles.th}>Farm</th>

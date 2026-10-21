@@ -527,7 +527,7 @@ export default function Analytics() {
 
       <div className={styles.grid}>
         <Card className={styles.fullCard}>
-          <Card.Header title={<div className={styles.chartTitle}><ShieldCheck size={15} /><span>Pest Control Compliance Breakdown</span></div>} />
+          <Card.Header title={<div className={styles.chartTitle}><ShieldCheck size={15} /><span>Biosecurity Compliance Breakdown</span></div>} />
           <Card.Body>
             <StackedBar
               data={complianceData}

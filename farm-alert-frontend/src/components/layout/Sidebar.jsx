@@ -29,7 +29,7 @@ const NAV_ITEMS = [
   { to: '/reports',        icon: FileText,        label: 'Disease Reports' },
   { to: '/outbreaks',      icon: AlertTriangle,   label: 'Outbreak Alerts' },
   { to: '/map',            icon: Map,             label: 'Disease Map' },
-  { to: '/compliance',     icon: ShieldCheck,     label: 'Compliance Logs' },
+  { to: '/compliance',     icon: ShieldCheck,     label: 'Biosecurity Compliance' },
   { to: '/settings',      icon: Settings,        label: 'System Settings' },
   { to: '/logs',          icon: ClipboardList,   label: 'Audit Logs' },
 ];
