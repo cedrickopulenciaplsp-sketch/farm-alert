@@ -468,3 +468,23 @@
   color: var(--color-danger);
   font-variant-numeric: tabular-nums;
 }
+
+/* ── Dark Mode Overrides ──────────────────────────────────── */
+:global(html.dark) .reportIcon,
+:global(html.dark) .emptyIcon,
+:global(html.dark) .errorCard,
+:global(html.dark) .statusActive {
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+  border-color: rgba(232, 148, 125, 0.35);
+}
+
+:global(html.dark) .statusResolved {
+  background: var(--badge-compliant-bg);
+  color: var(--badge-compliant-text);
+}
+
+:global(html.dark) .statusOther {
+  background: var(--badge-mod-bg);
+  color: var(--badge-mod-text);
+}

@@ -269,6 +269,22 @@
   gap: 0.5rem;
 }
 
+:global(html.dark) .roleAdmin {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fcd34d;
+}
+
+:global(html.dark) .roleStaff {
+  background: rgba(59, 130, 246, 0.18);
+  color: #93c5fd;
+}
+
+:global(html.dark) .roleFarmer,
+:global(html.dark) .statusActive {
+  background: rgba(34, 197, 94, 0.18);
+  color: #86efac;
+}
+
 .tableFooter {
   padding: 0.625rem 1rem;
   border-top: 1px solid var(--color-border);

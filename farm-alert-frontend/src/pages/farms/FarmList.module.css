@@ -434,3 +434,24 @@
   font-size: var(--text-sm);
   color: var(--color-danger);
 }
+
+/* ── Dark Mode Overrides ──────────────────────────────────── */
+:global(html.dark) .badgeActive {
+  background: var(--badge-compliant-bg);
+  color: var(--badge-compliant-text);
+}
+
+:global(html.dark) .badgeInactive {
+  background: var(--badge-default-bg);
+  color: var(--badge-default-text);
+}
+
+:global(html.dark) .badgeQuarantine {
+  background: var(--badge-mod-bg);
+  color: var(--badge-mod-text);
+}
+
+:global(html.dark) .errorCard {
+  background: var(--color-danger-light);
+  border-color: rgba(232, 148, 125, 0.35);
+}

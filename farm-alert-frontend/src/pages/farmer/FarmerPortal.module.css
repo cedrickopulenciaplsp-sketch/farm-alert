@@ -366,3 +366,41 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Dark Mode Overrides ──────────────────────────────────── */
+:global(html.dark) .advisoryAlert {
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(248, 113, 113, 0.4);
+  color: #fecaca;
+}
+
+:global(html.dark) .advisorySafe {
+  background: rgba(34, 197, 94, 0.14);
+  border-color: rgba(74, 222, 128, 0.35);
+  color: #bbf7d0;
+}
+
+:global(html.dark) .bioCompliant {
+  background: rgba(34, 197, 94, 0.18);
+  color: #86efac;
+}
+
+:global(html.dark) .bioPending {
+  background: rgba(234, 179, 8, 0.18);
+  color: #fde047;
+}
+
+:global(html.dark) .bioNonCompliant {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fca5a5;
+}
+
+:global(html.dark) .stepDone {
+  background: rgba(34, 197, 94, 0.14);
+  border-color: rgba(74, 222, 128, 0.4);
+}
+
+:global(html.dark) .stepAlert {
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(248, 113, 113, 0.45);
+}

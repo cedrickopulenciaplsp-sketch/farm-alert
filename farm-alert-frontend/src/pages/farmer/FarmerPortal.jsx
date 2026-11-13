@@ -313,14 +313,13 @@ export default function FarmerPortal() {
                         </span>
                       </div>
                       <span
-                        className={styles.bioBadge}
-                        style={
+                        className={`${styles.bioBadge} ${
                           isResolved
-                            ? { background: 'hsl(145, 55%, 92%)', color: 'hsl(145, 65%, 24%)' }
+                            ? styles.bioCompliant
                             : labResult === 'Positive'
-                            ? { background: '#fef2f2', color: '#b91c1c' }
-                            : { background: 'hsl(42, 95%, 90%)', color: 'hsl(35, 90%, 28%)' }
-                        }
+                            ? styles.bioNonCompliant
+                            : styles.bioPending
+                        }`}
                       >
                         {isResolved
                           ? 'Cleared / Resolved'

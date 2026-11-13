@@ -368,3 +368,8 @@
   justify-content: flex-end;
   gap: 0.625rem;
 }
+
+:global(html.dark) .errorCard {
+  background: var(--color-danger-light);
+  border-color: rgba(232, 148, 125, 0.35);
+}

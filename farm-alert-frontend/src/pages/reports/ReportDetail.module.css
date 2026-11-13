@@ -383,3 +383,26 @@
   color: var(--color-danger);
   max-width: 380px;
 }
+
+/* ── Dark Mode Overrides ──────────────────────────────────── */
+:global(html.dark) .reportIconWrap,
+:global(html.dark) .statusActive,
+:global(html.dark) .statusBtnActive {
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+  border-color: rgba(232, 148, 125, 0.45);
+}
+
+:global(html.dark) .statusResolved,
+:global(html.dark) .statusBtnResolved {
+  background: var(--badge-compliant-bg);
+  color: var(--badge-compliant-text);
+  border-color: rgba(79, 189, 175, 0.45);
+}
+
+:global(html.dark) .statusMonitor,
+:global(html.dark) .statusBtnMonitor {
+  background: var(--badge-mod-bg);
+  color: var(--badge-mod-text);
+  border-color: rgba(240, 214, 138, 0.45);
+}
