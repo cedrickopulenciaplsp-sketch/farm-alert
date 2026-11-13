@@ -23,7 +23,7 @@ import ReportForm from '../../components/reports/ReportForm';
 import styles from './FarmerPortal.module.css';
 
 export default function FarmerPortal() {
-  const { userFarmId, isDemoAccount, setDemoRole } = useAuth();
+  const { userFarmId } = useAuth();
 
   const [farms, setFarms]               = useState([]);
   const [selectedFarmId, setSelectedFarmId] = useState(userFarmId || '');
@@ -42,11 +42,10 @@ export default function FarmerPortal() {
     ]);
 
     // Data privacy: a registered farmer only ever sees their own linked holding.
-    // The multi-farm switcher is reserved for project-team demo accounts.
     const allFarms = fRes.data ?? [];
-    const farmList = isDemoAccount
-      ? allFarms
-      : allFarms.filter((f) => f.farm_id === userFarmId);
+    const farmList = userFarmId
+      ? allFarms.filter((f) => f.farm_id === userFarmId)
+      : [];
     setFarms(farmList);
     setReports(rRes.data ?? []);
     setOutbreaks(oRes.data ?? []);
@@ -59,7 +58,7 @@ export default function FarmerPortal() {
     });
 
     setLoading(false);
-  }, [userFarmId, isDemoAccount]);
+  }, [userFarmId]);
 
   useEffect(() => {
     loadPortalData();
@@ -101,9 +100,7 @@ export default function FarmerPortal() {
   }, [complianceLogs, selectedFarm]);
 
   function handleFarmChange(e) {
-    const nextId = e.target.value;
-    setSelectedFarmId(nextId);
-    setDemoRole('farmer', nextId);
+    setSelectedFarmId(e.target.value);
   }
 
   if (loading) {

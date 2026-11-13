@@ -122,9 +122,11 @@ export function AuthProvider({ children }) {
   const [access, setAccess]               = useState(null);      // resolved account access
   const [profileLoaded, setProfileLoaded] = useState(false);     // true once access is resolved
 
-  // Per-tab demo role (honoured ONLY for project-team demo accounts)
-  const [demoRole, setDemoRoleState]  = useState(() => normalizeRole(sessionStorage.getItem(DEMO_ROLE_KEY)));
-  const [demoFarmId, setDemoFarmId]   = useState(() => sessionStorage.getItem(DEMO_FARM_KEY) || null);
+  // Clear any legacy demo role override from sessionStorage so each account strictly uses its DB-assigned role
+  useEffect(() => {
+    sessionStorage.removeItem(DEMO_ROLE_KEY);
+    sessionStorage.removeItem(DEMO_FARM_KEY);
+  }, []);
 
   const resolvedUserId = useRef(null);
 
@@ -202,34 +204,13 @@ export function AuthProvider({ children }) {
     return Promise.resolve();
   }, [user, loadAccess]);
 
-  // Per-tab role switching for defense demonstrations (sessionStorage = per tab)
-  const setDemoRole = useCallback((nextRole, nextFarmId = null) => {
-    const norm = normalizeRole(nextRole);
-    if (norm) {
-      sessionStorage.setItem(DEMO_ROLE_KEY, norm);
-    } else {
-      sessionStorage.removeItem(DEMO_ROLE_KEY);
-    }
-    setDemoRoleState(norm);
+  const setDemoRole = useCallback(() => {}, []);
 
-    if (nextFarmId) {
-      sessionStorage.setItem(DEMO_FARM_KEY, nextFarmId);
-      setDemoFarmId(nextFarmId);
-    } else if (norm !== 'farmer') {
-      sessionStorage.removeItem(DEMO_FARM_KEY);
-      setDemoFarmId(null);
-    }
-  }, []);
+  const isDemoAccount = false;
 
-  const isDemoAccount = Boolean(access?.isDemoAccount);
+  const userRole = access?.role || profileRole(profile) || 'cvo_staff';
 
-  const userRole = (isDemoAccount && demoRole)
-    ? demoRole
-    : (access?.role || profileRole(profile) || 'cvo_staff');
-
-  const userFarmId = isDemoAccount
-    ? (demoFarmId || access?.farmId || profile?.farm_id || null)
-    : (access?.farmId || profile?.farm_id || null);
+  const userFarmId = access?.farmId || profile?.farm_id || null;
 
   const value = {
     session,

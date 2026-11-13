@@ -230,14 +230,10 @@ function BrandPanel() {
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { session, loading, profileLoaded, isAuthorized, userRole, setDemoRole } = useAuth();
+  const { session, loading, profileLoaded, isAuthorized, userRole } = useAuth();
 
   const [isLoading, setIsLoading] = useState(false);
   const [oauthError, setOauthError] = useState('');
-  const [showDemoRoles, setShowDemoRoles] = useState(false);
-  const [selectedRole, setSelectedRole] = useState(
-    () => sessionStorage.getItem('farm_alert_demo_role') || null
-  );
 
   // Only redirect if the account is confirmed authorized
   if (!loading && session && profileLoaded && isAuthorized) {
@@ -282,10 +278,7 @@ export default function Login() {
     }
   }, [location.search, navigate]);
 
-  async function handleGoogleSignIn(roleOverride = null) {
-    const targetRole = typeof roleOverride === 'string' ? roleOverride : null;
-    setDemoRole(targetRole);
-    setSelectedRole(targetRole);
+  async function handleGoogleSignIn() {
     setOauthError('');
     setIsLoading(true);
     const { error } = await loginWithGoogle();
@@ -494,115 +487,6 @@ export default function Login() {
                 </p>
               </div>
             </div>
-
-            {/* Collapsible Team Demo Role Switcher (for defense testing only) */}
-            <div style={{ marginTop: '16px', textAlign: 'center' }}>
-              <button
-                type="button"
-                onClick={() => setShowDemoRoles(prev => !prev)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  color: '#64748b',
-                  cursor: 'pointer',
-                  padding: '4px 8px',
-                  textDecoration: 'underline',
-                  textUnderlineOffset: '3px',
-                }}
-              >
-                {showDemoRoles ? 'Hide Demo Role Switcher' : 'Team Demo Mode (Switch Role)'}
-              </button>
-            </div>
-
-            {showDemoRoles && (
-              <div
-                className="fa-animate-in"
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '10px',
-                  marginTop: '12px',
-                }}
-              >
-                {[
-                  {
-                    id: 'demo-login-admin',
-                    role: 'admin',
-                    title: 'City Veterinarian (Admin)',
-                    badge: 'Full Access',
-                    desc: 'Full Command Center · Barangay Masterlist · Outbreak Resolution',
-                    border: '#f59e0b',
-                    bg: '#fffdf5',
-                    badgeBg: '#fef3c7',
-                    badgeColor: '#b45309',
-                  },
-                  {
-                    id: 'demo-login-staff',
-                    role: 'cvo_staff',
-                    title: 'Veterinary Inspector (Staff)',
-                    badge: 'Field Ops',
-                    desc: 'Field Operations · Blood Sample & Lab Results · Biosecurity Inspection',
-                    border: '#3b82f6',
-                    bg: '#f8faff',
-                    badgeBg: '#dbeafe',
-                    badgeColor: '#1d4ed8',
-                  },
-                  {
-                    id: 'demo-login-farmer',
-                    role: 'farmer',
-                    title: 'Livestock Raiser (Farmer)',
-                    badge: 'Farmer Portal',
-                    desc: 'Mobile Farm Dossier · Report Sick Animals · Barangay Advisory',
-                    border: '#16a34a',
-                    bg: '#f6fdf8',
-                    badgeBg: '#dcfce7',
-                    badgeColor: '#15803d',
-                  },
-                ].map((item) => {
-                  const active = selectedRole === item.role;
-                  return (
-                    <button
-                      key={item.role}
-                      id={item.id}
-                      type="button"
-                      disabled={isLoading}
-                      onClick={() => handleGoogleSignIn(item.role)}
-                      style={{
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: '12px 14px',
-                        borderRadius: '10px',
-                        border: active ? `2px solid ${item.border}` : '1.5px solid #e2e8f0',
-                        background: active ? item.bg : '#ffffff',
-                        cursor: isLoading ? 'not-allowed' : 'pointer',
-                        transition: 'all 0.15s ease',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                        <span style={{ fontSize: '0.86rem', fontWeight: 700, color: '#0f172a' }}>
-                          {item.title}
-                        </span>
-                        <span style={{
-                          fontSize: '10px',
-                          fontWeight: 700,
-                          padding: '2px 7px',
-                          borderRadius: '999px',
-                          background: item.badgeBg,
-                          color: item.badgeColor,
-                        }}>
-                          {item.badge}
-                        </span>
-                      </div>
-                      <div style={{ fontSize: '0.74rem', color: '#64748b', marginTop: '3px', lineHeight: 1.4 }}>
-                        {item.desc}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
 
             {/* Footer */}
             <p
