@@ -23,7 +23,16 @@ function getInitials(email) {
 // ---------------------------------------------------------------------------
 // Derive a friendly role label
 // ---------------------------------------------------------------------------
+const ROLE_BADGE_META = {
+  admin:     { label: 'City Veterinarian (Admin)',      bg: 'hsl(42, 95%, 90%)',  color: 'hsl(35, 90%, 28%)'  },
+  cvo_staff: { label: 'Veterinary Inspector (Staff)',   bg: 'hsl(212, 85%, 92%)', color: 'hsl(212, 80%, 30%)' },
+  farmer:    { label: 'Livestock Raiser (Farmer)',     bg: 'hsl(145, 60%, 91%)', color: 'hsl(145, 65%, 24%)' },
+};
+
 function getRoleLabel(role) {
+  return ROLE_BADGE_META[role]?.label ?? ROLE_BADGE_META.cvo_staff.label;
+}
+function _unused(role) {
   if (role === 'admin') return 'Administrator';
   if (role === 'cvo_officer') return 'CVO Officer';
   return 'Staff';
@@ -169,6 +178,8 @@ function NotificationsPanel({ onClose }) {
 // ---------------------------------------------------------------------------
 export default function Navbar({ title = 'Dashboard' }) {
   const { user, role } = useAuth();
+  const navigate = useNavigate();
+  const roleMeta = ROLE_BADGE_META[role] ?? ROLE_BADGE_META.admin;
   const { isDark, toggleTheme } = useTheme();
   const { unreadCount } = useNotifications();
   const initials = getInitials(user?.email);
@@ -207,8 +218,8 @@ export default function Navbar({ title = 'Dashboard' }) {
 
   const THREAT_META = {
     normal:   { label: 'Normal Surveillance',      cls: styles.threatNormal   },
-    elevated: { label: `Elevated — ${activeOutbreaks} Active`,  cls: styles.threatElevated },
-    critical: { label: `Critical — ${activeOutbreaks} Active`,  cls: styles.threatCritical },
+    elevated: { label: `Elevated — ${activeOutbreaks} Pending`,  cls: styles.threatElevated },
+    critical: { label: `High Alert — ${activeOutbreaks} Pending`,  cls: styles.threatCritical },
   };
   const threat = THREAT_META[threatLevel];
 
@@ -241,6 +252,7 @@ export default function Navbar({ title = 'Dashboard' }) {
       </div>
 
       <div className={styles.actions}>
+        
         {/* Dark / Light mode toggle */}
         <button
           id="navbar-theme-toggle-btn"
@@ -291,7 +303,21 @@ export default function Navbar({ title = 'Dashboard' }) {
           )}
           <div className={styles.profileInfo}>
             <span className={styles.profileName}>{displayName}</span>
-            <span className={styles.profileRole}>{getRoleLabel(role)}</span>
+            <span
+              className={styles.profileRole}
+              style={{
+                display: 'inline-block',
+                marginTop: '2px',
+                padding: '1px 7px',
+                borderRadius: '999px',
+                fontSize: '10px',
+                fontWeight: 700,
+                background: roleMeta.bg,
+                color: roleMeta.color,
+              }}
+            >
+              {getRoleLabel(role)}
+            </span>
           </div>
         </div>
       </div>

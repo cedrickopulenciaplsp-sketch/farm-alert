@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { getMapFarms } from '../../services/analytics';
 import { useRealtime } from '../../hooks/useRealtime';
 import { Heartbeat as Activity } from '@phosphor-icons/react';
-import MapWidget from '../../components/map/MapWidget';
+import MapWidget, { hasActiveIncident } from '../../components/map/MapWidget';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import Card from '../../components/shared/Card';
 import styles from './DiseaseMap.module.css';
@@ -23,6 +23,7 @@ export default function DiseaseMap() {
   useEffect(() => { loadFarms(); }, [loadFarms]);
 
   useRealtime('disease_reports', () => loadFarms());
+  useRealtime('outbreak_alerts', () => loadFarms());
   useRealtime('farms',           () => loadFarms());
 
   if (loading) {
@@ -33,9 +34,9 @@ export default function DiseaseMap() {
     );
   }
 
-  const infectedFarms = farms.filter(f => f.latest_report_status === 'Active');
+  const infectedFarms = farms.filter(hasActiveIncident);
   const closedFarms   = farms.filter(f => f.farm_status === 'Temporarily Closed');
-  const healthyFarms  = farms.filter(f => f.farm_status !== 'Temporarily Closed' && f.latest_report_status !== 'Active');
+  const healthyFarms  = farms.filter(f => f.farm_status !== 'Temporarily Closed' && !hasActiveIncident(f));
 
   return (
     <div className={styles.page}>

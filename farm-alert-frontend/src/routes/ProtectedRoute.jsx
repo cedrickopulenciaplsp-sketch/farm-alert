@@ -1,7 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useInactivityTimeout } from '../hooks/useInactivityTimeout';
-import { isAuthorizedEmail } from '../services/auth';
 
 /**
  * ProtectedRoute
@@ -21,24 +19,36 @@ import { isAuthorizedEmail } from '../services/auth';
  * @param {string} [requiredRole] - Optional role required to access the route.
  *                                  If omitted, any authenticated user can access.
  */
+const ADMIN_ONLY_PATHS = ['/settings', '/logs'];
+const FARMER_ALLOWED_PATHS = ['/farmer-portal', '/diseases'];
+
 export default function ProtectedRoute() {
-  const { session, loading } = useAuth();
+  const { session, loading, profileLoaded, isAuthorized, userRole } = useAuth();
   const location = useLocation();
 
-  // Enforce a 4-minute inactivity auto-logout (for demo/security purposes)
-  useInactivityTimeout(4);
-
-  // While the initial session check is still running, render nothing.
-  if (loading) {
+  // While the session / account access check is still running, render nothing.
+  if (loading || (session && !profileLoaded)) {
     return null;
   }
 
-  // Not logged in or unauthorized email → send to login page (preserve error parameters if any)
-  if (!session || (session?.user?.email && !isAuthorizedEmail(session.user.email))) {
+  // Not logged in, not registered, or suspended → send to login page (preserve error parameters if any)
+  if (!session || !isAuthorized) {
     const search = location.search;
     const hash = window.location.hash ? `?${window.location.hash.replace(/^#/, '')}` : '';
     const query = search || hash;
     return <Navigate to={`/login${query}`} replace />;
+  }
+
+  const pathname = location.pathname;
+
+  // Task 3.3: Farmers are scoped to /farmer-portal (and /diseases library)
+  if (userRole === 'farmer' && !FARMER_ALLOWED_PATHS.some((p) => pathname.startsWith(p))) {
+    return <Navigate to="/farmer-portal" replace />;
+  }
+
+  // Task 3.3: Non-admins cannot access /settings/* (incl. Barangay Masterlist, User Accounts) or /logs
+  if (userRole !== 'admin' && ADMIN_ONLY_PATHS.some((p) => pathname.startsWith(p))) {
+    return <Navigate to={userRole === 'farmer' ? '/farmer-portal' : '/dashboard'} replace />;
   }
 
   // Authorised → render child routes

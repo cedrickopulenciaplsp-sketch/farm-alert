@@ -14,7 +14,7 @@ import styles from './ReportForm.module.css';
 const INITIAL_FORM = {
   farm_id:          '',
   disease_id:       '',
-  animals_affected: 0,
+  animals_affected: 1,
   mortalities:      0,
   severity:         'Severe',
   date_reported:    new Date().toISOString().slice(0, 10),
@@ -25,6 +25,8 @@ const INITIAL_FORM = {
 const INITIAL_ERRORS = {
   farm_id:          '',
   disease_id:       '',
+  animals_affected: '',
+  mortalities:      '',
   date_reported:    '',
 };
 
@@ -33,11 +35,12 @@ const INITIAL_ERRORS = {
 //
 // @param {function} onSuccess  - called with the created report after success
 // @param {function} onCancel   - called when the user dismisses the form
+// @param {string}   [prefilledFarmId] - optional farm_id to preselect & lock (for Farmer Portal)
 // ---------------------------------------------------------------------------
-export default function ReportForm({ onSuccess, onCancel }) {
+export default function ReportForm({ onSuccess, onCancel, prefilledFarmId = '' }) {
   const { user } = useAuth();
 
-  const [form,     setForm]     = useState(INITIAL_FORM);
+  const [form,     setForm]     = useState({ ...INITIAL_FORM, farm_id: prefilledFarmId || '' });
   const [errors,   setErrors]   = useState(INITIAL_ERRORS);
   const [farms,    setFarms]    = useState([]);
   const [diseases, setDiseases] = useState([]);
@@ -59,6 +62,12 @@ export default function ReportForm({ onSuccess, onCancel }) {
     }
     loadDropdowns();
   }, []);
+
+  useEffect(() => {
+    if (prefilledFarmId) {
+      setForm((prev) => ({ ...prev, farm_id: prefilledFarmId }));
+    }
+  }, [prefilledFarmId]);
 
   const selectedFarm = farms.find(f => f.farm_id === form.farm_id) ?? null;
 
@@ -152,6 +161,20 @@ export default function ReportForm({ onSuccess, onCancel }) {
       valid = false;
     }
 
+    const affected = Number(form.animals_affected) || 0;
+    const deaths   = Number(form.mortalities) || 0;
+    if (affected < 0) {
+      newErrors.animals_affected = 'Must be 0 or greater.';
+      valid = false;
+    }
+    if (deaths < 0) {
+      newErrors.mortalities = 'Must be 0 or greater.';
+      valid = false;
+    } else if (deaths > affected && affected > 0) {
+      newErrors.mortalities = 'Mortalities cannot exceed animals affected.';
+      valid = false;
+    }
+
     setErrors(newErrors);
     return valid;
   }
@@ -165,6 +188,8 @@ export default function ReportForm({ onSuccess, onCancel }) {
     setApiError('');
     const payload = {
       ...form,
+      animals_affected: Math.max(0, Number(form.animals_affected) || 0),
+      mortalities:      Math.max(0, Number(form.mortalities) || 0),
     };
 
     const { data, error } = await createReport(payload);
@@ -246,6 +271,33 @@ export default function ReportForm({ onSuccess, onCancel }) {
           </option>
         ))}
       </Select>
+
+      {/* Animals Affected & Mortalities (Task 1.2) */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
+        <Input
+          id="report-animals-affected"
+          name="animals_affected"
+          type="number"
+          min="0"
+          label="Animals Affected (Sick)"
+          required
+          value={form.animals_affected}
+          onChange={handleChange}
+          error={errors.animals_affected}
+          disabled={submit}
+        />
+        <Input
+          id="report-mortalities"
+          name="mortalities"
+          type="number"
+          min="0"
+          label="Mortalities (Deaths)"
+          value={form.mortalities}
+          onChange={handleChange}
+          error={errors.mortalities}
+          disabled={submit}
+        />
+      </div>
 
       {/* Date reported */}
       <Input

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
 /**
@@ -9,12 +9,17 @@ import { supabase } from '../lib/supabase';
  * @param {string} event - The specific event to listen for ('INSERT', 'UPDATE', 'DELETE', or '*'). Default is '*'.
  */
 export const useRealtime = (table, callback, event = '*') => {
-  useEffect(() => {
-    // Ensure table and callback are provided
-    if (!table || !callback) return;
+  const instanceId  = useId();
+  const callbackRef = useRef(callback);
 
-    // Create a unique channel name based on the table
-    const channelName = `realtime:${table}`;
+  useEffect(() => {
+    callbackRef.current = callback;
+  }, [callback]);
+
+  useEffect(() => {
+    if (!table) return;
+
+    const channelName = `realtime:${table}:${instanceId}`;
 
     const channel = supabase
       .channel(channelName)
@@ -22,21 +27,17 @@ export const useRealtime = (table, callback, event = '*') => {
         'postgres_changes',
         { event: event, schema: 'public', table: table },
         (payload) => {
-          console.log(`Realtime update received on ${table}:`, payload);
-          callback(payload);
+          callbackRef.current?.(payload);
         }
       )
       .subscribe((status, err) => {
-        if (status === 'SUBSCRIBED') {
-          console.log(`Subscribed to realtime changes for ${table}`);
-        } else if (status === 'CHANNEL_ERROR') {
+        if (status === 'CHANNEL_ERROR') {
           console.error(`Error subscribing to ${table}:`, err);
         }
       });
 
-    // Cleanup subscription on unmount
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [table, callback, event]);
+  }, [table, event, instanceId]);
 };

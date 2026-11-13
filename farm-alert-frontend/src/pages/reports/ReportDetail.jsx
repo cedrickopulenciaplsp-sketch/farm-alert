@@ -219,6 +219,19 @@ export default function ReportDetail() {
               <InfoRow icon={MapPin} label="Barangay">
                 <span className={styles.valueText}>{report.barangay_name}</span>
               </InfoRow>
+              <InfoRow icon={Users} label="Animals Affected">
+                <span className={styles.valueText}>
+                  {report.animals_affected ?? report.cases ?? 0} heads sick
+                </span>
+              </InfoRow>
+              <InfoRow icon={Skull} label="Mortalities">
+                <span
+                  className={styles.valueText}
+                  style={Number(report.mortalities) > 0 ? { color: 'var(--color-danger)', fontWeight: 700 } : undefined}
+                >
+                  {report.mortalities ?? 0} heads dead
+                </span>
+              </InfoRow>
               <InfoRow icon={Calendar} label="Date Reported">
                 <span className={styles.valueText}>{fmtDate(report.date_reported)}</span>
               </InfoRow>

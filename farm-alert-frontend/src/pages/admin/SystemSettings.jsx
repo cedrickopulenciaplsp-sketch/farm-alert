@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Gear as Settings, FloppyDisk as Save, ArrowsClockwise as RefreshCw, WarningCircle as AlertCircle,
-  CheckCircle as CheckCircle2, PencilSimple as Edit2, X, Minus, Plus,
+  CheckCircle as CheckCircle2, PencilSimple as Edit2, X, Minus, Plus, MapPin, Users,
 } from '@phosphor-icons/react';
 import { getSettings, updateSetting } from '../../services/admin';
 import { writeAuditLog } from '../../services/admin';
@@ -191,6 +192,7 @@ function SettingRow({ setting, onSave }) {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function SystemSettings() {
   const { profile } = useAuth();
+  const navigate = useNavigate();
   const [settings, setSettings] = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState(null);
@@ -239,7 +241,7 @@ export default function SystemSettings() {
     <div className={`${styles.page} page-enter`}>
 
       {/* ── Page Header (standalone — no longer inside AdminLayout) ─────── */}
-      <header className={styles.pageHeader}>
+      <header className={styles.pageHeader} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div className={styles.headerLeft}>
           <div className={styles.headerIcon}>
             <Settings size={20} />
@@ -248,6 +250,26 @@ export default function SystemSettings() {
             <h1 className={styles.pageTitle}>System Settings</h1>
             <p className={styles.pageSubtitle}>Manage system configuration values for the CVO office.</p>
           </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexWrap: 'wrap' }}>
+          <Button
+            id="open-user-accounts-btn"
+            variant="secondary"
+            size="sm"
+            onClick={() => navigate('/settings/users')}
+          >
+            <Users size={15} weight="duotone" />
+            User Accounts
+          </Button>
+          <Button
+            id="open-barangay-masterlist-btn"
+            variant="primary"
+            size="sm"
+            onClick={() => navigate('/settings/barangays')}
+          >
+            <MapPin size={15} weight="duotone" />
+            Barangay Masterlist
+          </Button>
         </div>
       </header>
 

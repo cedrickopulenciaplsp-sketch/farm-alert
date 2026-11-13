@@ -133,27 +133,36 @@ export async function deleteFarm(id) {
  *
  * @returns {Promise<{ data: Array, error: object|null }>}
  */
-const APPROVED_BARANGAYS = [
-  'Concepcion',
-  'Dolores',
-  'San Cristobal',
-  'San Gregorio',
-  'San Joaquin',
-  'San Vicente',
-  'Santa Ana',
-  'Santa Cruz',
-  'Santisimo Rosario',
-  'Santo Niño',
-];
+const DEFAULT_BARANGAY_COORDS = {
+  'Concepcion':        { lat: 14.084200, lng: 121.341500 },
+  'Dolores':           { lat: 14.095800, lng: 121.339200 },
+  'San Cristobal':     { lat: 14.049400, lng: 121.376900 },
+  'San Gregorio':      { lat: 14.039800, lng: 121.309500 },
+  'San Joaquin':       { lat: 14.034500, lng: 121.321800 },
+  'San Vicente':       { lat: 14.041200, lng: 121.331500 },
+  'Santa Ana':         { lat: 14.029800, lng: 121.338400 },
+  'Santa Cruz':        { lat: 14.059200, lng: 121.354100 },
+  'Santisimo Rosario': { lat: 14.018500, lng: 121.318200 },
+  'Santo Niño':        { lat: 14.048500, lng: 121.361200 },
+};
 
 export async function getBarangays() {
   const { data, error } = await supabase
     .from('barangays')
-    .select('barangay_id, barangay_name, classification')
-    .in('barangay_name', APPROVED_BARANGAYS)
+    .select('*')
+    .eq('is_active', true)
     .order('barangay_name', { ascending: true });
 
-  return { data, error };
+  const enriched = (data ?? []).map((b) => {
+    const fallback = DEFAULT_BARANGAY_COORDS[b.barangay_name];
+    return {
+      ...b,
+      latitude: b.latitude ?? fallback?.lat ?? 14.069300,
+      longitude: b.longitude ?? fallback?.lng ?? 121.326500,
+    };
+  });
+
+  return { data: enriched, error };
 }
 
 /**

@@ -5,13 +5,44 @@ import { supabase } from '../lib/supabase';
 // ---------------------------------------------------------------------------
 
 /**
- * Fetch geospatial farm data for the Disease Map.
+ * Fetch geospatial farm data for the Disease Map, enriched with outbreak lab_result
+ * and barangay fallback coordinates (Task 5.4).
  */
 export async function getMapFarms() {
-  const { data, error } = await supabase
-    .from('v_map_farms')
-    .select('*');
-  return { data, error };
+  const [mapRes, alertsRes, linksRes, brgyRes] = await Promise.all([
+    supabase.from('v_map_farms').select('*'),
+    supabase
+      .from('outbreak_alerts')
+      .select('outbreak_id, farm_id, barangay_id, disease_id, status, lab_result, checkpoint_issued, blood_sample_taken_date')
+      .neq('status', 'Resolved'),
+    supabase.from('outbreak_farm_links').select('outbreak_id, farm_id'),
+    supabase.from('barangays').select('barangay_name, latitude, longitude'),
+  ]);
+
+  if (mapRes.error) return { data: null, error: mapRes.error };
+
+  const alerts = alertsRes.data ?? [];
+  const links  = linksRes.data ?? [];
+  const brgyCoords = Object.fromEntries(
+    (brgyRes.data ?? []).map((b) => [b.barangay_name, { lat: b.latitude, lng: b.longitude }])
+  );
+
+  const enriched = (mapRes.data ?? []).map((farm) => {
+    // Check direct farm_id or linked via outbreak_farm_links
+    const linkedAlertIds = new Set(links.filter(l => l.farm_id === farm.farm_id).map(l => l.outbreak_id));
+    const farmAlert = alerts.find((a) => a.farm_id === farm.farm_id || linkedAlertIds.has(a.outbreak_id));
+    const fallback  = brgyCoords[farm.barangay_name];
+    return {
+      ...farm,
+      latitude:          farm.latitude  ?? fallback?.lat ?? null,
+      longitude:         farm.longitude ?? fallback?.lng ?? null,
+      lab_result:        farmAlert?.lab_result ?? null,
+      checkpoint_issued: farmAlert?.checkpoint_issued ?? false,
+      outbreak_status:   farmAlert?.status ?? null,
+    };
+  });
+
+  return { data: enriched, error: null };
 }
 
 /**

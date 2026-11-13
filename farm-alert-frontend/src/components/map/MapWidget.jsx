@@ -33,9 +33,28 @@ const closedIcon = new L.Icon({
   iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41],
 });
 
+/**
+ * A farm has an active incident only when there is an open (non-Resolved)
+ * outbreak alert for it that has not been cleared by a Negative RADDL result.
+ */
+export function hasActiveIncident(farm) {
+  if (farm.lab_result === 'Negative') return false;
+  if (!farm.outbreak_status || farm.outbreak_status === 'Resolved') return false;
+  return true;
+}
+
+/**
+ * 1 km Infected Zone and 7 km Surveillance Zone rings are drawn ONLY for
+ * confirmed outbreaks (Positive RADDL result) or active quarantine checkpoints.
+ */
+export function hasQuarantineZones(farm) {
+  if (!hasActiveIncident(farm)) return false;
+  return farm.lab_result === 'Positive' || farm.checkpoint_issued === true;
+}
+
 function resolveIcon(farm) {
   if (farm.farm_status === 'Temporarily Closed') return closedIcon;
-  if (farm.farm_status === 'Quarantine' || farm.latest_report_status === 'Active') return dangerIcon;
+  if (hasActiveIncident(farm)) return dangerIcon;
   return safeIcon;
 }
 
@@ -73,8 +92,7 @@ export default function MapWidget({ farms = [], zoom = 13, className = '', style
 
       {/* ── Buffer Zones (Underneath Markers) ── */}
       {validFarms.map(farm => {
-        const isInfected = farm.latest_report_status === 'Active' || farm.farm_status === 'Quarantine';
-        if (!isInfected) return null;
+        if (!hasQuarantineZones(farm)) return null;
         return (
           <React.Fragment key={`buffers-${farm.farm_id}`}>
             {/* 7km Surveillance Zone - Orange */}
@@ -105,7 +123,7 @@ export default function MapWidget({ farms = [], zoom = 13, className = '', style
       })}
 
       {farms.filter(f => f.latitude && f.longitude).map(farm => {
-        const isInfected = farm.latest_report_status === 'Active';
+        const hasIncident = hasActiveIncident(farm);
         return (
           <Marker
             key={farm.farm_id}
@@ -113,18 +131,41 @@ export default function MapWidget({ farms = [], zoom = 13, className = '', style
             icon={resolveIcon(farm)}
           >
             <Popup>
-              <div style={{ fontFamily: 'var(--font-body)', minWidth: 160 }}>
+              <div style={{ fontFamily: 'var(--font-body)', minWidth: 180 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                   <strong style={{ fontSize: 13 }}>{farm.farm_name}</strong>
-                  {isInfected && <ShieldAlert size={13} color="var(--color-danger)" />}
+                  {hasIncident && <ShieldAlert size={13} color="var(--color-danger)" />}
                 </div>
                 <p style={{ fontSize: 12, margin: '2px 0' }}><strong>Owner:</strong> {farm.owner_name}</p>
                 <p style={{ fontSize: 12, margin: '2px 0' }}><strong>Barangay:</strong> {farm.barangay_name}</p>
                 <p style={{ fontSize: 12, margin: '2px 0' }}><strong>Livestock:</strong> {farm.livestock_type_name}</p>
-                <p style={{ fontSize: 12, margin: '2px 0' }}><strong>Status:</strong> {farm.farm_status === 'Active/Quarantine' ? 'Active' : farm.farm_status}</p>
-                {isInfected && (
-                  <div style={{ marginTop: 6, padding: '4px 8px', background: 'var(--color-danger-light)', borderRadius: 4 }}>
-                    <p style={{ fontSize: 12, margin: '2px 0', color: 'var(--color-danger)' }}><strong>Active Incident:</strong> {farm.latest_disease}</p>
+                <p style={{ fontSize: 12, margin: '2px 0' }}>
+                  <strong>Status:</strong>{' '}
+                  {hasIncident
+                    ? (farm.lab_result === 'Positive'
+                        ? 'Confirmed Outbreak (1km/7km Quarantine)'
+                        : farm.outbreak_status === 'Acknowledged'
+                        ? 'Under Investigation (Samples Collected)'
+                        : 'Suspected Incident (Awaiting Dispatch)')
+                    : (farm.farm_status === 'Temporarily Closed'
+                        ? 'Temporarily Closed'
+                        : farm.lab_result === 'Negative'
+                        ? 'Healthy (Lab Cleared)'
+                        : 'Healthy / Active')}
+                </p>
+                {hasIncident && (
+                  <div style={{ marginTop: 6, padding: '6px 8px', background: 'var(--color-danger-light)', borderRadius: 4 }}>
+                    <p style={{ fontSize: 12, margin: '2px 0', color: 'var(--color-danger)' }}>
+                      <strong>Active Incident:</strong> {farm.latest_disease || 'Suspected Incident'}
+                    </p>
+                    <p style={{ fontSize: 11, margin: '2px 0', color: 'var(--color-danger)' }}>
+                      <strong>Lab Result:</strong> {farm.lab_result ? `${farm.lab_result} (RADDL)` : 'Pending Lab Confirmation'}
+                    </p>
+                    {farm.checkpoint_issued && (
+                      <p style={{ fontSize: 11, margin: '2px 0', fontWeight: 700, color: 'var(--color-danger)' }}>
+                        Quarantine Checkpoint Active
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

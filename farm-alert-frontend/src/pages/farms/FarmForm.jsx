@@ -30,17 +30,29 @@ import styles from './FarmForm.module.css';
 // Validation
 // ---------------------------------------------------------------------------
 const PH_PHONE_RE = /^(09|\+639)\d{9}$/;
+const EMAIL_RE    = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * DA-BAI nomenclature for unnamed backyard holdings:
+ * if no enterprise name is given, the holding is identified by its owner.
+ */
+function resolveFarmName(farmName, ownerName) {
+  const name = (farmName ?? '').trim();
+  if (name) return name;
+  return `${(ownerName ?? '').trim()} Backyard Holding`;
+}
 
 function validate(fields, typeName) {
   const errors = {};
   const isPoultryFarm = typeName === 'Poultry' || typeName === 'Both';
   const isSwineAnimal = typeName === 'Swine'  || typeName === 'Both';
 
-  if (!fields.farm_name.trim())
-    errors.farm_name = 'Farm name is required.';
-
+  // Farm name is optional — backyard raisers fall back to "[Owner] Backyard Holding"
   if (!fields.owner_name.trim())
     errors.owner_name = 'Owner name is required.';
+
+  if (fields.farmer_email && !EMAIL_RE.test(fields.farmer_email.trim()))
+    errors.farmer_email = 'Enter a valid email address (e.g. juan.delacruz@gmail.com).';
 
   if (!fields.barangay_id)
     errors.barangay_id = 'Please select a barangay.';
@@ -96,6 +108,7 @@ function blankForm() {
     livestock_type_id:        '',
     head_count:               '',
     contact_number:           '',
+    farmer_email:             '',
     latitude:                 '',
     longitude:                '',
     status:                   'Active/Quarantine',
@@ -174,6 +187,7 @@ export default function FarmForm() {
             livestock_type_id:       String(data.livestock_type_id ?? ''),
             head_count:              data.head_count    != null  ? String(data.head_count)    : '',
             contact_number:          data.contact_number          ?? '',
+            farmer_email:            data.farmer_email            ?? '',
             latitude:                data.latitude      != null  ? String(data.latitude)      : '',
             longitude:               data.longitude     != null  ? String(data.longitude)     : '',
             status:                  data.status                  ?? 'Active',
@@ -204,6 +218,16 @@ export default function FarmForm() {
   function handleChange(e) {
     const { name, value } = e.target;
     const updatedFields = { ...fields, [name]: value };
+
+    // Task 1.4: Auto-fill coordinates when Barangay is selected
+    if (name === 'barangay_id' && value) {
+      const selectedBrgy = barangays.find(b => String(b.barangay_id) === String(value));
+      if (selectedBrgy && selectedBrgy.latitude != null && selectedBrgy.longitude != null) {
+        updatedFields.latitude  = String(Number(selectedBrgy.latitude).toFixed(6));
+        updatedFields.longitude = String(Number(selectedBrgy.longitude).toFixed(6));
+      }
+    }
+
     setFields(updatedFields);
     // Re-validate just this field on change if already touched
     if (touched[name]) {
@@ -247,8 +271,9 @@ export default function FarmForm() {
 
     // Build payload
     const payload = {
-      farm_name:         fields.farm_name.trim(),
+      farm_name:         resolveFarmName(fields.farm_name, fields.owner_name),
       owner_name:        fields.owner_name.trim(),
+      farmer_email:      fields.farmer_email.trim().toLowerCase() || null,
       facility_address:  fields.facility_address.trim() || null,
       barangay_id:       Number(fields.barangay_id),
       livestock_type_id: Number(fields.livestock_type_id),
@@ -437,12 +462,16 @@ export default function FarmForm() {
                 id="farm_name"
                 name="farm_name"
                 label="Farm Name"
-                required
-                placeholder="e.g. San Pedro Swine Farm"
+                placeholder={
+                  fields.owner_name.trim()
+                    ? `${fields.owner_name.trim()} Backyard Holding`
+                    : 'e.g. San Pedro Swine Farm'
+                }
                 value={fields.farm_name}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 error={fieldError('farm_name')}
+                hint={'Optional for backyard raisers — if left blank, saved as "[Owner Name] Backyard Holding"'}
                 maxLength={150}
               />
               <Input
@@ -470,6 +499,20 @@ export default function FarmForm() {
                 maxLength={11}
                 type="tel"
                 inputMode="numeric"
+              />
+              <Input
+                id="farmer_email"
+                name="farmer_email"
+                label="Farmer Google Email"
+                placeholder="e.g. juan.delacruz@gmail.com"
+                value={fields.farmer_email}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={fieldError('farmer_email')}
+                hint="Optional — only needed if the raiser (or a family member) will use the Farmer Portal. Without it, CVO staff logs reports on their behalf."
+                maxLength={150}
+                type="email"
+                autoComplete="off"
               />
               <Select
                 id="status"
@@ -569,7 +612,7 @@ export default function FarmForm() {
           {/* ── Swine Details (Swine or Both) ─────────────────────────── */}
           {isSwineAnimal && (
             <Card className={`${styles.formCard} ${styles.swineCard}`}>
-              <Card.Header title="🐷 Swine Details" />
+              <Card.Header title="Swine Details" />
               <Card.Body className={styles.cardBody}>
                 <Input
                   id="male_swine_population"
@@ -606,7 +649,7 @@ export default function FarmForm() {
           {/* ── Poultry Details (Poultry or Both) ───────────────────────── */}
           {isPoultryFarm && (
             <Card className={`${styles.formCard} ${styles.poultryCard}`}>
-              <Card.Header title="🐔 Poultry Details" />
+              <Card.Header title="Poultry Details" />
               <Card.Body className={styles.cardBody}>
                 <Select
                   id="production_type"
@@ -755,7 +798,7 @@ export default function FarmForm() {
             <Card.Header title="Map Coordinates" />
             <Card.Body className={`${styles.cardBody} ${styles.coordsBody}`}>
               <p className={styles.coordsHint}>
-                Optional. Type the latitude &amp; longitude directly to auto-pin the location, or click anywhere on the map below.
+                Coordinates auto-filled from Barangay Hall upon selecting a Barangay. Drag or click the pin on the map to pinpoint the exact pen (manual coordinate typing is optional).
               </p>
               <LocationPicker
                 latitude={fields.latitude !== '' ? Number(fields.latitude) : null}

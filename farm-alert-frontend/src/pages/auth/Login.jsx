@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { WarningCircle as AlertCircle, ShieldCheck, Leaf } from '@phosphor-icons/react';
 import { useAuth } from '../../context/AuthContext';
-import { loginWithGoogle, isAuthorizedEmail } from '../../services/auth';
+import { loginWithGoogle } from '../../services/auth';
 
 // ---------------------------------------------------------------------------
 // Google "G" logo SVG
@@ -218,14 +218,17 @@ function BrandPanel() {
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { session, loading, profileLoaded } = useAuth();
+  const { session, loading, profileLoaded, isAuthorized, userRole, setDemoRole } = useAuth();
 
   const [isLoading, setIsLoading] = useState(false);
   const [oauthError, setOauthError] = useState('');
+  const [selectedRole, setSelectedRole] = useState(
+    () => sessionStorage.getItem('farm_alert_demo_role') || 'admin'
+  );
 
-  // Only redirect to dashboard if the account is confirmed authorized
-  if (!loading && session && profileLoaded && isAuthorizedEmail(session.user?.email)) {
-    return <Navigate to="/dashboard" replace />;
+  // Only redirect if the account is confirmed authorized
+  if (!loading && session && profileLoaded && isAuthorized) {
+    return <Navigate to={userRole === 'farmer' ? '/farmer-portal' : '/dashboard'} replace />;
   }
 
   // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -234,7 +237,7 @@ export default function Login() {
     const rejectedEmail = sessionStorage.getItem('unauthorized_login_email');
     if (rejectedEmail) {
       sessionStorage.removeItem('unauthorized_login_email');
-      setOauthError(`Access restricted: "${rejectedEmail}" is not an authorized City Veterinary Office account. Please select an authorized account.`);
+      setOauthError(`Access restricted: "${rejectedEmail}" is not registered with the City Veterinary Office, or has been suspended. Please contact the City Veterinarian or sign in with your registered Google account.`);
       return;
     }
 
@@ -266,7 +269,12 @@ export default function Login() {
     }
   }, [location.search, navigate]);
 
-  async function handleGoogleSignIn() {
+  async function handleGoogleSignIn(roleOverride = null) {
+    const targetRole = typeof roleOverride === 'string' ? roleOverride : selectedRole;
+    if (targetRole) {
+      setDemoRole(targetRole);
+      setSelectedRole(targetRole);
+    }
     setOauthError('');
     setIsLoading(true);
     const { error } = await loginWithGoogle();
@@ -304,38 +312,38 @@ export default function Login() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '40px 48px',
+          padding: '32px 40px',
           background: '#ffffff',
           boxShadow: '-10px 0 40px rgba(0,0,0,0.06)',
           zIndex: 20,
-          overflow: 'hidden',
+          overflowY: 'auto',
           position: 'relative',
         }}>
           {/* Faint animated virus icons */}
           <VirusBackground />
 
-          <div style={{ width: '100%', maxWidth: '360px', position: 'relative', zIndex: 10 }}>
+          <div style={{ width: '100%', maxWidth: '440px', position: 'relative', zIndex: 10, margin: 'auto 0' }}>
             {/* Vet caduceus icon */}
-            <div className="fa-animate-in" style={{ marginBottom: '40px' }}>
+            <div className="fa-animate-in" style={{ marginBottom: '24px' }}>
               <div style={{
-                width: '64px', height: '64px', borderRadius: '16px',
+                width: '54px', height: '54px', borderRadius: '14px',
                 background: 'rgba(26, 71, 49, 0.05)',
                 border: '1.5px solid rgba(26, 71, 49, 0.1)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                marginBottom: '24px',
+                marginBottom: '16px',
               }}>
-                <VetCaduceus size={36} color="#1a4731" />
+                <VetCaduceus size={30} color="#1a4731" />
               </div>
               <h2 style={{
                 fontFamily: 'var(--font-display)', fontWeight: 800,
-                fontSize: '1.75rem', color: '#1a4731',
-                letterSpacing: '-0.02em', marginBottom: '10px',
+                fontSize: '1.65rem', color: '#1a4731',
+                letterSpacing: '-0.02em', marginBottom: '6px',
               }}>
                 Secure Sign In
               </h2>
               <p style={{
                 fontSize: '0.875rem', color: '#64748b',
-                lineHeight: 1.6,
+                lineHeight: 1.5,
               }}>
                 Access is restricted to authorized City Veterinary Office personnel.
               </p>
@@ -434,51 +442,165 @@ export default function Login() {
               className="fa-animate-in fa-animate-in-delay-2"
               style={{
                 display: 'flex', alignItems: 'center', gap: '12px',
-                margin: '32px 0',
+                margin: '24px 0 16px',
               }}
             >
               <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
-              <span style={{ fontSize: '0.72rem', color: '#94a3b8', whiteSpace: 'nowrap', letterSpacing: '0.05em', textTransform: 'uppercase', fontWeight: 600 }}>
-                Authorized access only
+              <span style={{ fontSize: '0.72rem', color: '#64748b', whiteSpace: 'nowrap', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700 }}>
+                Demo Role Quick Access
               </span>
               <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
+            </div>
+
+            {/* Task 6.1: 1-Click Demo Role Switcher Buttons */}
+            <div
+              className="fa-animate-in fa-animate-in-delay-2"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                marginBottom: '24px',
+              }}
+            >
+              {[
+                {
+                  id: 'demo-login-admin',
+                  role: 'admin',
+                  title: 'City Veterinarian (Admin)',
+                  badge: 'Full Access',
+                  desc: 'Full Command Center · Barangay Masterlist · Outbreak Resolution',
+                  border: '#f59e0b',
+                  bg: '#fffdf5',
+                  badgeBg: '#fef3c7',
+                  badgeColor: '#b45309',
+                },
+                {
+                  id: 'demo-login-staff',
+                  role: 'cvo_staff',
+                  title: 'Veterinary Inspector (Staff)',
+                  badge: 'Field Ops',
+                  desc: 'Field Operations · Blood Sample & Lab Results · Biosecurity Inspection',
+                  border: '#3b82f6',
+                  bg: '#f8faff',
+                  badgeBg: '#dbeafe',
+                  badgeColor: '#1d4ed8',
+                },
+                {
+                  id: 'demo-login-farmer',
+                  role: 'farmer',
+                  title: 'Livestock Raiser (Farmer)',
+                  badge: 'Farmer Portal',
+                  desc: 'Mobile Farm Dossier · Report Sick Animals · Barangay Advisory',
+                  border: '#16a34a',
+                  bg: '#f6fdf8',
+                  badgeBg: '#dcfce7',
+                  badgeColor: '#15803d',
+                },
+              ].map((item) => {
+                const active = selectedRole === item.role;
+                return (
+                  <button
+                    key={item.role}
+                    id={item.id}
+                    type="button"
+                    disabled={isLoading}
+                    onClick={() => handleGoogleSignIn(item.role)}
+                    style={{
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: '14px 18px',
+                      borderRadius: '12px',
+                      border: active ? `2px solid ${item.border}` : '1.5px solid #e2e8f0',
+                      background: active ? item.bg : '#ffffff',
+                      boxShadow: active ? `0 4px 14px ${item.border}22` : '0 1px 3px rgba(0,0,0,0.04)',
+                      cursor: isLoading ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.18s ease',
+                      position: 'relative',
+                    }}
+                    onMouseEnter={e => {
+                      if (!isLoading && !active) {
+                        e.currentTarget.style.borderColor = '#cbd5e1';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.06)';
+                      }
+                    }}
+                    onMouseLeave={e => {
+                      if (!isLoading && !active) {
+                        e.currentTarget.style.borderColor = '#e2e8f0';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)';
+                      }
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                      <span style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0f172a' }}>
+                        {item.title}
+                      </span>
+                      <span style={{
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        padding: '2px 8px',
+                        borderRadius: '999px',
+                        background: item.badgeBg,
+                        color: item.badgeColor,
+                        letterSpacing: '0.02em',
+                      }}>
+                        {item.badge}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '4px', lineHeight: 1.45 }}>
+                      {item.desc}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
 
             {/* Authorized account notice */}
             <div
               className="fa-animate-in fa-animate-in-delay-3"
               style={{
-                padding: '16px',
+                padding: '12px 14px',
                 background: '#f8fafc',
                 border: '1px solid #e2e8f0',
                 borderRadius: '12px',
-                display: 'flex', alignItems: 'flex-start', gap: '12px',
+                display: 'flex', alignItems: 'flex-start', gap: '10px',
               }}
             >
               <div style={{
-                width: '32px', height: '32px', borderRadius: '8px',
+                width: '28px', height: '28px', borderRadius: '7px',
                 background: 'rgba(26, 71, 49, 0.08)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0,
+                marginTop: '1px',
               }}>
-                <ShieldCheck size={18} color="#1a4731" strokeWidth={2.5} />
+                <ShieldCheck size={16} color="#1a4731" strokeWidth={2.5} />
               </div>
-              <div>
+              <div style={{ flex: 1 }}>
                 <p style={{
-                  fontSize: '0.85rem', fontWeight: 700,
-                  color: '#0f172a', marginBottom: '4px',
+                  fontSize: '0.8rem', fontWeight: 700,
+                  color: '#0f172a', marginBottom: '2px',
                 }}>
-                  Authorized account
+                  Registered Accounts Only
                 </p>
-                <p style={{
-                  fontSize: '0.8rem', color: '#64748b',
-                  lineHeight: 1.5,
-                }}>
-                  Only authorized team accounts may access this system:<br />
-                  <strong style={{ color: '#1a4731', fontWeight: 600 }}>sanielken2@gmail.com</strong><br />
-                  <strong style={{ color: '#1a4731', fontWeight: 600 }}>mjhorcelt@gmail.com</strong><br />
-                  <strong style={{ color: '#1a4731', fontWeight: 600 }}>morenongkups@gmail.com</strong>
+                <p style={{ fontSize: '0.75rem', color: '#64748b', lineHeight: 1.45, margin: 0 }}>
+                  CVO personnel and farmers sign in with the Google email registered by the City Veterinary Office. Demo role switching is available to the project team accounts:
                 </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
+                  {['sanielken2@gmail.com', 'mjhorcelt@gmail.com', 'morenongkups@gmail.com'].map(em => (
+                    <span key={em} style={{
+                      fontSize: '11px',
+                      color: '#1a4731',
+                      background: 'rgba(26, 71, 49, 0.08)',
+                      padding: '1px 6px',
+                      borderRadius: '4px',
+                      fontWeight: 600,
+                      fontFamily: 'monospace',
+                    }}>
+                      {em}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -486,11 +608,11 @@ export default function Login() {
             <p
               className="fa-animate-in fa-animate-in-delay-4"
               style={{
-                marginTop: '40px',
+                marginTop: '20px',
                 fontSize: '0.75rem',
                 color: '#94a3b8',
                 textAlign: 'center',
-                lineHeight: 1.6,
+                lineHeight: 1.5,
                 letterSpacing: '0.01em',
               }}
             >

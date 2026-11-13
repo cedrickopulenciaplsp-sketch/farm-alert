@@ -3,19 +3,23 @@ import { useRealtime } from '../../hooks/useRealtime';
 import {
   ShieldWarning as ShieldAlert,
   MapPin,
-  Bug,
   Calendar,
   Users,
   Skull,
   CheckCircle as CheckCircle2,
   WarningCircle as AlertCircle,
   ArrowsClockwise as RefreshCw,
-  Eye,
   Funnel as Filter,
   Siren,
   Tractor,
+  MagnifyingGlass,
+  Flask,
+  PaperPlaneTilt,
+  ShieldCheck,
 } from '@phosphor-icons/react';
+import { supabase } from '../../lib/supabase';
 import { getOutbreaks, updateOutbreak } from '../../services/outbreaks';
+import { writeAuditLog } from '../../services/admin';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/shared/Button';
 import Card from '../../components/shared/Card';
@@ -25,16 +29,63 @@ import { Select } from '../../components/shared/FormElements';
 import styles from './OutbreakAlerts.module.css';
 
 // ---------------------------------------------------------------------------
-// Outbreak status badge
+// Incident stage — derived from DB status + RADDL lab result.
+//
+//   DB status      lab_result   ->  Stage shown
+//   Active         (any*)       ->  Suspected Incident (awaiting dispatch)
+//   Acknowledged   Pending      ->  Under Investigation
+//   any open       Positive     ->  Confirmed Outbreak
+//   any open       Negative     ->  Lab Negative (awaiting case closure)
+//   Resolved       Negative     ->  Lab Cleared (closed)
+//   Resolved       other        ->  Resolved (closed)
 // ---------------------------------------------------------------------------
-const STATUS_META = {
-  Active:       { cls: 'statusActive',   label: 'Active'       },
-  Acknowledged: { cls: 'statusAck',      label: 'Acknowledged' },
-  Resolved:     { cls: 'statusResolved', label: 'Resolved'     },
+function getStage(o) {
+  const lab = o.lab_result || 'Pending';
+  if (o.status === 'Resolved') return lab === 'Negative' ? 'cleared' : 'resolved';
+  if (o.status === 'Active')   return 'suspected';
+  if (lab === 'Positive')      return 'confirmed';
+  if (lab === 'Negative')      return 'negative';
+  return 'investigating';
+}
+
+const STAGE_META = {
+  suspected: {
+    label: 'Suspected Incident',
+    cls:   'stageSuspected',
+    note:  'Report received. Not yet an outbreak — awaiting the City Veterinarian\'s dispatch order for field investigation.',
+  },
+  investigating: {
+    label: 'Under Investigation',
+    cls:   'stageInvestigating',
+    note:  'Veterinary Inspector dispatched. Samples are collected on-site and submitted to RADDL for laboratory confirmation.',
+  },
+  confirmed: {
+    label: 'Confirmed Outbreak',
+    cls:   'stageConfirmed',
+    note:  'RADDL result is POSITIVE. 1 km Quarantine and 7 km Surveillance zones are projected on the Disease Map.',
+  },
+  negative: {
+    label: 'Lab Negative',
+    cls:   'stageCleared',
+    note:  'RADDL result is NEGATIVE — no outbreak. Awaiting the City Veterinarian to formally close the case.',
+  },
+  cleared: {
+    label: 'Lab Cleared — Closed',
+    cls:   'stageResolved',
+    note:  'Laboratory ruled out the disease. Case closed by the City Veterinarian.',
+  },
+  resolved: {
+    label: 'Resolved — Quarantine Lifted',
+    cls:   'stageResolved',
+    note:  'Quarantine lifted and case closed by the City Veterinarian.',
+  },
 };
 
-function StatusBadge({ status }) {
-  const meta = STATUS_META[status] ?? STATUS_META.Active;
+const STAGE_ORDER = { suspected: 0, confirmed: 1, investigating: 2, negative: 3, resolved: 4, cleared: 5 };
+const isClosedStage = (stage) => stage === 'cleared' || stage === 'resolved';
+
+function StageBadge({ stage }) {
+  const meta = STAGE_META[stage];
   return (
     <span className={`${styles.statusBadge} ${styles[meta.cls]}`}>
       {meta.label}
@@ -42,240 +93,354 @@ function StatusBadge({ status }) {
   );
 }
 
+function formatDate(value, withTime = false) {
+  if (!value) return '—';
+  return new Date(value).toLocaleString('en-PH', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    ...(withTime ? { hour: 'numeric', minute: '2-digit' } : {}),
+  });
+}
+
 // ---------------------------------------------------------------------------
-// Stat summary card at top of page
+// Summary stats
 // ---------------------------------------------------------------------------
 function SummaryStats({ outbreaks }) {
-  const active       = outbreaks.filter(o => o.status === 'Active').length;
-  const acknowledged = outbreaks.filter(o => o.status === 'Acknowledged').length;
-  const resolved     = outbreaks.filter(o => o.status === 'Resolved').length;
+  const counts = outbreaks.reduce((acc, o) => {
+    const s = getStage(o);
+    acc[s] = (acc[s] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  const awaitingClosure = counts.negative ?? 0;
+  const closed          = (counts.cleared ?? 0) + (counts.resolved ?? 0);
 
   return (
-    <div className={styles.statsRow}>
-      <div className={`${styles.statCard} ${styles.statDanger}`}>
+    <div className={`${styles.statsRow} ${styles.statsRowFour}`}>
+      <div className={`${styles.statCard} ${styles.statWarning}`}>
         <Siren size={18} aria-hidden="true" className={styles.statIcon} />
         <div>
-          <p className={styles.statValue}>{active}</p>
-          <p className={styles.statLabel}>Active Outbreaks</p>
+          <p className={styles.statValue}>{counts.suspected ?? 0}</p>
+          <p className={styles.statLabel}>Suspected Incidents</p>
+          <p className={styles.statHint}>Awaiting dispatch</p>
         </div>
       </div>
-      <div className={`${styles.statCard} ${styles.statWarning}`}>
-        <Eye size={18} aria-hidden="true" className={styles.statIcon} />
+      <div className={`${styles.statCard} ${styles.statInfo}`}>
+        <MagnifyingGlass size={18} aria-hidden="true" className={styles.statIcon} />
         <div>
-          <p className={styles.statValue}>{acknowledged}</p>
-          <p className={styles.statLabel}>Acknowledged</p>
+          <p className={styles.statValue}>{counts.investigating ?? 0}</p>
+          <p className={styles.statLabel}>Under Investigation</p>
+          <p className={styles.statHint}>Awaiting RADDL result</p>
+        </div>
+      </div>
+      <div className={`${styles.statCard} ${styles.statDanger}`}>
+        <ShieldAlert size={18} aria-hidden="true" className={styles.statIcon} />
+        <div>
+          <p className={styles.statValue}>{counts.confirmed ?? 0}</p>
+          <p className={styles.statLabel}>Confirmed Outbreaks</p>
+          <p className={styles.statHint}>Lab positive · quarantine</p>
         </div>
       </div>
       <div className={`${styles.statCard} ${styles.statSuccess}`}>
         <CheckCircle2 size={18} aria-hidden="true" className={styles.statIcon} />
         <div>
-          <p className={styles.statValue}>{resolved}</p>
-          <p className={styles.statLabel}>Resolved</p>
+          <p className={styles.statValue}>{closed}</p>
+          <p className={styles.statLabel}>Cleared / Resolved</p>
+          <p className={styles.statHint}>
+            {awaitingClosure > 0
+              ? `${awaitingClosure} lab negative awaiting closure`
+              : 'Lab negative or lifted'}
+          </p>
         </div>
       </div>
     </div>
   );
 }
 
+// ---------------------------------------------------------------------------
+// Step wrapper
+// ---------------------------------------------------------------------------
+function Step({ num, title, authority, state = '', children }) {
+  const authCls =
+    authority === 'City Veterinarian' ? styles.authorityAdmin : styles.authorityStaff;
+  return (
+    <div className={`${styles.sopStep} ${state}`}>
+      <div className={styles.stepHeaderRow}>
+        <div className={styles.stepHeader}>
+          <span className={styles.stepNum}>{num}</span>
+          <span className={styles.stepName}>{title}</span>
+        </div>
+        <span className={`${styles.authorityTag} ${authCls}`}>{authority}</span>
+      </div>
+      <div className={styles.stepBody}>{children}</div>
+    </div>
+  );
+}
 
 // ---------------------------------------------------------------------------
-// OutbreakCard — individual alert card
+// IncidentCard
 // ---------------------------------------------------------------------------
-function OutbreakCard({ outbreak, onAction, onSopUpdate }) {
-  const [actioning, setActioning] = useState(false);
+function IncidentCard({ outbreak, onDispatch, onResolve, onSopUpdate, isAdmin }) {
+  const [busy, setBusy]               = useState(false);
+  const [sopUpdating, setSopUpdating] = useState(false);
+  const [bloodDate, setBloodDate]     = useState(outbreak.blood_sample_taken_date || '');
+  const [labResult, setLabResult]     = useState(outbreak.lab_result || 'Pending');
+  const [checkpoint, setCheckpoint]   = useState(Boolean(outbreak.checkpoint_issued));
 
-  const isActive       = outbreak.status === 'Active';
-  const isAcknowledged = outbreak.status === 'Acknowledged';
-  const isResolved     = outbreak.status === 'Resolved';
+  // Keep local inputs in sync with realtime updates from other tabs/users
+  useEffect(() => { setBloodDate(outbreak.blood_sample_taken_date || ''); }, [outbreak.blood_sample_taken_date]);
+  useEffect(() => { setLabResult(outbreak.lab_result || 'Pending'); }, [outbreak.lab_result]);
+  useEffect(() => { setCheckpoint(Boolean(outbreak.checkpoint_issued)); }, [outbreak.checkpoint_issued]);
 
-  const dateDetected = outbreak.date_triggered
-    ? new Date(outbreak.date_triggered).toLocaleDateString('en-PH', {
-        year: 'numeric', month: 'short', day: 'numeric',
-      })
-    : '—';
+  const stage       = getStage(outbreak);
+  const meta        = STAGE_META[stage];
+  const isClosed    = stage === 'cleared' || stage === 'resolved';
+  const isDispatched = outbreak.status !== 'Active';
+  const farmLabel   = outbreak.farm_name || outbreak.affected_farms_list || 'Affected Farm';
+  const sick        = Number(outbreak.total_animals_affected) || 0;
+  const dead        = Number(outbreak.total_mortalities) || 0;
 
-  async function handleAction(newStatus) {
-    setActioning(true);
-    await onAction(outbreak.outbreak_id, newStatus);
-    setActioning(false);
+  async function handleDispatch() {
+    setBusy(true);
+    await onDispatch(outbreak);
+    setBusy(false);
   }
 
-  const [sopUpdating, setSopUpdating] = useState(false);
-  const [bloodDate, setBloodDate] = useState(outbreak.blood_sample_taken_date || '');
-  const [labResult, setLabResult] = useState(outbreak.lab_result || 'Pending');
-  const [checkpoint, setCheckpoint] = useState(outbreak.checkpoint_issued || false);
-
   async function handleSopChange(field, value) {
-    if (field === 'bloodDate') setBloodDate(value);
-    if (field === 'labResult') setLabResult(value);
-    if (field === 'checkpoint') setCheckpoint(value);
-    
-    setSopUpdating(true);
     const payload = {};
-    if (field === 'bloodDate') payload.blood_sample_taken_date = value || null;
-    if (field === 'labResult') payload.lab_result = value;
-    if (field === 'checkpoint') payload.checkpoint_issued = value;
-    
-    await onSopUpdate(outbreak.outbreak_id, payload);
+    if (field === 'bloodDate') {
+      setBloodDate(value);
+      payload.blood_sample_taken_date = value || null;
+    }
+    if (field === 'labResult') {
+      setLabResult(value);
+      payload.lab_result = value;
+      // A quarantine checkpoint only exists for a confirmed (positive) outbreak
+      if (value !== 'Positive' && checkpoint) {
+        setCheckpoint(false);
+        payload.checkpoint_issued = false;
+      }
+    }
+    if (field === 'checkpoint') {
+      setCheckpoint(value);
+      payload.checkpoint_issued = value;
+    }
+
+    setSopUpdating(true);
+    await onSopUpdate(outbreak, field, payload);
     setSopUpdating(false);
   }
 
+  const cardAccent =
+    stage === 'suspected' ? styles.cardSuspected :
+    stage === 'confirmed' ? styles.cardConfirmed : '';
+
+  const showUrgentBar = stage === 'suspected' || stage === 'confirmed';
+
   return (
     <article
-      className={`${styles.outbreakCard} ${isActive ? styles.outbreakCardActive : ''}`}
-      aria-label={`Outbreak: ${outbreak.disease_name} in ${outbreak.barangay_name}`}
+      className={`${styles.outbreakCard} ${cardAccent}`}
+      aria-label={`${meta.label}: ${outbreak.disease_name} at ${farmLabel}`}
     >
-      {/* Urgent pulse indicator for Active outbreaks */}
-      {isActive && (
-        <div className={styles.urgentBar} aria-hidden="true" />
+      {showUrgentBar && (
+        <div
+          className={`${styles.urgentBar} ${stage === 'suspected' ? styles.urgentBarSuspected : ''}`}
+          aria-hidden="true"
+        />
       )}
 
       <div className={styles.cardContent}>
-        {/* Header row */}
+        {/* Header */}
         <div className={styles.cardHeader}>
           <div className={styles.cardTitleGroup}>
-            <div className={`${styles.outbreakIcon} ${isActive ? styles.outbreakIconActive : ''}`}>
+            <div className={`${styles.outbreakIcon} ${stage === 'confirmed' ? styles.outbreakIconActive : ''}`}>
               <ShieldAlert size={16} aria-hidden="true" />
             </div>
             <div>
-              <h2 className={styles.diseaseName}>{outbreak.disease_name}</h2>
+              <h2 className={styles.diseaseName}>
+                {stage === 'suspected' || stage === 'investigating' ? 'Suspected ' : ''}
+                {outbreak.disease_name} — <span style={{ color: 'var(--color-brand)' }}>{farmLabel}</span>
+              </h2>
               <div className={styles.locationRow}>
                 <MapPin size={12} aria-hidden="true" className={styles.locationIcon} />
-                <span className={styles.barangayName}>{outbreak.barangay_name}</span>
+                <span className={styles.barangayName}>Brgy. {outbreak.barangay_name}</span>
               </div>
             </div>
           </div>
-          <StatusBadge status={outbreak.status} />
+          <StageBadge stage={stage} />
         </div>
 
-        {/* Meta row */}
+        {/* Meta */}
         <div className={styles.metaRow}>
           <div className={styles.metaItem}>
             <Calendar size={12} aria-hidden="true" className={styles.metaIcon} />
-            <span>Detected {dateDetected}</span>
+            <span>Reported {formatDate(outbreak.date_triggered)}</span>
           </div>
           <div className={styles.metaItem}>
             <Tractor size={12} aria-hidden="true" className={styles.metaIcon} />
-            <span>{outbreak.affected_farms_list || 'Unknown Farm'}</span>
+            <span>{farmLabel}</span>
           </div>
           <div className={styles.metaItem}>
             <Users size={12} aria-hidden="true" className={styles.metaIcon} />
-            <span>{outbreak.farms_affected_count ?? '—'} farm{outbreak.farms_affected_count !== 1 ? 's' : ''} affected</span>
+            <span>
+              {sick > 0
+                ? `${sick} head${sick !== 1 ? 's' : ''} sick (reported)`
+                : 'Head count to be verified on-site'}
+            </span>
           </div>
-          {Number(outbreak.total_mortalities) > 0 && (
+          {dead > 0 && (
             <div className={styles.metaItem} style={{ color: 'var(--color-danger)', fontWeight: 600 }}>
               <Skull size={12} aria-hidden="true" className={styles.metaIcon} />
-              <span>{outbreak.total_mortalities} death{outbreak.total_mortalities !== 1 ? 's' : ''} recorded</span>
-            </div>
-          )}
-          {outbreak.acknowledged_by_name && (
-            <div className={styles.metaItem}>
-              <Eye size={12} aria-hidden="true" className={styles.metaIcon} />
-              <span>Acknowledged by {outbreak.acknowledged_by_name}</span>
+              <span>{dead} mortalit{dead !== 1 ? 'ies' : 'y'}</span>
             </div>
           )}
         </div>
 
-        {/* ── Official CVO SOP Section ── */}
+        {/* What this stage means — answers "is this an outbreak?" at a glance */}
+        <p className={styles.stageNote}>
+          <strong>{meta.label}:</strong> {meta.note}
+        </p>
+
+        {/* Field Response Protocol */}
         <div className={styles.sopSection}>
           <div className={styles.sopHeader}>
-            <h4 className={styles.sopTitle}>Epidemiological Testing SOP</h4>
-            {isActive && (
-              <span className={styles.sopLockedHint}>🔒 Acknowledge to unlock</span>
-            )}
-            {checkpoint && (
-              <span className={styles.checkpointBadge}>🚧 CHECKPOINT ACTIVE</span>
+            <h4 className={styles.sopTitle}>Field Response Protocol (DA-BAI SOP)</h4>
+            {checkpoint && !isClosed && (
+              <span className={styles.checkpointBadge}>CHECKPOINT ACTIVE</span>
             )}
           </div>
-          
+
           <div className={styles.sopSteps}>
-            {/* Step 1: Blood Draw */}
-            <div className={`${styles.sopStep} ${isActive ? styles.stepDisabled : ''}`}>
-              <div className={styles.stepHeader}>
-                <span className={styles.stepNum}>1</span>
-                <span className={styles.stepName}>Blood Sample Collection</span>
-              </div>
-              <div className={styles.stepBody}>
-                <input 
-                  type="date" 
-                  className={styles.sopInput} 
-                  value={bloodDate}
-                  onChange={(e) => handleSopChange('bloodDate', e.target.value)}
-                  disabled={isActive || sopUpdating || isResolved}
-                />
-              </div>
-            </div>
-
-            {/* Step 2: Lab Result (only enable if blood drawn) */}
-            <div className={`${styles.sopStep} ${(!bloodDate || isActive) ? styles.stepDisabled : ''}`}>
-              <div className={styles.stepHeader}>
-                <span className={styles.stepNum}>2</span>
-                <span className={styles.stepName}>Lab Results</span>
-              </div>
-              <div className={styles.stepBody}>
-                <select 
-                  className={styles.sopInput}
-                  value={labResult}
-                  onChange={(e) => handleSopChange('labResult', e.target.value)}
-                  disabled={isActive || !bloodDate || sopUpdating || isResolved}
+            {/* Step 1 — Dispatch order */}
+            <Step
+              num={1}
+              title="Dispatch Order"
+              authority="City Veterinarian"
+              state={isDispatched ? styles.stepDone : ''}
+            >
+              {isDispatched ? (
+                <span className={styles.stepText}>
+                  <PaperPlaneTilt size={14} aria-hidden="true" style={{ color: 'hsl(145, 60%, 36%)' }} />
+                  Inspector dispatched {outbreak.dispatched_at ? formatDate(outbreak.dispatched_at, true) : ''}
+                  {(outbreak.dispatched_by_name || outbreak.acknowledged_by_name) &&
+                    ` by ${outbreak.dispatched_by_name || outbreak.acknowledged_by_name}`}
+                </span>
+              ) : isAdmin ? (
+                <Button
+                  id={`dispatch-inspector-${outbreak.outbreak_id}`}
+                  variant="primary"
+                  size="sm"
+                  loading={busy}
+                  onClick={handleDispatch}
                 >
-                  <option value="Pending">Pending Result</option>
-                  <option value="Positive">Positive (Hold Quarantine)</option>
-                  <option value="Negative">Negative (Clear Alert)</option>
-                </select>
-              </div>
-            </div>
+                  <PaperPlaneTilt size={13} aria-hidden="true" />
+                  Dispatch Inspector
+                </Button>
+              ) : (
+                <span className={styles.stepTextMuted}>
+                  Awaiting dispatch order from the City Veterinarian.
+                </span>
+              )}
+            </Step>
 
-            {/* Step 3: Checkpoint (if positive) */}
+            {/* Step 2 — Blood sample collection */}
+            <Step
+              num={2}
+              title="Blood Sample Collection"
+              authority="Veterinary Inspector"
+              state={
+                !isDispatched ? `${styles.stepDisabled} ${styles.stepPending}` :
+                bloodDate ? styles.stepDone : ''
+              }
+            >
+              <input
+                type="date"
+                className={styles.sopInput}
+                value={bloodDate}
+                max={new Date().toISOString().slice(0, 10)}
+                onChange={(e) => handleSopChange('bloodDate', e.target.value)}
+                disabled={!isDispatched || sopUpdating || isClosed}
+                aria-label="Blood sample collection date"
+              />
+            </Step>
+
+            {/* Step 3 — RADDL laboratory result */}
+            <Step
+              num={3}
+              title="RADDL Laboratory Result"
+              authority="Veterinary Inspector"
+              state={
+                !bloodDate || !isDispatched ? `${styles.stepDisabled} ${styles.stepPending}` :
+                labResult === 'Positive' ? styles.stepDanger :
+                labResult === 'Negative' ? styles.stepDone : ''
+              }
+            >
+              <select
+                className={styles.sopInput}
+                value={labResult}
+                onChange={(e) => handleSopChange('labResult', e.target.value)}
+                disabled={!isDispatched || !bloodDate || sopUpdating || isClosed}
+                aria-label="RADDL laboratory result"
+              >
+                <option value="Pending">Pending — samples at laboratory</option>
+                <option value="Positive">Positive — Confirmed Outbreak</option>
+                <option value="Negative">Negative — Lab Cleared (no outbreak)</option>
+              </select>
+            </Step>
+
+            {/* Step 4 — Quarantine checkpoint (confirmed outbreaks only) */}
             {labResult === 'Positive' && (
-              <div className={`${styles.sopStep} ${styles.stepDanger}`}>
-                <div className={styles.stepHeader}>
-                  <span className={styles.stepNum}>3</span>
-                  <span className={styles.stepName}>Issue Quarantine Checkpoint</span>
-                </div>
-                <div className={styles.stepBody}>
+              <Step
+                num={4}
+                title="Quarantine Checkpoint Order"
+                authority="City Veterinarian"
+                state={isClosed ? styles.stepDone : styles.stepDanger}
+              >
+                {isAdmin && !isClosed ? (
                   <label className={styles.checkpointToggle}>
-                    <input 
+                    <input
                       type="checkbox"
                       checked={checkpoint}
                       onChange={(e) => handleSopChange('checkpoint', e.target.checked)}
-                      disabled={isActive || sopUpdating || isResolved}
+                      disabled={sopUpdating}
                     />
-                    <span>Establish physical checkpoint around affected farms</span>
+                    <span>Order a physical movement checkpoint within the 1 km quarantine zone</span>
                   </label>
-                </div>
-              </div>
+                ) : (
+                  <span className={styles.stepText}>
+                    {isClosed
+                      ? (checkpoint
+                          ? 'Checkpoint order lifted upon outbreak resolution.'
+                          : 'Quarantine protocol completed and lifted upon resolution.')
+                      : (checkpoint
+                          ? 'Checkpoint ordered by the City Veterinarian.'
+                          : 'Awaiting checkpoint order from the City Veterinarian.')}
+                  </span>
+                )}
+              </Step>
             )}
           </div>
         </div>
 
-        {/* Action buttons */}
-        {!isResolved && (
+        {/* Executive resolution — City Veterinarian only */}
+        {!isClosed && (stage === 'negative' || stage === 'confirmed') && (
           <div className={styles.cardActions}>
-            {isActive && (
+            {isAdmin ? (
               <Button
-                id={`acknowledge-outbreak-${outbreak.outbreak_id}`}
-                variant="secondary"
+                id={`resolve-incident-${outbreak.outbreak_id}`}
+                variant={stage === 'negative' ? 'primary' : 'secondary'}
                 size="sm"
-                loading={actioning}
-                onClick={() => handleAction('Acknowledged')}
+                loading={busy}
+                onClick={() => onResolve(outbreak)}
               >
-                <Eye size={13} aria-hidden="true" />
-                Acknowledge
+                <ShieldCheck size={13} aria-hidden="true" />
+                {stage === 'negative' ? 'Close Case (Lab Cleared)' : 'Lift Quarantine & Resolve'}
               </Button>
-            )}
-            {(isActive || isAcknowledged) && labResult === 'Negative' && (
-              <Button
-                id={`resolve-outbreak-${outbreak.outbreak_id}`}
-                variant="primary"
-                size="sm"
-                loading={actioning}
-                onClick={() => handleAction('Resolved')}
-                title="Lift Alert & Resolve"
-              >
-                <CheckCircle2 size={13} aria-hidden="true" />
-                Lift Alert & Resolve
-              </Button>
+            ) : (
+              <span className={styles.awaitingPill}>
+                Awaiting City Veterinarian resolution
+              </span>
             )}
           </div>
         )}
@@ -287,23 +452,37 @@ function OutbreakCard({ outbreak, onAction, onSopUpdate }) {
 // ---------------------------------------------------------------------------
 // Empty state
 // ---------------------------------------------------------------------------
-function EmptyState({ hasFilters, onClear }) {
+function EmptyState({ hasFilters, onClear, viewMode, archiveCount, onOpenArchive }) {
+  const isActiveClear = !hasFilters && viewMode === 'active';
   return (
     <div className={styles.emptyState}>
-      <div className={styles.emptyIcon}>
-        <ShieldAlert size={32} aria-hidden="true" />
+      <div className={`${styles.emptyIcon} ${isActiveClear ? styles.emptyIconClear : ''}`}>
+        {isActiveClear
+          ? <ShieldCheck size={32} aria-hidden="true" />
+          : <ShieldAlert size={32} aria-hidden="true" />}
       </div>
       <h3 className={styles.emptyTitle}>
-        {hasFilters ? 'No outbreaks match your filter' : 'No outbreak alerts'}
+        {hasFilters
+          ? 'No incidents match your filter'
+          : viewMode === 'active'
+          ? 'No active disease incidents'
+          : 'No archived cases yet'}
       </h3>
       <p className={styles.emptyDesc}>
         {hasFilters
-          ? 'Try clearing the status filter to see all alerts.'
-          : 'Outbreak alerts are generated automatically when disease reports exceed the configured threshold.'}
+          ? 'Try clearing the stage filter to see all cases in this view.'
+          : viewMode === 'active'
+          ? 'All reported incidents have been triaged and resolved. San Pablo City is under normal surveillance.'
+          : 'Resolved and lab-cleared cases will be stored here for audit and epidemiological review.'}
       </p>
-      {hasFilters && (
+      {hasFilters ? (
         <Button variant="ghost" size="sm" id="clear-outbreak-filters-btn" onClick={onClear}>
           Clear filter
+        </Button>
+      ) : viewMode === 'active' && archiveCount > 0 && (
+        <Button variant="secondary" size="sm" id="view-case-archive-btn" onClick={onOpenArchive}>
+          <CheckCircle2 size={14} aria-hidden="true" />
+          View Case Archive ({archiveCount})
         </Button>
       )}
     </div>
@@ -311,14 +490,15 @@ function EmptyState({ hasFilters, onClear }) {
 }
 
 // ---------------------------------------------------------------------------
-// Confirm resolve modal
+// Confirm resolution modal
 // ---------------------------------------------------------------------------
-function ConfirmModal({ isOpen, onConfirm, onCancel, busy }) {
+function ConfirmModal({ incident, onConfirm, onCancel, busy }) {
+  const isNegative = incident && getStage(incident) === 'negative';
   return (
     <Modal
-      isOpen={isOpen}
+      isOpen={!!incident}
       onClose={onCancel}
-      title="Resolve Outbreak?"
+      title={isNegative ? 'Close Case — Lab Cleared?' : 'Lift Quarantine & Resolve Outbreak?'}
       size="sm"
       footer={
         <div className={styles.confirmFooter}>
@@ -326,43 +506,45 @@ function ConfirmModal({ isOpen, onConfirm, onCancel, busy }) {
             Cancel
           </Button>
           <Button id="confirm-resolve-btn" variant="primary" loading={busy} onClick={onConfirm}>
-            Yes, Resolve
+            {isNegative ? 'Yes, Close Case' : 'Yes, Lift Quarantine'}
           </Button>
         </div>
       }
     >
       <p className={styles.confirmText}>
-        Resolving this outbreak will automatically:
+        {isNegative
+          ? 'The RADDL laboratory ruled out the disease. Closing this case will:'
+          : 'Only lift the quarantine after terminal disinfection and the required clean monitoring period. This will:'}
       </p>
       <ul className={styles.confirmList}>
-        <li>Mark all linked <strong>disease reports</strong> for this disease as <strong>Resolved</strong>.</li>
-        <li>Reset affected <strong>farms</strong> back to <strong>Active</strong> status — unless they have other active disease reports.</li>
-        <li>Update the <strong>map pins</strong> to reflect the new farm statuses.</li>
+        <li>Mark the linked <strong>disease report(s)</strong> as <strong>Resolved</strong>.</li>
+        <li>Restore the <strong>farm</strong> to <strong>Active</strong> status (unless it has other open reports).</li>
+        {!isNegative && <li>Remove the <strong>1 km / 7 km zones</strong> from the Disease Map.</li>}
+        <li>Record this executive action in the <strong>Audit Logs</strong>.</li>
       </ul>
       <p className={styles.confirmText} style={{ marginTop: '0.75rem' }}>
-        This action cannot be automatically undone.
+        This action is reserved for the City Veterinarian and cannot be automatically undone.
       </p>
     </Modal>
   );
 }
 
 // ---------------------------------------------------------------------------
-// OutbreakAlerts — main page
+// Main page
 // ---------------------------------------------------------------------------
 export default function OutbreakAlerts() {
-  const { user } = useAuth();
+  const { user, role, profile } = useAuth();
+  const isAdmin = role === 'admin';
 
   const [outbreaks, setOutbreaks] = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [error,     setError]     = useState(null);
-  const [statusFilter, setStatusFilter] = useState('');
+  const [viewMode,    setViewMode]    = useState('active');
+  const [stageFilter, setStageFilter] = useState('');
 
-  // Confirm-resolve modal state
-  const [pendingResolve, setPendingResolve] = useState(null); // { id, newStatus }
+  const [pendingResolve, setPendingResolve] = useState(null);
   const [resolving,      setResolving]      = useState(false);
 
-  // ── Load outbreaks ────────────────────────────────────────────────────────
-  // Initial load — shows skeleton
   const loadOutbreaks = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -372,7 +554,6 @@ export default function OutbreakAlerts() {
     setLoading(false);
   }, []);
 
-  // Silent refresh — updates data without skeleton flash
   const silentRefresh = useCallback(async () => {
     const { data, error: fetchError } = await getOutbreaks();
     if (!fetchError && data) setOutbreaks(data);
@@ -380,90 +561,128 @@ export default function OutbreakAlerts() {
 
   useEffect(() => { loadOutbreaks(); }, [loadOutbreaks]);
 
-  // Auto-refresh when outbreak_alerts or disease_reports change in DB
-  useRealtime('outbreak_alerts',  () => silentRefresh());
-  useRealtime('disease_reports',  () => silentRefresh());
+  useEffect(() => {
+    const onFocus = () => silentRefresh();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [silentRefresh]);
 
-  // ── Handle action (acknowledge / resolve) ─────────────────────────────────
-  async function handleAction(outbreakId, newStatus) {
-    // Route "Resolved" through a confirmation modal
-    if (newStatus === 'Resolved') {
-      setPendingResolve({ id: outbreakId, newStatus });
-      return;
-    }
-    await applyUpdate(outbreakId, newStatus);
+  useRealtime('outbreak_alerts', silentRefresh);
+  useRealtime('disease_reports', silentRefresh);
+
+  function patchLocal(outbreakId, patch) {
+    setOutbreaks(prev => prev.map(o => (o.outbreak_id === outbreakId ? { ...o, ...patch } : o)));
   }
 
-  async function applyUpdate(outbreakId, newStatus) {
-    const payload = { status: newStatus };
-
-    const { error: updateError } = await updateOutbreak(outbreakId, payload);
-    if (!updateError) {
-      // Optimistic update — mutate local state
-      setOutbreaks(prev =>
-        prev.map(o =>
-          o.outbreak_id === outbreakId
-            ? {
-                ...o,
-                status: newStatus,
-                acknowledged_by_name:
-                  newStatus === 'Acknowledged'
-                    ? (user?.user_metadata?.full_name ?? o.acknowledged_by_name)
-                    : o.acknowledged_by_name,
-              }
-            : o
-        )
-      );
-    }
-    return { error: updateError };
+  function describe(o) {
+    return `${o.disease_name} at ${o.farm_name || 'farm'} (Brgy. ${o.barangay_name})`;
   }
 
-  async function handleSopUpdate(outbreakId, sopPayload) {
-    const { error } = await updateOutbreak(outbreakId, sopPayload);
-    if (!error) {
-      setOutbreaks(prev =>
-        prev.map(o =>
-          o.outbreak_id === outbreakId
-            ? { ...o, ...sopPayload }
-            : o
-        )
-      );
+  // Step 1 — City Veterinarian issues the dispatch order
+  async function handleDispatch(o) {
+    const { error: updateError } = await updateOutbreak(o.outbreak_id, { status: 'Acknowledged' });
+    if (updateError) return;
+
+    patchLocal(o.outbreak_id, {
+      status:             'Acknowledged',
+      dispatched_at:      new Date().toISOString(),
+      dispatched_by_name: profile?.full_name ?? user?.user_metadata?.full_name ?? null,
+    });
+
+    await writeAuditLog({
+      userId:      profile?.user_id,
+      action:      `Dispatched veterinary inspector for suspected ${describe(o)}`,
+      targetTable: 'outbreak_alerts',
+      targetId:    o.outbreak_id,
+    });
+  }
+
+  // Steps 2–4 — field data and checkpoint order
+  async function handleSopUpdate(o, field, payload) {
+    const { error: updateError } = await updateOutbreak(o.outbreak_id, payload);
+    if (updateError) return;
+    patchLocal(o.outbreak_id, payload);
+
+    let action = null;
+    if (field === 'bloodDate' && payload.blood_sample_taken_date) {
+      action = `Recorded blood sample collection (${payload.blood_sample_taken_date}) for ${describe(o)}`;
+    }
+    if (field === 'labResult') {
+      action =
+        payload.lab_result === 'Positive' ? `RADDL result POSITIVE — Confirmed outbreak: ${describe(o)}` :
+        payload.lab_result === 'Negative' ? `RADDL result NEGATIVE — Lab cleared: ${describe(o)}` :
+                                            `RADDL result set to Pending for ${describe(o)}`;
+    }
+    if (field === 'checkpoint') {
+      action = `${payload.checkpoint_issued ? 'Ordered' : 'Withdrew'} quarantine checkpoint for ${describe(o)}`;
+    }
+
+    if (action) {
+      await writeAuditLog({
+        userId:      profile?.user_id,
+        action,
+        targetTable: 'outbreak_alerts',
+        targetId:    o.outbreak_id,
+      });
     }
   }
 
-  // Confirm modal — resolve
+  // Final step — executive resolution (City Veterinarian only)
   async function confirmResolve() {
-    if (!pendingResolve) return;
+    if (!pendingResolve || !isAdmin) return;
     setResolving(true);
-    await applyUpdate(pendingResolve.id, pendingResolve.newStatus);
+    const o = pendingResolve;
+    const wasNegative = getStage(o) === 'negative';
+    const { error: updateError } = await updateOutbreak(o.outbreak_id, { status: 'Resolved' });
+    if (!updateError) {
+      if (o.report_id) {
+        await supabase.from('disease_reports').update({ status: 'Resolved' }).eq('report_id', o.report_id);
+      }
+      if (o.farm_id && o.disease_id) {
+        await supabase.from('disease_reports').update({ status: 'Resolved' }).eq('farm_id', o.farm_id).eq('disease_id', o.disease_id).neq('status', 'Resolved');
+      }
+      patchLocal(o.outbreak_id, { status: 'Resolved' });
+      await writeAuditLog({
+        userId:      profile?.user_id,
+        action:      wasNegative
+          ? `City Veterinarian closed case (lab cleared): ${describe(o)}`
+          : `City Veterinarian lifted quarantine and resolved outbreak: ${describe(o)}`,
+        targetTable: 'outbreak_alerts',
+        targetId:    o.outbreak_id,
+      });
+    }
     setResolving(false);
     setPendingResolve(null);
   }
 
-  const hasFilters = !!statusFilter;
+  const activeList  = outbreaks.filter(o => !isClosedStage(getStage(o)));
+  const archiveList = outbreaks.filter(o => isClosedStage(getStage(o)));
+  const scopedList  = viewMode === 'active' ? activeList : archiveList;
 
-  const ORDER = { Active: 0, Acknowledged: 1, Resolved: 2 };
-  
-  const filtered = statusFilter 
-    ? outbreaks.filter(o => o.status === statusFilter)
-    : outbreaks;
+  const switchView = (mode) => {
+    setViewMode(mode);
+    setStageFilter('');
+  };
+
+  const hasFilters = !!stageFilter;
+
+  const filtered = stageFilter
+    ? scopedList.filter(o => getStage(o) === stageFilter)
+    : scopedList;
 
   const sorted = [...filtered].sort(
-    (a, b) => (ORDER[a.status] ?? 3) - (ORDER[b.status] ?? 3)
+    (a, b) => (STAGE_ORDER[getStage(a)] ?? 9) - (STAGE_ORDER[getStage(b)] ?? 9)
   );
 
-  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className={`${styles.page} page-enter`}>
-
-      {/* ── Page Header ────────────────────────────────────────────────────── */}
       <header className={styles.pageHeader}>
         <div>
-          <h1 className={styles.pageTitle}>Outbreak Alerts</h1>
+          <h1 className={styles.pageTitle}>Disease Incidents &amp; Outbreak Response</h1>
           <p className={styles.pageSubtitle}>
             {loading
               ? 'Loading…'
-              : `${outbreaks.length} alert${outbreaks.length !== 1 ? 's' : ''}${hasFilters ? ' (filtered)' : ''}`}
+              : `${activeList.length} active · ${archiveList.length} archived · An incident becomes an outbreak only when RADDL confirms a positive result.`}
           </p>
         </div>
         <Button
@@ -478,40 +697,81 @@ export default function OutbreakAlerts() {
         </Button>
       </header>
 
-      {/* ── Summary Stats ───────────────────────────────────────────────────── */}
       {!loading && !error && <SummaryStats outbreaks={outbreaks} />}
 
-      {/* ── Filter bar ──────────────────────────────────────────────────────── */}
+      <div className={styles.viewTabs} role="tablist" aria-label="Incident queue view">
+        <button
+          id="tab-active-incidents"
+          type="button"
+          role="tab"
+          aria-selected={viewMode === 'active'}
+          className={`${styles.viewTab} ${viewMode === 'active' ? styles.viewTabActive : ''}`}
+          onClick={() => switchView('active')}
+        >
+          <Siren size={14} aria-hidden="true" />
+          Active Incidents
+          <span className={styles.viewTabCount}>{activeList.length}</span>
+        </button>
+        <button
+          id="tab-case-archive"
+          type="button"
+          role="tab"
+          aria-selected={viewMode === 'archive'}
+          className={`${styles.viewTab} ${viewMode === 'archive' ? styles.viewTabActive : ''}`}
+          onClick={() => switchView('archive')}
+        >
+          <CheckCircle2 size={14} aria-hidden="true" />
+          Case Archive
+          <span className={styles.viewTabCount}>{archiveList.length}</span>
+        </button>
+      </div>
+
       <Card className={styles.filtersCard}>
         <Card.Body className={styles.filtersBody}>
           <Filter size={14} className={styles.filterIcon} aria-hidden="true" />
-          <span className={styles.filterLabel}>Filter by status</span>
+          <span className={styles.filterLabel}>Filter by stage</span>
           <Select
             id="filter-outbreak-status"
             label=""
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            aria-label="Filter outbreaks by status"
+            value={stageFilter}
+            onChange={(e) => setStageFilter(e.target.value)}
+            aria-label="Filter incidents by stage"
             className={styles.filterSelect}
           >
-            <option value="">All Statuses</option>
-            <option value="Active">Active</option>
-            <option value="Acknowledged">Acknowledged</option>
-            <option value="Resolved">Resolved</option>
+            {viewMode === 'active' ? (
+              <>
+                <option value="">All Active Stages</option>
+                <option value="suspected">Suspected Incident</option>
+                <option value="investigating">Under Investigation</option>
+                <option value="confirmed">Confirmed Outbreak</option>
+                <option value="negative">Lab Negative (Awaiting Closure)</option>
+              </>
+            ) : (
+              <>
+                <option value="">All Archived Cases</option>
+                <option value="cleared">Lab Cleared — Closed</option>
+                <option value="resolved">Resolved — Quarantine Lifted</option>
+              </>
+            )}
           </Select>
           {hasFilters && (
             <button
               id="clear-outbreak-filter-btn"
               className={styles.clearBtn}
-              onClick={() => setStatusFilter('')}
+              onClick={() => setStageFilter('')}
             >
               Clear
             </button>
           )}
+          <span className={styles.filterLabel} style={{ marginLeft: 'auto' }}>
+            <Flask size={13} aria-hidden="true" style={{ verticalAlign: '-2px', marginRight: 4 }} />
+            {viewMode === 'active'
+              ? 'Lab-confirmed outbreaks only appear in red'
+              : 'Historical resolved & lab-cleared incidents on record'}
+          </span>
         </Card.Body>
       </Card>
 
-      {/* ── Content ─────────────────────────────────────────────────────────── */}
       {error ? (
         <Card className={styles.errorCard}>
           <Card.Body className={styles.errorBody}>
@@ -525,27 +785,30 @@ export default function OutbreakAlerts() {
       ) : loading ? (
         <SkeletonLoader rows={4} columns={4} type="card" />
       ) : sorted.length === 0 ? (
-        <EmptyState hasFilters={hasFilters} onClear={() => setStatusFilter('')} />
+        <EmptyState
+          hasFilters={hasFilters}
+          onClear={() => setStageFilter('')}
+          viewMode={viewMode}
+          archiveCount={archiveList.length}
+          onOpenArchive={() => switchView('archive')}
+        />
       ) : (
-        <div
-          className={styles.outbreakList}
-          role="list"
-          aria-label="Outbreak alerts list"
-        >
+        <div className={styles.outbreakList} role="list" aria-label="Disease incidents list">
           {sorted.map(outbreak => (
-            <OutbreakCard
+            <IncidentCard
               key={outbreak.outbreak_id}
               outbreak={outbreak}
-              onAction={handleAction}
+              onDispatch={handleDispatch}
+              onResolve={setPendingResolve}
               onSopUpdate={handleSopUpdate}
+              isAdmin={isAdmin}
             />
           ))}
         </div>
       )}
 
-      {/* ── Confirm resolve modal ────────────────────────────────────────────── */}
       <ConfirmModal
-        isOpen={!!pendingResolve}
+        incident={pendingResolve}
         onConfirm={confirmResolve}
         onCancel={() => setPendingResolve(null)}
         busy={resolving}

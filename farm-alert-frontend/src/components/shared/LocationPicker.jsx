@@ -105,7 +105,7 @@ export default function LocationPicker({ latitude, longitude, onChange, disabled
       {!disabled && (
         <div className={styles.coordInputRow}>
           <div className={styles.coordField}>
-            <label htmlFor="coord-lat" className={styles.coordLabel}>Latitude</label>
+            <label htmlFor="coord-lat" className={styles.coordLabel}>Latitude <span style={{ fontWeight: 400, opacity: 0.7 }}>(Optional)</span></label>
             <input
               id="coord-lat"
               type="number"
@@ -121,7 +121,7 @@ export default function LocationPicker({ latitude, longitude, onChange, disabled
             />
           </div>
           <div className={styles.coordField}>
-            <label htmlFor="coord-lng" className={styles.coordLabel}>Longitude</label>
+            <label htmlFor="coord-lng" className={styles.coordLabel}>Longitude <span style={{ fontWeight: 400, opacity: 0.7 }}>(Optional)</span></label>
             <input
               id="coord-lng"
               type="number"
@@ -144,7 +144,7 @@ export default function LocationPicker({ latitude, longitude, onChange, disabled
               title="Clear pin"
               aria-label="Clear coordinates"
             >
-              ✕ Clear pin
+              Clear pin
             </button>
           )}
         </div>
@@ -162,7 +162,18 @@ export default function LocationPicker({ latitude, longitude, onChange, disabled
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <MapLockControl />
-        {position && <Marker position={position} />}
+        {position && (
+          <Marker
+            position={position}
+            draggable={!disabled}
+            eventHandlers={{
+              dragend(e) {
+                const { lat, lng } = e.target.getLatLng();
+                handleMapClick(Number(lat.toFixed(6)), Number(lng.toFixed(6)));
+              },
+            }}
+          />
+        )}
         {position && <MapFlyTo position={position} />}
         {!disabled && <MapEventHandler onLocationSelect={handleMapClick} />}
       </MapContainer>
@@ -173,7 +184,7 @@ export default function LocationPicker({ latitude, longitude, onChange, disabled
           ? 'Location is read-only.'
           : position
             ? <>
-                <span className={styles.pinned}>📍 Pinned at:</span>
+                <span className={styles.pinned}>Pinned at:</span>
                 <span className={styles.coords}>
                   {position[0].toFixed(6)}, {position[1].toFixed(6)}
                 </span>

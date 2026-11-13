@@ -129,7 +129,7 @@ export default function FarmDossierModal({ farmId, onClose }) {
               <h2 className={styles.headerTitle}>
                 {loading ? 'Loading…' : (farm?.farm_name ?? 'Farm Details')}
                 {farm?.has_active_checkpoint && (
-                  <span className={styles.checkpointBadge}>🚧 CHECKPOINT ACTIVE</span>
+                  <span className={styles.checkpointBadge}>CHECKPOINT ACTIVE</span>
                 )}
               </h2>
             </div>

@@ -582,3 +582,205 @@ input[type="date"].sopInput::-webkit-calendar-picker-indicator:hover {
   justify-content: flex-end;
   gap: 0.625rem;
 }
+
+
+/* ============================================================
+   Incident Response Workflow (Migration 038 / Final Defense)
+   ============================================================ */
+
+.statsRowFour {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 900px) {
+  .statsRowFour { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 520px) {
+  .statsRowFour { grid-template-columns: 1fr; }
+}
+
+.statInfo .statIcon { color: hsl(212, 75%, 48%); }
+
+.statHint {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-top: 1px;
+}
+
+/* Stage badges */
+.stageSuspected {
+  background: hsl(45, 95%, 90%);
+  color: hsl(35, 85%, 30%);
+}
+
+.stageInvestigating {
+  background: hsl(212, 85%, 93%);
+  color: hsl(212, 75%, 36%);
+}
+
+.stageConfirmed {
+  background: hsl(4, 74%, 94%);
+  color: hsl(4, 74%, 38%);
+}
+
+.stageCleared {
+  background: hsl(145, 55%, 92%);
+  color: hsl(145, 60%, 26%);
+}
+
+.stageResolved {
+  background: var(--color-overlay);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+/* Card accent per stage */
+.cardSuspected   { border-color: hsl(42, 85%, 70%); }
+.cardConfirmed   { border-color: hsl(4, 74%, 75%); }
+
+.urgentBarSuspected {
+  background: hsl(42, 90%, 52%);
+}
+
+/* Stage explanation line under the header */
+.stageNote {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-overlay);
+  border: 1px solid var(--color-border);
+}
+
+.stageNote strong {
+  color: var(--color-text-primary);
+}
+
+/* Steps: authority tag + done state */
+.stepHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.authorityTag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 0.1rem 0.5rem;
+  border-radius: var(--radius-full);
+  background: var(--color-overlay);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.authorityAdmin {
+  background: #fef3c7;
+  color: #b45309;
+  border-color: #fde68a;
+}
+
+.authorityStaff {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.stepDone .stepNum {
+  background: hsl(145, 60%, 36%);
+}
+
+.stepPending .stepNum {
+  background: var(--color-text-muted);
+}
+
+.stepText {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.stepTextMuted {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.awaitingPill {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  background: var(--color-overlay);
+  border: 1px dashed var(--color-border-strong, var(--color-border));
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+}
+
+/* ── Active vs Case Archive view tabs ───────────────────── */
+.viewTabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  width: fit-content;
+}
+
+.viewTab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.85rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.viewTab:hover {
+  color: var(--color-text-primary);
+  background: var(--color-overlay);
+}
+
+.viewTabActive {
+  background: var(--color-brand);
+  color: #fff;
+}
+
+.viewTabActive:hover {
+  background: var(--color-brand);
+  color: #fff;
+}
+
+.viewTabCount {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.2);
+  color: inherit;
+}
+
+.viewTabActive .viewTabCount {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+.emptyIconClear {
+  background: var(--color-success-light, rgba(34, 197, 94, 0.12));
+  color: var(--color-success, #22c55e);
+}

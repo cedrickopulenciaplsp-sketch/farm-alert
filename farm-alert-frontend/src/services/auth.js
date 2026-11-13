@@ -67,7 +67,7 @@ export async function getSession() {
 export async function getUserProfile(authId) {
   const { data, error } = await supabase
     .from('users')
-    .select('user_id, full_name, username, role_id, is_active, requires_password_change')
+    .select('*')
     .eq('auth_id', authId)
     .single();
   return { profile: data ?? null, error };

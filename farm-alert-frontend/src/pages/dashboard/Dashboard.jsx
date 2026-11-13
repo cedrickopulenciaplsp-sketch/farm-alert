@@ -16,6 +16,8 @@ import {
 } from 'recharts';
 import Card from '../../components/shared/Card';
 import Button from '../../components/shared/Button';
+import Modal from '../../components/shared/Modal';
+import ReportForm from '../../components/reports/ReportForm';
 import SkeletonLoader from '../../components/shared/SkeletonLoader';
 import MapWidget from '../../components/map/MapWidget';
 import MiniTrendChart from '../../components/analytics/MiniTrendChart';
@@ -160,6 +162,7 @@ export default function Dashboard() {
 
   // Tab State
   const [activeTab, setActiveTab] = useState('operational');
+  const [showReportModal, setShowReportModal] = useState(false);
 
   // Operational Dashboard State
   const [summary, setSummary] = useState(null);
@@ -407,14 +410,30 @@ export default function Dashboard() {
           <p className={styles.pageSubtitle}>San Pablo City Veterinary Office — Livestock Health Monitoring</p>
         </div>
         <div className={styles.headerActions}>
-          <Button variant="secondary" onClick={() => navigate('/reports')}>
-            <FileText size={15} /> Disease Reports
+          <Button id="dashboard-log-report-btn" variant="secondary" onClick={() => setShowReportModal(true)}>
+            <Plus size={15} /> Log Report
           </Button>
           <Button variant="primary" onClick={() => navigate('/farms/new')}>
             <Plus size={15} /> Register Farm
           </Button>
         </div>
       </header>
+
+      {/* ── New Report Modal (Quick Action Shortcut) ──────────────────── */}
+      <Modal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        title="Log New Disease Report"
+        size="lg"
+      >
+        <ReportForm
+          onSuccess={() => {
+            setShowReportModal(false);
+            loadDashboardData(false);
+          }}
+          onCancel={() => setShowReportModal(false)}
+        />
+      </Modal>
 
       {/* ── Metric Cards ────────────────────────────────────────── */}
       <div className={styles.metricsGrid}>
@@ -629,7 +648,7 @@ export default function Dashboard() {
           </div>
 
           <div className={`${analyticsStyles.sectionHeader} anim-fade delay-3`}>
-            <span className={analyticsStyles.sectionTitle}>📊 Disease Analytics</span>
+            <span className={analyticsStyles.sectionTitle}>Disease Analytics</span>
             <div className={analyticsStyles.sectionLine} />
           </div>
 
@@ -792,7 +811,7 @@ export default function Dashboard() {
           </div>
 
           <div className={`${analyticsStyles.sectionHeader} anim-fade delay-10`}>
-            <span className={analyticsStyles.sectionTitle}>🛡️ Farm Compliance</span>
+            <span className={analyticsStyles.sectionTitle}>Farm Compliance</span>
             <div className={analyticsStyles.sectionLine} />
           </div>
 

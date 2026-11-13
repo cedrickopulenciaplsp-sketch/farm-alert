@@ -105,6 +105,16 @@ function ReportRow({ report }) {
         </div>
       </td>
 
+      {/* Affected / Deaths (Task 1.2) */}
+      <td className={styles.cell}>
+        <span className={styles.statPrimary}>
+          {report.animals_affected ?? report.cases ?? 0} sick
+        </span>
+        {Number(report.mortalities) > 0 && (
+          <span className={styles.statDanger}> • {report.mortalities} dead</span>
+        )}
+      </td>
+
       {/* Status */}
       <td className={styles.cell}>
         <StatusBadge status={report.status} />
@@ -224,6 +234,36 @@ export default function DiseaseReports() {
 
   const hasFilters = !!(search || status);
 
+  // Task 1.3: Calculate aggregate disease counters from active reports (fallback to all loaded reports if none active)
+  const activePool = reports.filter((r) => r.status === 'Active');
+  const counterPool = activePool.length > 0 ? activePool : reports;
+
+  const sumByMatch = (predicate) => {
+    const matched = counterPool.filter(predicate);
+    return {
+      affected: matched.reduce((acc, r) => acc + (Number(r.animals_affected ?? r.cases) || 0), 0),
+      deaths:   matched.reduce((acc, r) => acc + (Number(r.mortalities) || 0), 0),
+      reports:  matched.length,
+    };
+  };
+
+  const asfStats = sumByMatch((r) => {
+    const d = (r.disease_name || '').toLowerCase();
+    return d.includes('african swine fever') || d.includes('asf');
+  });
+
+  const fmdStats = sumByMatch((r) => {
+    const d = (r.disease_name || '').toLowerCase();
+    return d.includes('foot and mouth') || d.includes('foot-and-mouth') || d.includes('fmd');
+  });
+
+  const avianStats = sumByMatch((r) => {
+    const d = (r.disease_name || '').toLowerCase();
+    return d.includes('avian') || d.includes('newcastle') || d.includes('bird flu') || d.includes('fowl') || d.includes('coryza');
+  });
+
+  const totalStats = sumByMatch(() => true);
+
   // ---------------------------------------------------------------------------
   // CSV Export — invokes the server-side Edge Function
   // ---------------------------------------------------------------------------
@@ -311,6 +351,53 @@ export default function DiseaseReports() {
         </div>
       </header>
 
+      {/* ── Task 1.3: Aggregate Disease Counter Pills ────────────────────── */}
+      <div className={styles.diseasePillsBar} aria-label="Disease summary counters">
+        <div className={styles.diseasePill}>
+          <div className={styles.pillLeft}>
+            <span className={styles.pillDot} style={{ background: '#dc2626' }} aria-hidden="true" />
+            <span className={styles.pillLabel}>ASF</span>
+          </div>
+          <div className={styles.pillRight}>
+            <span className={styles.pillCount}>{asfStats.affected} heads affected</span>
+            {asfStats.deaths > 0 && <span className={styles.pillDeaths}>{asfStats.deaths} dead</span>}
+          </div>
+        </div>
+
+        <div className={styles.diseasePill}>
+          <div className={styles.pillLeft}>
+            <span className={styles.pillDot} style={{ background: '#ea580c' }} aria-hidden="true" />
+            <span className={styles.pillLabel}>FMD</span>
+          </div>
+          <div className={styles.pillRight}>
+            <span className={styles.pillCount}>{fmdStats.affected} heads affected</span>
+            {fmdStats.deaths > 0 && <span className={styles.pillDeaths}>{fmdStats.deaths} dead</span>}
+          </div>
+        </div>
+
+        <div className={styles.diseasePill}>
+          <div className={styles.pillLeft}>
+            <span className={styles.pillDot} style={{ background: '#ca8a04' }} aria-hidden="true" />
+            <span className={styles.pillLabel}>Avian Flu / ND</span>
+          </div>
+          <div className={styles.pillRight}>
+            <span className={styles.pillCount}>{avianStats.affected} heads affected</span>
+            {avianStats.deaths > 0 && <span className={styles.pillDeaths}>{avianStats.deaths} dead</span>}
+          </div>
+        </div>
+
+        <div className={styles.diseasePill}>
+          <div className={styles.pillLeft}>
+            <span className={styles.pillDot} style={{ background: 'var(--color-brand)' }} aria-hidden="true" />
+            <span className={styles.pillLabel}>All Reported</span>
+          </div>
+          <div className={styles.pillRight}>
+            <span className={styles.pillCount}>{totalStats.affected} heads affected</span>
+            {totalStats.deaths > 0 && <span className={styles.pillDeaths}>{totalStats.deaths} total dead</span>}
+          </div>
+        </div>
+      </div>
+
       {/* ── Filters Bar ──────────────────────────────────────────────────── */}
       <Card className={styles.filtersCard}>
         <Card.Body className={styles.filtersBody}>
@@ -386,6 +473,7 @@ export default function DiseaseReports() {
                 <tr>
                   <th className={styles.th}>Disease / Farm</th>
                   <th className={styles.th}>Barangay</th>
+                  <th className={styles.th}>Affected / Deaths</th>
                   <th className={styles.th}>Status</th>
                   <th className={styles.th}>Date Reported</th>
                   <th className={styles.th}>Encoded By</th>

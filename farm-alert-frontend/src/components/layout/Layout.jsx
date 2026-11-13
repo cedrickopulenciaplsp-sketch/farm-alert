@@ -7,13 +7,20 @@ import styles from './Layout.module.css';
 // Map route paths to human-readable page titles for the Navbar
 // ---------------------------------------------------------------------------
 const PAGE_TITLES = {
-  '/dashboard': 'Dashboard',
-  '/farms':     'Farm Registry',
-  '/reports':   'Disease Reports',
-  '/outbreaks': 'Outbreak Alerts',
-  '/map':       'Disease Map',
-  '/analytics': 'Analytics',
-  '/admin':     'Admin Settings',
+  '/dashboard':          'Dashboard',
+  '/farmer-portal':      'My Farm Portal',
+  '/farms':              'Farm Registry',
+  '/diseases':           'Disease Library',
+  '/reports':            'Disease Reports',
+  '/outbreaks':          'Incident & Outbreak Response',
+  '/map':                'Disease Map',
+  '/compliance':         'Biosecurity Compliance',
+  '/settings/barangays': 'Barangay Masterlist',
+  '/settings/users':     'User Accounts',
+  '/settings':           'System Settings',
+  '/logs':               'Audit Logs',
+  '/analytics':          'Analytics',
+  '/admin':              'Admin Settings',
 };
 
 function getPageTitle(pathname) {

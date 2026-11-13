@@ -17,7 +17,10 @@ import Dashboard from './pages/dashboard/Dashboard';
 import DiseaseMap from './pages/map/DiseaseMap';
 import ComplianceLogs from './pages/compliance/ComplianceLogs';
 import SystemSettings from './pages/admin/SystemSettings';
+import BarangayManagement from './pages/admin/BarangayManagement';
+import UserManagement from './pages/admin/UserManagement';
 import AuditLogs from './pages/admin/AuditLogs';
+import FarmerPortal from './pages/farmer/FarmerPortal';
 import SplashScreen from './components/shared/SplashScreen';
 
 // ---------------------------------------------------------------------------
@@ -67,6 +70,7 @@ function App() {
             {/* Layout wraps all inner protected pages with Sidebar + Navbar */}
             <Route element={<Layout />}>
               <Route path="/dashboard"      element={<Dashboard />} />
+              <Route path="/farmer-portal"  element={<FarmerPortal />} />
               <Route path="/farms"          element={<FarmList />} />
               <Route path="/farms/new"      element={<FarmForm />} />
               <Route path="/farms/:id/edit" element={<FarmForm />} />
@@ -79,8 +83,10 @@ function App() {
               <Route path="/analytics"             element={<Navigate to="/dashboard" replace />} />
 
               {/* Settings & Audit Logs — no longer behind AdminLayout (Phase 10 pivot) */}
-              <Route path="/settings" element={<SystemSettings />} />
-              <Route path="/logs"     element={<AuditLogs />} />
+              <Route path="/settings"           element={<SystemSettings />} />
+              <Route path="/settings/barangays" element={<BarangayManagement />} />
+              <Route path="/settings/users"     element={<UserManagement />} />
+              <Route path="/logs"               element={<AuditLogs />} />
 
               {/* Legacy admin redirects — preserve deep-links from bookmarks/external refs */}
               <Route path="/admin/settings" element={<Navigate to="/settings" replace />} />

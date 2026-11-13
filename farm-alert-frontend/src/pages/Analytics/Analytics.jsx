@@ -353,7 +353,7 @@ export default function Analytics() {
       {/* SECTION 1 — Disease Analytics                                      */}
       {/* ════════════════════════════════════════════════════════════════════ */}
       <div className={styles.sectionHeader}>
-        <span className={styles.sectionTitle}>📊 Disease Analytics</span>
+        <span className={styles.sectionTitle}>Disease Analytics</span>
         <div className={styles.sectionLine} />
       </div>
 
@@ -515,7 +515,7 @@ export default function Analytics() {
       {/* SECTION 2 — Farm & Pest Compliance                                 */}
       {/* ════════════════════════════════════════════════════════════════════ */}
       <div className={styles.sectionHeader}>
-        <span className={styles.sectionTitle}>🛡️ Farm Compliance</span>
+        <span className={styles.sectionTitle}>Farm Compliance</span>
         <div className={styles.sectionLine} />
       </div>
 

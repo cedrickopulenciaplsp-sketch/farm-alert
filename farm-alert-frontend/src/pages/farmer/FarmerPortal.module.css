@@ -1,0 +1,343 @@
+/* ============================================================
+   FarmerPortal.module.css — Mobile-First Dedicated Farmer Portal (Phase 4)
+   ============================================================ */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem 1.75rem;
+  max-width: 980px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── Top Banner / Header ───────────────────────────────────── */
+.heroBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1.35rem 1.5rem;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, #123f24 0%, #1a5c35 100%);
+  color: #ffffff;
+  box-shadow: var(--shadow-md);
+}
+
+.heroLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.roleTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: fit-content;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #bbf7d0;
+}
+
+.heroTitle {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.heroSub {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.82);
+  margin: 0;
+}
+
+.heroActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.farmSwitchSelect {
+  height: 40px;
+  padding: 0 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.25);
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+}
+
+.farmSwitchSelect option {
+  color: #0f172a;
+  background: #ffffff;
+}
+
+.reportEmergencyBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 44px;
+  padding: 0 1.25rem;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.reportEmergencyBtn:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+/* ── Localized Barangay Advisory Card (Task 4.5) ───────────── */
+.advisoryAlert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 1.1rem 1.25rem;
+  border-radius: var(--radius-md);
+  border: 1.5px solid #fca5a5;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.advisorySafe {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-md);
+  border: 1.5px solid #86efac;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.advisoryTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+}
+
+.advisoryDesc {
+  font-size: 0.84rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Grid for Farm Dossier & Biosecurity (Task 4.2) ────────── */
+.topGrid {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 1.125rem;
+}
+
+.dossierGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.875rem;
+}
+
+.dossierItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-overlay);
+  border: 1px solid var(--color-border);
+}
+
+.dossierLabel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.dossierValue {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.bioStatusBox {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.75rem;
+  height: 100%;
+}
+
+.bioBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: fit-content;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.bioCompliant {
+  background: hsl(145, 55%, 92%);
+  color: hsl(145, 65%, 24%);
+}
+
+.bioPending {
+  background: hsl(42, 95%, 90%);
+  color: hsl(35, 90%, 28%);
+}
+
+.bioNonCompliant {
+  background: hsl(4, 74%, 94%);
+  color: hsl(4, 74%, 38%);
+}
+
+/* ── Live Report Tracker Stepper (Task 4.4) ────────────────── */
+.trackerList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.trackerCard {
+  padding: 1.1rem 1.25rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.trackerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.trackerDisease {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.trackerMeta {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.stepperGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.6rem;
+}
+
+.stepBox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-overlay);
+  opacity: 0.55;
+}
+
+.stepActive {
+  opacity: 1;
+  border-color: var(--color-brand);
+  background: var(--color-brand-light);
+}
+
+.stepDone {
+  opacity: 1;
+  border-color: hsl(145, 55%, 72%);
+  background: hsl(145, 55%, 95%);
+}
+
+.stepAlert {
+  opacity: 1;
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.stepNum {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.stepTitle {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.stepSub {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+/* ── Mobile Viewport Responsiveness (Task 4.1) ─────────────── */
+@media (max-width: 768px) {
+  .page {
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .heroBanner {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1.15rem;
+  }
+
+  .heroActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .reportEmergencyBtn {
+    width: 100%;
+  }
+
+  .topGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .dossierGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .stepperGrid {
+    grid-template-columns: 1fr;
+  }
+}
