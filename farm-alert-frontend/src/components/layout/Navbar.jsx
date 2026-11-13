@@ -1,4 +1,4 @@
-import { Bell, Sun, Moon, X, Checks as CheckCheck, ShieldWarning as ShieldAlert, FileText, Clock, Shield } from '@phosphor-icons/react';
+import { Bell, Sun, Moon, X, Checks as CheckCheck, ShieldWarning as ShieldAlert, FileText, Clock, Shield, List } from '@phosphor-icons/react';
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -176,7 +176,7 @@ function NotificationsPanel({ onClose }) {
 // ---------------------------------------------------------------------------
 // Navbar component
 // ---------------------------------------------------------------------------
-export default function Navbar({ title = 'Dashboard' }) {
+export default function Navbar({ title = 'Dashboard', onMenuToggle }) {
   const { user, role } = useAuth();
   const navigate = useNavigate();
   const roleMeta = ROLE_BADGE_META[role] ?? ROLE_BADGE_META.admin;
@@ -238,6 +238,17 @@ export default function Navbar({ title = 'Dashboard' }) {
   return (
     <header className={styles.navbar} role="banner">
       <div className={styles.titleGroup}>
+        {onMenuToggle && (
+          <button
+            id="navbar-mobile-menu-btn"
+            type="button"
+            className={styles.menuBtn}
+            onClick={onMenuToggle}
+            aria-label="Open navigation menu"
+          >
+            <List size={20} aria-hidden="true" />
+          </button>
+        )}
         <h1 className={styles.title}>{title}</h1>
 
         {/* Global System Status Indicator */}

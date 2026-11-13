@@ -1,22 +1,56 @@
 .sidebar {
   width: 260px;
+  flex-shrink: 0;
   background-color: var(--color-surface);
   border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
-  transition: width var(--transition-base);
+  transition: transform 220ms ease, width var(--transition-base);
   z-index: 10;
 }
 
-.brand {
+.brandRow {
   height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--color-border);
+  padding-right: 0.75rem;
+}
+
+.brand {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 0 1.25rem;
-  border-bottom: 1px solid var(--color-border);
   text-decoration: none;
   transition: background-color var(--transition-fast);
+}
+
+.closeBtn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.navScroll {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.backdrop {
+  display: none;
 }
 
 .brand:hover {
@@ -162,5 +196,37 @@
 @keyframes outbreakPulse {
   0%, 100% { box-shadow: 0 0 0 0 hsla(4, 74%, 50%, 0.55); }
   50%       { box-shadow: 0 0 0 5px hsla(4, 74%, 50%, 0); }
+}
+
+/* ── Mobile Slide-Over Drawer ───────────────────────────── */
+@media (max-width: 900px) {
+  .backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 55;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    height: 100dvh;
+    width: min(280px, 82vw);
+    transform: translateX(-100%);
+    z-index: 60;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .sidebarOpen {
+    transform: translateX(0);
+  }
+
+  .closeBtn {
+    display: inline-flex;
+  }
 }
 

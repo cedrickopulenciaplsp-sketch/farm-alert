@@ -15,6 +15,7 @@ import {
   Shield,
   ShieldCheck,
   ClipboardText as ClipboardList,
+  X,
 } from '@phosphor-icons/react';
 import { signOut } from '../../services/auth';
 import { getActiveOutbreakCount } from '../../services/outbreaks';
@@ -43,12 +44,13 @@ const NAV_ITEMS = [
 // ---------------------------------------------------------------------------
 // NavItem — standard nav link
 // ---------------------------------------------------------------------------
-function NavItem({ to, icon: Icon, label, end }) {
+function NavItem({ to, icon: Icon, label, end, onNavigate }) {
   return (
     <li>
       <NavLink
         to={to}
         end={end ?? to === '/settings'}
+        onClick={onNavigate}
         className={({ isActive }) =>
           `${styles.navItem}${isActive ? ` ${styles.active}` : ''}`
         }
@@ -63,7 +65,7 @@ function NavItem({ to, icon: Icon, label, end }) {
 // ---------------------------------------------------------------------------
 // OutbreakNavItem — special nav item with live active-outbreak badge
 // ---------------------------------------------------------------------------
-function OutbreakNavItem() {
+function OutbreakNavItem({ onNavigate }) {
   const [activeCount, setActiveCount] = useState(0);
 
   useEffect(() => {
@@ -91,6 +93,7 @@ function OutbreakNavItem() {
     <li>
       <NavLink
         to="/outbreaks"
+        onClick={onNavigate}
         className={({ isActive }) =>
           `${styles.navItem}${isActive ? ` ${styles.active}` : ''}`
         }
@@ -111,52 +114,78 @@ function OutbreakNavItem() {
 // ---------------------------------------------------------------------------
 // Sidebar component
 // ---------------------------------------------------------------------------
-export default function Sidebar() {
+export default function Sidebar({ isOpen = false, onClose }) {
   const { userRole } = useAuth();
   const visibleItems = NAV_ITEMS.filter((item) => item.roles.includes(userRole || 'admin'));
 
   const handleLogout = async () => {
+    onClose?.();
     await signOut();
   };
 
   return (
-    <aside className={styles.sidebar}>
-      {/* Brand / CVO Institutional Crest */}
-      <NavLink to={userRole === 'farmer' ? '/farmer-portal' : '/dashboard'} className={styles.brand}>
-        <div className={styles.brandCrest}>
-          <Shield size={22} aria-hidden="true" weight="duotone" />
-        </div>
-        <div className={styles.brandText}>
-          <span className={styles.brandName}>FarmAlert</span>
-          <span className={styles.brandSub}>
-            {userRole === 'farmer' ? 'Farmer Portal' : 'City Veterinary Office'}
-          </span>
-        </div>
-      </NavLink>
-
-      {/* Primary nav links */}
-      <nav>
-        <ul className={styles.navList}>
-          {visibleItems.map(item =>
-            item.to === '/outbreaks'
-              ? <OutbreakNavItem key="/outbreaks" />
-              : <NavItem key={item.to} {...item} />
+    <>
+      {isOpen && (
+        <div
+          className={styles.backdrop}
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+      <aside className={`${styles.sidebar}${isOpen ? ` ${styles.sidebarOpen}` : ''}`}>
+        {/* Brand / CVO Institutional Crest */}
+        <div className={styles.brandRow}>
+          <NavLink
+            to={userRole === 'farmer' ? '/farmer-portal' : '/dashboard'}
+            className={styles.brand}
+            onClick={onClose}
+          >
+            <div className={styles.brandCrest}>
+              <Shield size={22} aria-hidden="true" weight="duotone" />
+            </div>
+            <div className={styles.brandText}>
+              <span className={styles.brandName}>FarmAlert</span>
+              <span className={styles.brandSub}>
+                {userRole === 'farmer' ? 'Farmer Portal' : 'City Veterinary Office'}
+              </span>
+            </div>
+          </NavLink>
+          {onClose && (
+            <button
+              type="button"
+              className={styles.closeBtn}
+              onClick={onClose}
+              aria-label="Close navigation menu"
+            >
+              <X size={18} aria-hidden="true" />
+            </button>
           )}
-        </ul>
-      </nav>
+        </div>
 
-      {/* Logout at the bottom */}
-      <div className={styles.footer}>
-        <button
-          id="sidebar-logout-btn"
-          className={styles.logoutBtn}
-          onClick={handleLogout}
-          aria-label="Sign out"
-        >
-          <LogOut size={18} className={styles.navIcon} aria-hidden="true" weight="duotone" />
-          Sign Out
-        </button>
-      </div>
-    </aside>
+        {/* Primary nav links */}
+        <nav className={styles.navScroll}>
+          <ul className={styles.navList}>
+            {visibleItems.map(item =>
+              item.to === '/outbreaks'
+                ? <OutbreakNavItem key="/outbreaks" onNavigate={onClose} />
+                : <NavItem key={item.to} {...item} onNavigate={onClose} />
+            )}
+          </ul>
+        </nav>
+
+        {/* Logout at the bottom */}
+        <div className={styles.footer}>
+          <button
+            id="sidebar-logout-btn"
+            className={styles.logoutBtn}
+            onClick={handleLogout}
+            aria-label="Sign out"
+          >
+            <LogOut size={18} className={styles.navIcon} aria-hidden="true" weight="duotone" />
+            Sign Out
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }

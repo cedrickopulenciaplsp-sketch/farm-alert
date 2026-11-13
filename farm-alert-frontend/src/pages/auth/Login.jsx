@@ -143,25 +143,37 @@ function BrandPanel() {
       />
 
       {/* Logo (Top) */}
-      <div style={{ zIndex: 10, display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <div style={{
-          width: '38px', height: '38px', borderRadius: '8px',
-          background: 'rgba(140, 210, 160, 0.15)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          border: '1px solid rgba(140, 210, 160, 0.25)',
-        }}>
-          <Leaf size={20} color="#8cd2a0" />
+      <div className="auth-left-brand" style={{ zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{
+            width: '38px', height: '38px', borderRadius: '8px',
+            background: 'rgba(140, 210, 160, 0.15)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            border: '1px solid rgba(140, 210, 160, 0.25)',
+            flexShrink: 0,
+          }}>
+            <Leaf size={20} color="#8cd2a0" />
+          </div>
+          <div>
+            <span style={{
+              fontFamily: 'var(--font-display)', fontWeight: 800,
+              fontSize: '1.2rem', color: '#ffffff', letterSpacing: '-0.01em',
+              display: 'block', lineHeight: 1.15,
+            }}>
+              FarmAlert
+            </span>
+            <span className="auth-mobile-sub" style={{
+              display: 'none',
+              fontSize: '0.72rem', color: '#8cd2a0', fontWeight: 600,
+            }}>
+              City Veterinary Office · San Pablo City
+            </span>
+          </div>
         </div>
-        <span style={{
-          fontFamily: 'var(--font-display)', fontWeight: 800,
-          fontSize: '1.25rem', color: '#ffffff', letterSpacing: '-0.01em',
-        }}>
-          Farm Alert
-        </span>
       </div>
 
       {/* Center Text */}
-      <div style={{ zIndex: 10 }}>
+      <div className="auth-left-body" style={{ zIndex: 10 }}>
         <p style={{
           fontSize: '0.85rem', color: '#8cd2a0',
           fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase',
@@ -185,7 +197,7 @@ function BrandPanel() {
       </div>
 
       {/* Bottom Features List */}
-      <div style={{ zIndex: 10, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className="auth-left-footer" style={{ zIndex: 10, display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {[
           'Real-time outbreak detection',
           'Farm registry management',
@@ -222,8 +234,9 @@ export default function Login() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [oauthError, setOauthError] = useState('');
+  const [showDemoRoles, setShowDemoRoles] = useState(false);
   const [selectedRole, setSelectedRole] = useState(
-    () => sessionStorage.getItem('farm_alert_demo_role') || 'admin'
+    () => sessionStorage.getItem('farm_alert_demo_role') || null
   );
 
   // Only redirect if the account is confirmed authorized
@@ -270,11 +283,9 @@ export default function Login() {
   }, [location.search, navigate]);
 
   async function handleGoogleSignIn(roleOverride = null) {
-    const targetRole = typeof roleOverride === 'string' ? roleOverride : selectedRole;
-    if (targetRole) {
-      setDemoRole(targetRole);
-      setSelectedRole(targetRole);
-    }
+    const targetRole = typeof roleOverride === 'string' ? roleOverride : null;
+    setDemoRole(targetRole);
+    setSelectedRole(targetRole);
     setOauthError('');
     setIsLoading(true);
     const { error } = await loginWithGoogle();
@@ -288,9 +299,16 @@ export default function Login() {
     <>
       <style>{`
         @media (max-width: 1024px) {
-          .auth-layout { flex-direction: column !important; }
-          .auth-left { flex: none !important; height: auto !important; padding: 40px 32px !important; }
-          .auth-right { flex: 1 !important; padding: 40px 32px !important; }
+          .auth-layout { flex-direction: column !important; height: auto !important; min-height: 100dvh !important; }
+          .auth-left { flex: none !important; padding: 28px 24px !important; }
+          .auth-right { flex: 1 !important; padding: 28px 24px 36px !important; box-shadow: none !important; overflow-y: visible !important; }
+        }
+        @media (max-width: 768px) {
+          .auth-left { padding: 16px 20px !important; }
+          .auth-left-body, .auth-left-footer { display: none !important; }
+          .auth-mobile-sub { display: block !important; }
+          .auth-right { padding: 24px 18px 32px !important; align-items: flex-start !important; }
+          .auth-card { margin: 0 auto !important; }
         }
         @keyframes login-spin {
           to { transform: rotate(360deg); }
@@ -299,7 +317,7 @@ export default function Login() {
 
       <div className="auth-layout" style={{
         display: 'flex',
-        height: '100vh',
+        minHeight: '100dvh',
         fontFamily: 'var(--font-body)',
         background: '#ffffff',
       }}>
@@ -322,30 +340,31 @@ export default function Login() {
           {/* Faint animated virus icons */}
           <VirusBackground />
 
-          <div style={{ width: '100%', maxWidth: '440px', position: 'relative', zIndex: 10, margin: 'auto 0' }}>
+          <div className="auth-card" style={{ width: '100%', maxWidth: '420px', position: 'relative', zIndex: 10, margin: 'auto 0' }}>
             {/* Vet caduceus icon */}
-            <div className="fa-animate-in" style={{ marginBottom: '24px' }}>
+            <div className="fa-animate-in" style={{ marginBottom: '22px' }}>
               <div style={{
-                width: '54px', height: '54px', borderRadius: '14px',
-                background: 'rgba(26, 71, 49, 0.05)',
-                border: '1.5px solid rgba(26, 71, 49, 0.1)',
+                width: '50px', height: '50px', borderRadius: '14px',
+                background: 'rgba(26, 71, 49, 0.06)',
+                border: '1.5px solid rgba(26, 71, 49, 0.12)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                marginBottom: '16px',
+                marginBottom: '14px',
               }}>
-                <VetCaduceus size={30} color="#1a4731" />
+                <VetCaduceus size={28} color="#1a4731" />
               </div>
               <h2 style={{
                 fontFamily: 'var(--font-display)', fontWeight: 800,
-                fontSize: '1.65rem', color: '#1a4731',
+                fontSize: '1.6rem', color: '#1a4731',
                 letterSpacing: '-0.02em', marginBottom: '6px',
               }}>
-                Secure Sign In
+                Sign In to FarmAlert
               </h2>
               <p style={{
                 fontSize: '0.875rem', color: '#64748b',
                 lineHeight: 1.5,
+                margin: 0,
               }}>
-                Access is restricted to authorized City Veterinary Office personnel.
+                Use your registered Google account for the City Veterinary Office or Farmer Portal.
               </p>
             </div>
 
@@ -437,129 +456,11 @@ export default function Login() {
               </button>
             </div>
 
-            {/* Divider */}
-            <div
-              className="fa-animate-in fa-animate-in-delay-2"
-              style={{
-                display: 'flex', alignItems: 'center', gap: '12px',
-                margin: '24px 0 16px',
-              }}
-            >
-              <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
-              <span style={{ fontSize: '0.72rem', color: '#64748b', whiteSpace: 'nowrap', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 700 }}>
-                Demo Role Quick Access
-              </span>
-              <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
-            </div>
-
-            {/* Task 6.1: 1-Click Demo Role Switcher Buttons */}
-            <div
-              className="fa-animate-in fa-animate-in-delay-2"
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-                marginBottom: '24px',
-              }}
-            >
-              {[
-                {
-                  id: 'demo-login-admin',
-                  role: 'admin',
-                  title: 'City Veterinarian (Admin)',
-                  badge: 'Full Access',
-                  desc: 'Full Command Center · Barangay Masterlist · Outbreak Resolution',
-                  border: '#f59e0b',
-                  bg: '#fffdf5',
-                  badgeBg: '#fef3c7',
-                  badgeColor: '#b45309',
-                },
-                {
-                  id: 'demo-login-staff',
-                  role: 'cvo_staff',
-                  title: 'Veterinary Inspector (Staff)',
-                  badge: 'Field Ops',
-                  desc: 'Field Operations · Blood Sample & Lab Results · Biosecurity Inspection',
-                  border: '#3b82f6',
-                  bg: '#f8faff',
-                  badgeBg: '#dbeafe',
-                  badgeColor: '#1d4ed8',
-                },
-                {
-                  id: 'demo-login-farmer',
-                  role: 'farmer',
-                  title: 'Livestock Raiser (Farmer)',
-                  badge: 'Farmer Portal',
-                  desc: 'Mobile Farm Dossier · Report Sick Animals · Barangay Advisory',
-                  border: '#16a34a',
-                  bg: '#f6fdf8',
-                  badgeBg: '#dcfce7',
-                  badgeColor: '#15803d',
-                },
-              ].map((item) => {
-                const active = selectedRole === item.role;
-                return (
-                  <button
-                    key={item.role}
-                    id={item.id}
-                    type="button"
-                    disabled={isLoading}
-                    onClick={() => handleGoogleSignIn(item.role)}
-                    style={{
-                      width: '100%',
-                      textAlign: 'left',
-                      padding: '14px 18px',
-                      borderRadius: '12px',
-                      border: active ? `2px solid ${item.border}` : '1.5px solid #e2e8f0',
-                      background: active ? item.bg : '#ffffff',
-                      boxShadow: active ? `0 4px 14px ${item.border}22` : '0 1px 3px rgba(0,0,0,0.04)',
-                      cursor: isLoading ? 'not-allowed' : 'pointer',
-                      transition: 'all 0.18s ease',
-                      position: 'relative',
-                    }}
-                    onMouseEnter={e => {
-                      if (!isLoading && !active) {
-                        e.currentTarget.style.borderColor = '#cbd5e1';
-                        e.currentTarget.style.transform = 'translateY(-1px)';
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.06)';
-                      }
-                    }}
-                    onMouseLeave={e => {
-                      if (!isLoading && !active) {
-                        e.currentTarget.style.borderColor = '#e2e8f0';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)';
-                      }
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                      <span style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0f172a' }}>
-                        {item.title}
-                      </span>
-                      <span style={{
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        padding: '2px 8px',
-                        borderRadius: '999px',
-                        background: item.badgeBg,
-                        color: item.badgeColor,
-                        letterSpacing: '0.02em',
-                      }}>
-                        {item.badge}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '4px', lineHeight: 1.45 }}>
-                      {item.desc}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
             {/* Authorized account notice */}
             <div
-              className="fa-animate-in fa-animate-in-delay-3"
+              className="fa-animate-in fa-animate-in-delay-2"
               style={{
+                marginTop: '20px',
                 padding: '12px 14px',
                 background: '#f8fafc',
                 border: '1px solid #e2e8f0',
@@ -579,30 +480,124 @@ export default function Login() {
               <div style={{ flex: 1 }}>
                 <p style={{
                   fontSize: '0.8rem', fontWeight: 700,
-                  color: '#0f172a', marginBottom: '2px',
+                  color: '#0f172a', margin: '0 0 2px',
                 }}>
-                  Registered Accounts Only
+                  Authorized Accounts Only
                 </p>
                 <p style={{ fontSize: '0.75rem', color: '#64748b', lineHeight: 1.45, margin: 0 }}>
-                  CVO personnel and farmers sign in with the Google email registered by the City Veterinary Office. Demo role switching is available to the project team accounts:
+                  CVO personnel and livestock raisers sign in with an email registered by the San Pablo City Veterinary Office. Unregistered accounts cannot access the system.
                 </p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
-                  {['sanielken2@gmail.com', 'mjhorcelt@gmail.com', 'morenongkups@gmail.com'].map(em => (
-                    <span key={em} style={{
-                      fontSize: '11px',
-                      color: '#1a4731',
-                      background: 'rgba(26, 71, 49, 0.08)',
-                      padding: '1px 6px',
-                      borderRadius: '4px',
-                      fontWeight: 600,
-                      fontFamily: 'monospace',
-                    }}>
-                      {em}
-                    </span>
-                  ))}
-                </div>
               </div>
             </div>
+
+            {/* Collapsible Team Demo Role Switcher (for defense testing only) */}
+            <div style={{ marginTop: '16px', textAlign: 'center' }}>
+              <button
+                type="button"
+                onClick={() => setShowDemoRoles(prev => !prev)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  color: '#64748b',
+                  cursor: 'pointer',
+                  padding: '4px 8px',
+                  textDecoration: 'underline',
+                  textUnderlineOffset: '3px',
+                }}
+              >
+                {showDemoRoles ? 'Hide Demo Role Switcher' : 'Team Demo Mode (Switch Role)'}
+              </button>
+            </div>
+
+            {showDemoRoles && (
+              <div
+                className="fa-animate-in"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                  marginTop: '12px',
+                }}
+              >
+                {[
+                  {
+                    id: 'demo-login-admin',
+                    role: 'admin',
+                    title: 'City Veterinarian (Admin)',
+                    badge: 'Full Access',
+                    desc: 'Full Command Center · Barangay Masterlist · Outbreak Resolution',
+                    border: '#f59e0b',
+                    bg: '#fffdf5',
+                    badgeBg: '#fef3c7',
+                    badgeColor: '#b45309',
+                  },
+                  {
+                    id: 'demo-login-staff',
+                    role: 'cvo_staff',
+                    title: 'Veterinary Inspector (Staff)',
+                    badge: 'Field Ops',
+                    desc: 'Field Operations · Blood Sample & Lab Results · Biosecurity Inspection',
+                    border: '#3b82f6',
+                    bg: '#f8faff',
+                    badgeBg: '#dbeafe',
+                    badgeColor: '#1d4ed8',
+                  },
+                  {
+                    id: 'demo-login-farmer',
+                    role: 'farmer',
+                    title: 'Livestock Raiser (Farmer)',
+                    badge: 'Farmer Portal',
+                    desc: 'Mobile Farm Dossier · Report Sick Animals · Barangay Advisory',
+                    border: '#16a34a',
+                    bg: '#f6fdf8',
+                    badgeBg: '#dcfce7',
+                    badgeColor: '#15803d',
+                  },
+                ].map((item) => {
+                  const active = selectedRole === item.role;
+                  return (
+                    <button
+                      key={item.role}
+                      id={item.id}
+                      type="button"
+                      disabled={isLoading}
+                      onClick={() => handleGoogleSignIn(item.role)}
+                      style={{
+                        width: '100%',
+                        textAlign: 'left',
+                        padding: '12px 14px',
+                        borderRadius: '10px',
+                        border: active ? `2px solid ${item.border}` : '1.5px solid #e2e8f0',
+                        background: active ? item.bg : '#ffffff',
+                        cursor: isLoading ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                        <span style={{ fontSize: '0.86rem', fontWeight: 700, color: '#0f172a' }}>
+                          {item.title}
+                        </span>
+                        <span style={{
+                          fontSize: '10px',
+                          fontWeight: 700,
+                          padding: '2px 7px',
+                          borderRadius: '999px',
+                          background: item.badgeBg,
+                          color: item.badgeColor,
+                        }}>
+                          {item.badge}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.74rem', color: '#64748b', marginTop: '3px', lineHeight: 1.4 }}>
+                        {item.desc}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Footer */}
             <p

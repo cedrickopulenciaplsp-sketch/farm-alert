@@ -431,5 +431,76 @@ html.dark .notifIconReport   { background: hsl(30,50%,20%); color: hsl(30,80%,75
   transition: background 120ms;
 }
 
+.menuBtn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 .viewAllBtn:hover { background: var(--color-brand-light); }
+
+/* ── Mobile Navbar Responsiveness ──────────────────────────────────────── */
+@media (max-width: 900px) {
+  .menuBtn {
+    display: inline-flex;
+  }
+
+  .navbar {
+    padding: 0 1rem;
+    gap: 0.5rem;
+  }
+
+  .titleGroup {
+    min-width: 0;
+    flex: 1;
+    gap: 0.5rem;
+  }
+
+  .title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .actions {
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .navbar {
+    height: 56px;
+    padding: 0 0.75rem;
+  }
+
+  .title {
+    font-size: 0.95rem;
+  }
+
+  .threatBadge {
+    display: none;
+  }
+
+  .profile {
+    padding: 0.2rem;
+  }
+
+  .profileInfo {
+    display: none;
+  }
+
+  .notifPanel {
+    width: min(340px, calc(100vw - 1.5rem));
+    right: -42px;
+  }
+}
 
