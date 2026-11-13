@@ -188,3 +188,27 @@
   gap: 0.625rem;
   padding-top: 0.25rem;
 }
+
+/* ── Locked farm readout (Farmer Portal) ─────────────────── */
+.lockedFarmBox {
+  padding: 0.5625rem 0.875rem;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  background: var(--color-overlay);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+}
+
+/* ── Responsive 2-col input row ───────────────────────────── */
+.twoColGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.875rem;
+}
+
+@media (max-width: 480px) {
+  .twoColGrid {
+    grid-template-columns: 1fr;
+  }
+}

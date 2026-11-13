@@ -111,7 +111,7 @@ export default function FarmerPortal() {
     );
   }
 
-  const bioStatus = latestCompliance?.status || 'Compliant';
+  const bioStatus = latestCompliance?.status || 'Not Yet Inspected';
   const bioCls =
     bioStatus === 'Compliant'
       ? styles.bioCompliant
@@ -160,7 +160,10 @@ export default function FarmerPortal() {
             id="farmer-report-sick-animals-btn"
             type="button"
             className={styles.reportEmergencyBtn}
+            disabled={!selectedFarm}
             onClick={() => setReportModalOpen(true)}
+            style={!selectedFarm ? { opacity: 0.55, cursor: 'not-allowed' } : undefined}
+            title={!selectedFarm ? 'No registered farm is linked to your account yet' : 'Report sick animals'}
           >
             <Siren size={18} weight="fill" aria-hidden="true" />
             + Report Sick Animals
@@ -200,7 +203,21 @@ export default function FarmerPortal() {
       )}
 
       {/* ── Task 4.2: My Farm Dossier & Biosecurity Status Card ──────────── */}
-      {selectedFarm && (
+      {!selectedFarm ? (
+        <Card>
+          <Card.Body>
+            <div style={{ textAlign: 'center', padding: '1.5rem 1rem', color: 'var(--color-text-muted)' }}>
+              <Tractor size={32} style={{ margin: '0 auto 0.5rem', opacity: 0.6 }} />
+              <p style={{ fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: 4 }}>
+                No Registered Farm Linked Yet
+              </p>
+              <p style={{ fontSize: '0.85rem' }}>
+                Please ask the San Pablo City Veterinary Office Admin to link your Google account to your registered farm in User Accounts.
+              </p>
+            </div>
+          </Card.Body>
+        </Card>
+      ) : (
         <div className={styles.topGrid}>
           <Card>
             <Card.Header title="My Farm Dossier" />

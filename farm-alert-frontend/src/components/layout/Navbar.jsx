@@ -105,12 +105,12 @@ function NotificationItem({ notif, onRead, onClear, onNavigate }) {
 // ---------------------------------------------------------------------------
 // Notifications dropdown panel
 // ---------------------------------------------------------------------------
-function NotificationsPanel({ onClose }) {
+function NotificationsPanel({ onClose, role }) {
   const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotification } = useNotifications();
   const navigate = useNavigate();
 
   function handleNavigate(link) {
-    navigate(link);
+    navigate(role === 'farmer' ? '/farmer-portal' : link);
     onClose();
   }
 
@@ -163,9 +163,9 @@ function NotificationsPanel({ onClose }) {
         <div className={styles.notifFooter}>
           <button
             className={styles.viewAllBtn}
-            onClick={() => handleNavigate('/outbreaks')}
+            onClick={() => handleNavigate(role === 'farmer' ? '/farmer-portal' : '/outbreaks')}
           >
-            View all outbreak alerts →
+            {role === 'farmer' ? 'View My Farm Portal →' : 'View all outbreak alerts →'}
           </button>
         </div>
       )}
@@ -296,7 +296,7 @@ export default function Navbar({ title = 'Dashboard', onMenuToggle }) {
           </button>
 
           {notifOpen && (
-            <NotificationsPanel onClose={() => setNotifOpen(false)} />
+            <NotificationsPanel onClose={() => setNotifOpen(false)} role={role} />
           )}
         </div>
 

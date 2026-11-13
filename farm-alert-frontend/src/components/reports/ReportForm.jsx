@@ -38,9 +38,11 @@ const INITIAL_ERRORS = {
 // @param {string}   [prefilledFarmId] - optional farm_id to preselect & lock (for Farmer Portal)
 // ---------------------------------------------------------------------------
 export default function ReportForm({ onSuccess, onCancel, prefilledFarmId = '' }) {
-  const { user } = useAuth();
+  const { userRole, userFarmId } = useAuth();
+  const lockedFarmId = prefilledFarmId || (userRole === 'farmer' ? userFarmId : '') || '';
+  const isFarmLocked = Boolean(lockedFarmId) || userRole === 'farmer';
 
-  const [form,     setForm]     = useState({ ...INITIAL_FORM, farm_id: prefilledFarmId || '' });
+  const [form,     setForm]     = useState({ ...INITIAL_FORM, farm_id: lockedFarmId });
   const [errors,   setErrors]   = useState(INITIAL_ERRORS);
   const [farms,    setFarms]    = useState([]);
   const [diseases, setDiseases] = useState([]);
@@ -64,10 +66,10 @@ export default function ReportForm({ onSuccess, onCancel, prefilledFarmId = '' }
   }, []);
 
   useEffect(() => {
-    if (prefilledFarmId) {
-      setForm((prev) => ({ ...prev, farm_id: prefilledFarmId }));
+    if (lockedFarmId) {
+      setForm((prev) => ({ ...prev, farm_id: lockedFarmId }));
     }
-  }, [prefilledFarmId]);
+  }, [lockedFarmId]);
 
   const selectedFarm = farms.find(f => f.farm_id === form.farm_id) ?? null;
 
@@ -163,8 +165,11 @@ export default function ReportForm({ onSuccess, onCancel, prefilledFarmId = '' }
 
     const affected = Number(form.animals_affected) || 0;
     const deaths   = Number(form.mortalities) || 0;
-    if (affected < 0) {
-      newErrors.animals_affected = 'Must be 0 or greater.';
+    if (affected < 1) {
+      newErrors.animals_affected = 'At least 1 affected animal is required.';
+      valid = false;
+    } else if (selectedFarm && selectedFarm.head_count > 0 && affected > selectedFarm.head_count) {
+      newErrors.animals_affected = `Cannot exceed the farm's total head count (${selectedFarm.head_count}).`;
       valid = false;
     }
     if (deaths < 0) {
@@ -220,36 +225,52 @@ export default function ReportForm({ onSuccess, onCancel, prefilledFarmId = '' }
         <span className={styles.sectionLabel}>Incident Details</span>
       </div>
 
-      {/* Farm select */}
-      <Select
-        id="report-farm"
-        name="farm_id"
-        label="Farm"
-        required
-        value={form.farm_id}
-        onChange={handleChange}
-        error={errors.farm_id}
-        disabled={loading || submit}
-      >
-        <option value="" disabled>
-          {loading ? 'Loading farms…' : 'Select a farm'}
-        </option>
-        {farms.map(f => {
-          const isClosed = f.status === 'Temporarily Closed' || f.farm_status === 'Temporarily Closed';
-          const isInactive = f.status === 'Inactive';
-          const isDisabled = isClosed || isInactive;
-          const statusSuffix = isClosed
-            ? ' (Temporarily Closed — Inactive)'
-            : isInactive
-            ? ' (Inactive)'
-            : '';
-          return (
-            <option key={f.farm_id} value={f.farm_id} disabled={isDisabled}>
-              {f.farm_name} — {f.barangay_name}{statusSuffix}
-            </option>
-          );
-        })}
-      </Select>
+      {/* Farm field: locked to farmer's holding in Farmer Portal, selectable for CVO staff/admin */}
+      {isFarmLocked ? (
+        <div className={styles.fieldBlock}>
+          <label className={styles.fieldLabel}>
+            Registered Farm<span className={styles.required}>*</span>
+          </label>
+          <div className={styles.lockedFarmBox}>
+            {loading
+              ? 'Loading your farm details…'
+              : selectedFarm
+              ? `${selectedFarm.farm_name} — Brgy. ${selectedFarm.barangay_name}`
+              : 'No registered farm linked to your account'}
+          </div>
+          {errors.farm_id && <span className={styles.fieldError}>{errors.farm_id}</span>}
+        </div>
+      ) : (
+        <Select
+          id="report-farm"
+          name="farm_id"
+          label="Farm"
+          required
+          value={form.farm_id}
+          onChange={handleChange}
+          error={errors.farm_id}
+          disabled={loading || submit}
+        >
+          <option value="" disabled>
+            {loading ? 'Loading farms…' : 'Select a farm'}
+          </option>
+          {farms.map(f => {
+            const isClosed = f.status === 'Temporarily Closed' || f.farm_status === 'Temporarily Closed';
+            const isInactive = f.status === 'Inactive';
+            const isDisabled = isClosed || isInactive;
+            const statusSuffix = isClosed
+              ? ' (Temporarily Closed — Inactive)'
+              : isInactive
+              ? ' (Inactive)'
+              : '';
+            return (
+              <option key={f.farm_id} value={f.farm_id} disabled={isDisabled}>
+                {f.farm_name} — {f.barangay_name}{statusSuffix}
+              </option>
+            );
+          })}
+        </Select>
+      )}
 
       {/* Disease select */}
       <Select
@@ -273,7 +294,7 @@ export default function ReportForm({ onSuccess, onCancel, prefilledFarmId = '' }
       </Select>
 
       {/* Animals Affected & Mortalities (Task 1.2) */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
+      <div className={styles.twoColGrid}>
         <Input
           id="report-animals-affected"
           name="animals_affected"
