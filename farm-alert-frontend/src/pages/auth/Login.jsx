@@ -299,16 +299,16 @@ export default function Login() {
     <>
       <style>{`
         @media (max-width: 1024px) {
-          .auth-layout { flex-direction: column !important; height: auto !important; min-height: 100dvh !important; }
-          .auth-left { flex: none !important; padding: 28px 24px !important; }
-          .auth-right { flex: 1 !important; padding: 28px 24px 36px !important; box-shadow: none !important; overflow-y: visible !important; }
+          .auth-layout { flex-direction: column !important; height: auto !important; min-height: 100dvh !important; overflow-x: hidden !important; }
+          .auth-left { flex: none !important; width: 100% !important; padding: 28px 24px !important; }
+          .auth-right { flex: 1 !important; width: 100% !important; padding: 32px 24px 44px !important; box-shadow: none !important; overflow: hidden !important; align-items: flex-start !important; }
+          .auth-card { margin: 0 auto !important; }
         }
         @media (max-width: 768px) {
           .auth-left { padding: 16px 20px !important; }
           .auth-left-body, .auth-left-footer { display: none !important; }
           .auth-mobile-sub { display: block !important; }
-          .auth-right { padding: 24px 18px 32px !important; align-items: flex-start !important; }
-          .auth-card { margin: 0 auto !important; }
+          .auth-right { padding: 24px 18px 32px !important; }
         }
         @keyframes login-spin {
           to { transform: rotate(360deg); }
@@ -317,7 +317,9 @@ export default function Login() {
 
       <div className="auth-layout" style={{
         display: 'flex',
+        width: '100%',
         minHeight: '100dvh',
+        overflowX: 'hidden',
         fontFamily: 'var(--font-body)',
         background: '#ffffff',
       }}>
@@ -335,10 +337,13 @@ export default function Login() {
           boxShadow: '-10px 0 40px rgba(0,0,0,0.06)',
           zIndex: 20,
           overflowY: 'auto',
+          overflowX: 'hidden',
           position: 'relative',
         }}>
-          {/* Faint animated virus icons */}
-          <VirusBackground />
+          {/* Clipped layer for faint animated virus icons so they never cause horizontal scroll */}
+          <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+            <VirusBackground />
+          </div>
 
           <div className="auth-card" style={{ width: '100%', maxWidth: '420px', position: 'relative', zIndex: 10, margin: 'auto 0' }}>
             {/* Vet caduceus icon */}
