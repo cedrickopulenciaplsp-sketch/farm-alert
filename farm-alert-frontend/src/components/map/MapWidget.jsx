@@ -44,12 +44,11 @@ export function hasActiveIncident(farm) {
 }
 
 /**
- * 1 km Infected Zone and 7 km Surveillance Zone rings are drawn ONLY for
- * confirmed outbreaks (Positive RADDL result) or active quarantine checkpoints.
+ * 1 km Infected Zone and 7 km Surveillance Zone rings are drawn for every
+ * farm with an active (non-Resolved, non-Negative) incident.
  */
 export function hasQuarantineZones(farm) {
-  if (!hasActiveIncident(farm)) return false;
-  return farm.lab_result === 'Positive' || farm.checkpoint_issued === true;
+  return hasActiveIncident(farm);
 }
 
 function resolveIcon(farm) {
