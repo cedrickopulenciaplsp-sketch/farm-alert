@@ -22,7 +22,11 @@ const DEFAULT_ZOOM   = 13;
 // ---------------------------------------------------------------------------
 function MapEventHandler({ onLocationSelect }) {
   useMapEvents({
-    click(e) { onLocationSelect(e.latlng.lat, e.latlng.lng); },
+    click(e) {
+      const target = e.originalEvent?.target;
+      if (target?.closest?.('[data-map-control="true"], .leaflet-control')) return;
+      onLocationSelect(e.latlng.lat, e.latlng.lng);
+    },
   });
   return null;
 }

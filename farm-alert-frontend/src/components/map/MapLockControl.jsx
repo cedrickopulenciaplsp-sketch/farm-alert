@@ -1,10 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
+import L from 'leaflet';
 import { Lock, LockOpen as Unlock } from '@phosphor-icons/react';
 
 export default function MapLockControl() {
   const map = useMap();
   const [isLocked, setIsLocked] = useState(true);
+  const buttonRef = useRef(null);
+
+  // Prevent map clicks / drag / scroll from propagating through the lock button
+  useEffect(() => {
+    const el = buttonRef.current;
+    if (!el) return;
+    L.DomEvent.disableClickPropagation(el);
+    L.DomEvent.disableScrollPropagation(el);
+  }, []);
 
   // Apply the lock state to the map's scroll wheel zoom behavior
   useEffect(() => {
@@ -16,7 +26,10 @@ export default function MapLockControl() {
   }, [isLocked, map]);
 
   return (
-    <div 
+    <button
+      ref={buttonRef}
+      type="button"
+      data-map-control="true"
       style={{
         position: 'absolute',
         top: '16px',
@@ -36,15 +49,18 @@ export default function MapLockControl() {
       }}
       onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-overlay, #f1f5f9)'; }}
       onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--color-surface, #fff)'; }}
+      onMouseDown={(e) => {
+        e.stopPropagation();
+      }}
       onClick={(e) => {
         e.stopPropagation();
-        setIsLocked(!isLocked);
+        e.preventDefault();
+        setIsLocked(prev => !prev);
       }}
-      onDoubleClick={(e) => e.stopPropagation()}
-      onMouseDown={(e) => e.stopPropagation()}
       title={isLocked ? "Scroll zoom locked. Click to unlock." : "Scroll zoom unlocked. Click to lock."}
+      aria-label={isLocked ? "Unlock scroll zoom" : "Lock scroll zoom"}
     >
       {isLocked ? <Lock size={18} /> : <Unlock size={18} />}
-    </div>
+    </button>
   );
 }
