@@ -94,11 +94,11 @@ function FarmRow({ farm, onEdit, onViewDossier }) {
           id={`dossier-farm-${farm.farm_id}`}
           className={styles.dossierBtn}
           onClick={() => onViewDossier(farm.farm_id)}
-          aria-label={`View dossier for ${farm.farm_name}`}
-          title="View 360° Dossier"
+          aria-label={`View profile for ${farm.farm_name}`}
+          title="View Farm Profile & History"
         >
           <BookOpen size={14} />
-          <span>Dossier</span>
+          <span>Profile</span>
         </button>
         <button
           id={`edit-farm-${farm.farm_id}`}

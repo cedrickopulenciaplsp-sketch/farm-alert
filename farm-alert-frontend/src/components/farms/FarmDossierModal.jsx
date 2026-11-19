@@ -88,7 +88,7 @@ export default function FarmDossierModal({ farmId, onClose }) {
     setError(null);
 
     getFarmDossier(farmId).then(({ farm: f, reports: r, error: e }) => {
-      if (e) { setError('Failed to load farm dossier.'); }
+      if (e) { setError('Failed to load farm profile.'); }
       else   { setFarm(f); setReports(r); }
       setLoading(false);
     });
@@ -116,7 +116,7 @@ export default function FarmDossierModal({ farmId, onClose }) {
         className={styles.panel}
         role="dialog"
         aria-modal="true"
-        aria-label={farm ? `${farm.farm_name} 360° Dossier` : 'Farm Dossier'}
+        aria-label={farm ? `${farm.farm_name} Profile & History` : 'Farm Profile'}
       >
         {/* ── Modal Header ───────────────────────────────────────── */}
         <div className={styles.header}>
@@ -125,7 +125,7 @@ export default function FarmDossierModal({ farmId, onClose }) {
               <Warehouse size={18} />
             </div>
             <div>
-              <p className={styles.headerEyebrow}>Farm 360° Dossier</p>
+              <p className={styles.headerEyebrow}>Farm Profile &amp; History</p>
               <h2 className={styles.headerTitle}>
                 {loading ? 'Loading…' : (farm?.farm_name ?? 'Farm Details')}
                 {farm?.has_active_checkpoint && (
@@ -137,7 +137,7 @@ export default function FarmDossierModal({ farmId, onClose }) {
           <button
             className={styles.closeBtn}
             onClick={onClose}
-            aria-label="Close dossier"
+            aria-label="Close farm profile"
           >
             <X size={18} />
           </button>
@@ -148,7 +148,7 @@ export default function FarmDossierModal({ farmId, onClose }) {
           {loading ? (
             <div className={styles.loadingState}>
               <Loader2 size={28} className={styles.spinner} />
-              <p>Loading farm dossier…</p>
+              <p>Loading farm profile…</p>
             </div>
           ) : error ? (
             <div className={styles.errorState}>

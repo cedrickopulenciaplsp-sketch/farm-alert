@@ -220,7 +220,7 @@ export default function FarmerPortal() {
       ) : (
         <div className={styles.topGrid}>
           <Card>
-            <Card.Header title="My Farm Dossier" />
+            <Card.Header title="My Farm Profile" />
             <Card.Body>
               <div className={styles.dossierGrid}>
                 <div className={styles.dossierItem}>
