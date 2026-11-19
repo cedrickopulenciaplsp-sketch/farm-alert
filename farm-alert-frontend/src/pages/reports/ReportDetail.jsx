@@ -14,8 +14,10 @@ import {
   CheckCircle as CheckCircle2,
   Heartbeat as Activity,
   Clock,
+  Flask,
 } from '@phosphor-icons/react';
 import { getReportById, updateReport } from '../../services/reports';
+import { parseDiffDiagFromNotes } from '../../services/outbreaks';
 import { writeAuditLog } from '../../services/admin';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/shared/Button';
@@ -167,6 +169,7 @@ export default function ReportDetail() {
   if (!report) return null;
 
   const isResolved = report.status === 'Resolved';
+  const diffDiag   = parseDiffDiagFromNotes(report.additional_notes);
 
   // ── Full render ───────────────────────────────────────────────────────────
   return (
@@ -199,6 +202,21 @@ export default function ReportDetail() {
         <StatusBadge status={report.status} />
       </header>
 
+      {/* ── Differential Diagnosis Banner (if reclassified by RADDL) ──────── */}
+      {diffDiag.hasDiffDiag && (
+        <div className={styles.diffDiagBanner}>
+          <Flask size={16} aria-hidden="true" className={styles.diffDiagIcon} />
+          <div className={styles.diffDiagContent}>
+            <span className={styles.diffDiagTitle}>RADDL Differential Diagnosis Reclassification</span>
+            <span className={styles.diffDiagDesc}>
+              Initial Presumptive Report: <strong>{diffDiag.presumptiveDisease}</strong>
+              {' -> '}Definitive Confirmed Pathogen: <strong>{report.disease_name}</strong>
+              {diffDiag.labRef ? ` (RADDL Ref: ${diffDiag.labRef})` : ''}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* ── Main grid ──────────────────────────────────────────────────────── */}
       <div className={styles.grid}>
 
@@ -207,9 +225,17 @@ export default function ReportDetail() {
           <Card className={styles.infoCard}>
             <Card.Header title="Report Information" className={styles.cardHeader} />
             <Card.Body className={styles.infoBody}>
-              <InfoRow icon={Bug} label="Disease">
+              <InfoRow icon={Bug} label={diffDiag.hasDiffDiag ? 'Confirmed Disease' : 'Disease'}>
                 <span className={styles.valueText}>{report.disease_name}</span>
               </InfoRow>
+              {diffDiag.hasDiffDiag && (
+                <InfoRow icon={Flask} label="Initial Presumptive">
+                  <span className={styles.valueText}>
+                    {diffDiag.presumptiveDisease}
+                    {diffDiag.labRef ? ` (Ref: ${diffDiag.labRef})` : ''}
+                  </span>
+                </InfoRow>
+              )}
               <InfoRow icon={MapPin} label="Farm">
                 <div>
                   <span className={styles.valueText}>{report.farm_name}</span>
@@ -245,7 +271,7 @@ export default function ReportDetail() {
           </Card>
 
           {/* Clinical notes */}
-          {report.additional_notes && (
+          {diffDiag.cleanNotes && (
             <Card className={styles.notesCard}>
               <Card.Header className={styles.cardHeader}>
                 <div className={styles.cardHeaderInner}>
@@ -254,7 +280,7 @@ export default function ReportDetail() {
                 </div>
               </Card.Header>
               <Card.Body>
-                <p className={styles.clinicalNotes}>{report.additional_notes}</p>
+                <p className={styles.clinicalNotes}>{diffDiag.cleanNotes}</p>
               </Card.Body>
             </Card>
           )}

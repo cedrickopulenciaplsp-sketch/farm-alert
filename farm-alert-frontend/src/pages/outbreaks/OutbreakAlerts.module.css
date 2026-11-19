@@ -787,3 +787,253 @@ input[type="date"].sopInput::-webkit-calendar-picker-indicator:hover {
   background: var(--color-success-light, rgba(34, 197, 94, 0.12));
   color: var(--color-success, #22c55e);
 }
+
+/* ============================================================
+   RADDL Differential Diagnosis (Presumptive vs Confirmed)
+   ============================================================ */
+
+.diffDiagBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: var(--radius-sm);
+  background: hsl(212, 85%, 96%);
+  border: 1px solid hsl(212, 75%, 82%);
+  color: hsl(212, 75%, 24%);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+
+.diffDiagBannerIcon {
+  color: hsl(212, 75%, 42%);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.diffDiagBannerBody {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.diffDiagBannerLabel {
+  font-weight: 700;
+  color: hsl(212, 80%, 28%);
+}
+
+.diffDiagBannerText {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.presumptiveTag {
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  background: hsl(42, 90%, 88%);
+  color: hsl(32, 85%, 26%);
+  font-weight: 700;
+}
+
+.confirmedTag {
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  background: hsl(4, 78%, 91%);
+  color: hsl(4, 74%, 34%);
+  font-weight: 700;
+}
+
+.labRefPill {
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.step3Stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  width: 100%;
+}
+
+.diffDiagStepRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding-top: 0.35rem;
+  border-top: 1px dashed var(--color-border);
+}
+
+.diffDiagStepHint {
+  font-size: 11.5px;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.diffDiagBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.65rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid hsl(212, 70%, 75%);
+  background: hsl(212, 85%, 96%);
+  color: hsl(212, 75%, 32%);
+  font-family: var(--font-body);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+  white-space: nowrap;
+}
+
+.diffDiagBtn:hover:not(:disabled) {
+  background: hsl(212, 85%, 91%);
+  border-color: hsl(212, 70%, 60%);
+}
+
+.diffDiagBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Modal form layout */
+.diffDiagForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+}
+
+.presumptiveBox {
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-overlay);
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.presumptiveBoxHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.presumptiveBoxTitle {
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.presumptiveBadge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: hsl(42, 90%, 88%);
+  color: hsl(32, 85%, 26%);
+}
+
+.presumptiveBoxValue {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.diffDiagError {
+  font-size: var(--text-xs);
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+/* Dark Mode Overrides for Differential Diagnosis & Badges */
+:global(html.dark) .diffDiagBanner {
+  background: rgba(30, 58, 138, 0.25);
+  border-color: rgba(59, 130, 246, 0.35);
+  color: #dbeafe;
+}
+
+:global(html.dark) .diffDiagBannerIcon {
+  color: #60a5fa;
+}
+
+:global(html.dark) .diffDiagBannerLabel {
+  color: #93c5fd;
+}
+
+:global(html.dark) .presumptiveTag {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+}
+
+:global(html.dark) .confirmedTag {
+  background: rgba(239, 68, 68, 0.22);
+  color: #fca5a5;
+}
+
+:global(html.dark) .labRefPill {
+  background: rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+}
+
+:global(html.dark) .diffDiagBtn {
+  background: rgba(30, 58, 138, 0.35);
+  border-color: rgba(59, 130, 246, 0.45);
+  color: #93c5fd;
+}
+
+:global(html.dark) .diffDiagBtn:hover:not(:disabled) {
+  background: rgba(37, 99, 235, 0.45);
+  border-color: rgba(96, 165, 250, 0.65);
+  color: #dbeafe;
+}
+
+:global(html.dark) .presumptiveBadge {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+}
+
+:global(html.dark) .authorityAdmin {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fcd34d;
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+:global(html.dark) .authorityStaff {
+  background: rgba(59, 130, 246, 0.18);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+:global(html.dark) .stageSuspected {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+}
+
+:global(html.dark) .stageInvestigating {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+
+:global(html.dark) .stageConfirmed {
+  background: rgba(239, 68, 68, 0.22);
+  color: #fca5a5;
+}
+
+:global(html.dark) .stageCleared {
+  background: rgba(34, 197, 94, 0.2);
+  color: #86efac;
+}

@@ -14,7 +14,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useRealtime } from '../../hooks/useRealtime';
 import { getFarms } from '../../services/farms';
 import { getReports } from '../../services/reports';
-import { getOutbreaks } from '../../services/outbreaks';
+import { getOutbreaks, parseDiffDiagFromNotes } from '../../services/outbreaks';
 import { getComplianceLogs } from '../../services/compliance';
 import Card from '../../components/shared/Card';
 import Modal from '../../components/shared/Modal';
@@ -296,6 +296,14 @@ export default function FarmerPortal() {
                 const hasBloodSample = Boolean(linkedAlert?.blood_sample_taken_date) || linkedAlert?.status === 'Acknowledged' || isResolved;
                 const labResult      = linkedAlert?.lab_result || (isResolved ? 'Negative' : 'Pending');
 
+                const parsedDiff = parseDiffDiagFromNotes(report.additional_notes);
+                const presumptiveDisease =
+                  parsedDiff.presumptiveDisease ||
+                  (linkedAlert?.presumptive_disease_name && linkedAlert.presumptive_disease_name !== report.disease_name
+                    ? linkedAlert.presumptive_disease_name
+                    : null);
+                const labRef = parsedDiff.labRef || linkedAlert?.lab_reference || null;
+
                 const dateStr = report.date_reported
                   ? new Date(report.date_reported).toLocaleDateString('en-PH', {
                       year: 'numeric', month: 'short', day: 'numeric',
@@ -307,6 +315,12 @@ export default function FarmerPortal() {
                     <div className={styles.trackerHeader}>
                       <div>
                         <h3 className={styles.trackerDisease}>{report.disease_name}</h3>
+                        {presumptiveDisease && presumptiveDisease !== report.disease_name && (
+                          <div style={{ fontSize: '0.775rem', color: 'var(--color-brand)', fontWeight: 600, marginTop: '2px' }}>
+                            RADDL Differential Diagnosis: Originally reported as Suspected {presumptiveDisease}
+                            {labRef ? ` (Ref: ${labRef})` : ''}
+                          </div>
+                        )}
                         <span className={styles.trackerMeta}>
                           Reported {dateStr} · <strong>{report.animals_affected ?? 0} sick</strong>
                           {Number(report.mortalities) > 0 ? ` · ${report.mortalities} dead` : ''}

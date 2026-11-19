@@ -18,14 +18,15 @@ import {
   ShieldCheck,
 } from '@phosphor-icons/react';
 import { supabase } from '../../lib/supabase';
-import { getOutbreaks, updateOutbreak } from '../../services/outbreaks';
+import { getOutbreaks, updateOutbreak, reclassifyOutbreakDisease } from '../../services/outbreaks';
+import { getDiseases } from '../../services/diseases';
 import { writeAuditLog } from '../../services/admin';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/shared/Button';
 import Card from '../../components/shared/Card';
 import SkeletonLoader from '../../components/shared/SkeletonLoader';
 import Modal from '../../components/shared/Modal';
-import { Select } from '../../components/shared/FormElements';
+import { Select, Input } from '../../components/shared/FormElements';
 import styles from './OutbreakAlerts.module.css';
 
 // ---------------------------------------------------------------------------
@@ -181,7 +182,7 @@ function Step({ num, title, authority, state = '', children }) {
 // ---------------------------------------------------------------------------
 // IncidentCard
 // ---------------------------------------------------------------------------
-function IncidentCard({ outbreak, onDispatch, onResolve, onSopUpdate, isAdmin }) {
+function IncidentCard({ outbreak, onDispatch, onResolve, onSopUpdate, onOpenDiffDiag, isAdmin }) {
   const [busy, setBusy]               = useState(false);
   const [sopUpdating, setSopUpdating] = useState(false);
   const [bloodDate, setBloodDate]     = useState(outbreak.blood_sample_taken_date || '');
@@ -200,6 +201,10 @@ function IncidentCard({ outbreak, onDispatch, onResolve, onSopUpdate, isAdmin })
   const farmLabel   = outbreak.farm_name || outbreak.affected_farms_list || 'Affected Farm';
   const sick        = Number(outbreak.total_animals_affected) || 0;
   const dead        = Number(outbreak.total_mortalities) || 0;
+  const hasDiffDiag = Boolean(
+    outbreak.presumptive_disease_name &&
+    outbreak.presumptive_disease_name !== outbreak.disease_name
+  );
 
   async function handleDispatch() {
     setBusy(true);
@@ -270,6 +275,25 @@ function IncidentCard({ outbreak, onDispatch, onResolve, onSopUpdate, isAdmin })
           </div>
           <StageBadge stage={stage} />
         </div>
+
+        {/* Differential Diagnosis Banner (Presumptive vs Confirmed) */}
+        {hasDiffDiag && (
+          <div className={styles.diffDiagBanner}>
+            <Flask size={14} aria-hidden="true" className={styles.diffDiagBannerIcon} />
+            <div className={styles.diffDiagBannerBody}>
+              <span className={styles.diffDiagBannerLabel}>RADDL Differential Diagnosis:</span>
+              <span className={styles.diffDiagBannerText}>
+                Initial Presumptive Report:{' '}
+                <strong className={styles.presumptiveTag}>{outbreak.presumptive_disease_name}</strong>
+                {' -> '}Definitive Lab Confirmation:{' '}
+                <strong className={styles.confirmedTag}>{outbreak.disease_name}</strong>
+                {outbreak.lab_reference && (
+                  <span className={styles.labRefPill}>Ref: {outbreak.lab_reference}</span>
+                )}
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Meta */}
         <div className={styles.metaRow}>
@@ -376,17 +400,41 @@ function IncidentCard({ outbreak, onDispatch, onResolve, onSopUpdate, isAdmin })
                 labResult === 'Negative' ? styles.stepDone : ''
               }
             >
-              <select
-                className={styles.sopInput}
-                value={labResult}
-                onChange={(e) => handleSopChange('labResult', e.target.value)}
-                disabled={!isDispatched || !bloodDate || sopUpdating || isClosed}
-                aria-label="RADDL laboratory result"
-              >
-                <option value="Pending">Pending — samples at laboratory</option>
-                <option value="Positive">Positive — Confirmed Outbreak</option>
-                <option value="Negative">Negative — Lab Cleared (no outbreak)</option>
-              </select>
+              <div className={styles.step3Stack}>
+                <select
+                  className={styles.sopInput}
+                  value={labResult}
+                  onChange={(e) => handleSopChange('labResult', e.target.value)}
+                  disabled={!isDispatched || !bloodDate || sopUpdating || isClosed}
+                  aria-label="RADDL laboratory result"
+                >
+                  <option value="Pending">Pending — samples at laboratory</option>
+                  <option value="Positive">Positive — Confirmed Outbreak</option>
+                  <option value="Negative">Negative — Lab Cleared (no outbreak)</option>
+                </select>
+
+                {isDispatched && bloodDate && !isClosed && (
+                  <div className={styles.diffDiagStepRow}>
+                    <span className={styles.diffDiagStepHint}>
+                      {hasDiffDiag
+                        ? `Presumptive: ${outbreak.presumptive_disease_name} -> Confirmed: ${outbreak.disease_name}`
+                        : 'Lab found a different pathogen than suspected?'}
+                    </span>
+                    <button
+                      type="button"
+                      id={`diff-diag-btn-${outbreak.outbreak_id}`}
+                      className={styles.diffDiagBtn}
+                      onClick={() => onOpenDiffDiag(outbreak)}
+                      disabled={sopUpdating}
+                    >
+                      <Flask size={13} aria-hidden="true" />
+                      {hasDiffDiag
+                        ? 'Update Differential Diagnosis'
+                        : 'Differential Diagnosis (Change Disease)'}
+                    </button>
+                  </div>
+                )}
+              </div>
             </Step>
 
             {/* Step 4 — Quarantine checkpoint (confirmed outbreaks only) */}
@@ -530,6 +578,121 @@ function ConfirmModal({ incident, onConfirm, onCancel, busy }) {
 }
 
 // ---------------------------------------------------------------------------
+// Differential Diagnosis modal (Option B: Presumptive vs Confirmed Disease)
+// ---------------------------------------------------------------------------
+function DifferentialDiagnosisModal({ incident, diseases, onConfirm, onCancel, busy, error }) {
+  const [selectedDiseaseId, setSelectedDiseaseId] = useState(() => incident?.disease_id || '');
+  const [labRef, setLabRef]                       = useState(() => incident?.lab_reference || '');
+
+  if (!incident) return null;
+
+  const presumptiveName = incident.presumptive_disease_name || incident.disease_name;
+  const farmLabel       = incident.farm_name || incident.affected_farms_list || 'Affected Farm';
+
+  // Filter diseases by the farm's livestock_type_id (1 = Swine, 2 = Poultry, 3 = Both)
+  const matchingDiseases = diseases.filter((d) => {
+    if (!incident.livestock_type_id || incident.livestock_type_id === 3) return true;
+    return d.livestock_type_id === incident.livestock_type_id || d.livestock_type_id === 3;
+  });
+
+  const selectedDiseaseObj  = diseases.find((d) => d.disease_id === selectedDiseaseId);
+  const selectedDiseaseName = selectedDiseaseObj?.disease_name || '';
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    if (!selectedDiseaseId || !selectedDiseaseName) return;
+    onConfirm({
+      newDiseaseId:   selectedDiseaseId,
+      newDiseaseName: selectedDiseaseName,
+      labRef,
+    });
+  }
+
+  return (
+    <Modal
+      isOpen={!!incident}
+      onClose={onCancel}
+      title="RADDL Differential Diagnosis"
+      size="md"
+      footer={
+        <div className={styles.confirmFooter}>
+          <Button id="diff-diag-cancel-btn" variant="secondary" onClick={onCancel} disabled={busy}>
+            Cancel
+          </Button>
+          <Button
+            id="diff-diag-save-btn"
+            variant="primary"
+            loading={busy}
+            disabled={!selectedDiseaseId || busy}
+            onClick={handleSubmit}
+          >
+            Confirm &amp; Update Diagnosis
+          </Button>
+        </div>
+      }
+    >
+      <form onSubmit={handleSubmit} className={styles.diffDiagForm}>
+        <p className={styles.confirmText}>
+          If RADDL laboratory testing ruled out the initial suspected disease and confirmed a different pathogen
+          at <strong>{farmLabel}</strong>, record the definitive diagnosis below. The original field suspicion will be preserved in the case record.
+        </p>
+
+        {/* Presumptive (Suspected) Disease — read-only box */}
+        <div className={styles.presumptiveBox}>
+          <div className={styles.presumptiveBoxHeader}>
+            <span className={styles.presumptiveBoxTitle}>Initial Presumptive Disease (Field Report)</span>
+            <span className={styles.presumptiveBadge}>Preserved in History</span>
+          </div>
+          <div className={styles.presumptiveBoxValue}>{presumptiveName}</div>
+        </div>
+
+        {/* Confirmed Disease Select */}
+        <Select
+          id="diff-diag-disease-select"
+          label="Definitive Confirmed Disease (RADDL Result)"
+          required
+          value={selectedDiseaseId}
+          onChange={(e) => setSelectedDiseaseId(e.target.value)}
+          disabled={busy}
+        >
+          <option value="" disabled>Select confirmed disease from library</option>
+          {matchingDiseases.map((d) => (
+            <option key={d.disease_id} value={d.disease_id}>
+              {d.disease_name}
+              {d.disease_name === presumptiveName ? ' (Original Presumptive)' : ''}
+            </option>
+          ))}
+        </Select>
+
+        {/* Optional RADDL Lab Sheet Reference */}
+        <Input
+          id="diff-diag-lab-ref"
+          label="RADDL Lab Sheet / Reference No. (Optional)"
+          placeholder="e.g. RADDL-4A-2026-089"
+          value={labRef}
+          onChange={(e) => setLabRef(e.target.value)}
+          disabled={busy}
+        />
+
+        {error && <p className={styles.diffDiagError}>{error}</p>}
+
+        <ul className={styles.confirmList}>
+          <li>
+            Retains <strong>{presumptiveName}</strong> as the initial presumptive diagnosis for syndromic surveillance accuracy.
+          </li>
+          <li>
+            Updates the active incident, linked report, and GIS Disease Map to <strong>{selectedDiseaseName || 'the confirmed pathogen'}</strong>.
+          </li>
+          <li>
+            Sets Step 3 RADDL Lab Result to <strong>Positive — Confirmed Outbreak</strong> and logs the reclassification in the <strong>Audit Trail</strong>.
+          </li>
+        </ul>
+      </form>
+    </Modal>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main page
 // ---------------------------------------------------------------------------
 export default function OutbreakAlerts() {
@@ -537,6 +700,7 @@ export default function OutbreakAlerts() {
   const isAdmin = role === 'admin';
 
   const [outbreaks, setOutbreaks] = useState([]);
+  const [diseases,  setDiseases]  = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [error,     setError]     = useState(null);
   const [viewMode,    setViewMode]    = useState('active');
@@ -545,12 +709,20 @@ export default function OutbreakAlerts() {
   const [pendingResolve, setPendingResolve] = useState(null);
   const [resolving,      setResolving]      = useState(false);
 
+  const [diffDiagTarget, setDiffDiagTarget] = useState(null);
+  const [diffDiagBusy,   setDiffDiagBusy]   = useState(false);
+  const [diffDiagError,  setDiffDiagError]  = useState('');
+
   const loadOutbreaks = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const { data, error: fetchError } = await getOutbreaks();
+    const [{ data, error: fetchError }, diseasesRes] = await Promise.all([
+      getOutbreaks(),
+      getDiseases(),
+    ]);
     if (fetchError) setError(fetchError.message);
     else            setOutbreaks(data ?? []);
+    if (diseasesRes.data) setDiseases(diseasesRes.data);
     setLoading(false);
   }, []);
 
@@ -625,6 +797,36 @@ export default function OutbreakAlerts() {
         targetId:    o.outbreak_id,
       });
     }
+  }
+
+  // Differential Diagnosis — reclassify confirmed pathogen while preserving presumptive report
+  function handleOpenDiffDiag(o) {
+    setDiffDiagError('');
+    setDiffDiagTarget(o);
+  }
+
+  async function handleConfirmDiffDiag({ newDiseaseId, newDiseaseName, labRef }) {
+    if (!diffDiagTarget) return;
+    setDiffDiagBusy(true);
+    setDiffDiagError('');
+
+    const { data, error: reclassErr } = await reclassifyOutbreakDisease({
+      outbreak:       diffDiagTarget,
+      newDiseaseId,
+      newDiseaseName,
+      labRef,
+      userId:         profile?.user_id,
+    });
+
+    if (reclassErr) {
+      setDiffDiagError(reclassErr.message || 'Failed to update differential diagnosis.');
+      setDiffDiagBusy(false);
+      return;
+    }
+
+    patchLocal(diffDiagTarget.outbreak_id, data);
+    setDiffDiagBusy(false);
+    setDiffDiagTarget(null);
   }
 
   // Final step — executive resolution (City Veterinarian only)
@@ -801,6 +1003,7 @@ export default function OutbreakAlerts() {
               onDispatch={handleDispatch}
               onResolve={setPendingResolve}
               onSopUpdate={handleSopUpdate}
+              onOpenDiffDiag={handleOpenDiffDiag}
               isAdmin={isAdmin}
             />
           ))}
@@ -812,6 +1015,21 @@ export default function OutbreakAlerts() {
         onConfirm={confirmResolve}
         onCancel={() => setPendingResolve(null)}
         busy={resolving}
+      />
+
+      <DifferentialDiagnosisModal
+        key={diffDiagTarget?.outbreak_id || 'closed'}
+        incident={diffDiagTarget}
+        diseases={diseases}
+        onConfirm={handleConfirmDiffDiag}
+        onCancel={() => {
+          if (!diffDiagBusy) {
+            setDiffDiagTarget(null);
+            setDiffDiagError('');
+          }
+        }}
+        busy={diffDiagBusy}
+        error={diffDiagError}
       />
     </div>
   );
