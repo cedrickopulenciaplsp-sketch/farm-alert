@@ -218,6 +218,9 @@ export default function FarmForm() {
   function handleChange(e) {
     const { name, value } = e.target;
     const updatedFields = { ...fields, [name]: value };
+    if (name === 'production_type' && value !== 'Others') {
+      updatedFields.production_type_other = '';
+    }
 
     // Task 1.4: Auto-fill coordinates when Barangay is selected
     if (name === 'barangay_id' && value) {
@@ -677,6 +680,7 @@ export default function FarmForm() {
                     name="production_type_other"
                     label="Please Specify Production Type"
                     required
+                    autoFocus
                     placeholder="e.g. Free-range native chicken"
                     value={fields.production_type_other}
                     onChange={handleChange}
