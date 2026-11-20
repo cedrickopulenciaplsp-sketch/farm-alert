@@ -10,11 +10,13 @@ import {
   CheckCircle as CheckCircle2,
   Prohibit as Ban,
   ArrowsClockwise as RefreshCw,
+  Trash,
 } from '@phosphor-icons/react';
 import {
   ROLE_LABELS,
   getAccounts,
   setAccountActive,
+  deleteAccount,
   normalizeEmail,
 } from '../../services/accounts';
 import { getFarms } from '../../services/farms';
@@ -45,6 +47,7 @@ export default function UserManagement() {
   const [modalOpen, setModalOpen]         = useState(false);
   const [editingAccount, setEditingAccount] = useState(null);
   const [togglingId, setTogglingId]       = useState(null);
+  const [deletingId, setDeletingId]       = useState(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -135,6 +138,21 @@ export default function UserManagement() {
       });
     }
     setTogglingId(null);
+  }
+
+  async function handleRemoveAccount(acc) {
+    setDeletingId(acc.account_id);
+    const { error: delErr } = await deleteAccount(acc.account_id, acc.email);
+    if (!delErr) {
+      setAccounts((prev) => prev.filter((row) => row.account_id !== acc.account_id));
+      await writeAuditLog({
+        userId:      profile?.user_id,
+        action:      `Removed authorized Google account '${acc.email}'`,
+        targetTable: 'users',
+        targetId:    String(acc.account_id),
+      });
+    }
+    setDeletingId(null);
   }
 
   function renderRoleBadge(role) {
@@ -375,25 +393,38 @@ export default function UserManagement() {
                             Edit
                           </Button>
                           {!isSelf && acc.role !== 'admin' && (
-                            <Button
-                              id={`toggle-account-${acc.account_id}`}
-                              variant="ghost"
-                              size="sm"
-                              loading={togglingId === acc.account_id}
-                              onClick={() => handleToggleStatus(acc)}
-                            >
-                              {acc.is_active ? (
-                                <>
-                                  <Ban size={13} aria-hidden="true" />
-                                  Suspend
-                                </>
-                              ) : (
-                                <>
-                                  <CheckCircle2 size={13} aria-hidden="true" />
-                                  Activate
-                                </>
-                              )}
-                            </Button>
+                            <>
+                              <Button
+                                id={`toggle-account-${acc.account_id}`}
+                                variant="ghost"
+                                size="sm"
+                                loading={togglingId === acc.account_id}
+                                onClick={() => handleToggleStatus(acc)}
+                              >
+                                {acc.is_active ? (
+                                  <>
+                                    <Ban size={13} aria-hidden="true" />
+                                    Suspend
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle2 size={13} aria-hidden="true" />
+                                    Activate
+                                  </>
+                                )}
+                              </Button>
+                              <Button
+                                id={`remove-account-${acc.account_id}`}
+                                variant="ghost"
+                                size="sm"
+                                loading={deletingId === acc.account_id}
+                                onClick={() => handleRemoveAccount(acc)}
+                                style={{ color: 'var(--color-danger)' }}
+                              >
+                                <Trash size={13} aria-hidden="true" />
+                                Remove
+                              </Button>
+                            </>
                           )}
                         </div>
                       </td>

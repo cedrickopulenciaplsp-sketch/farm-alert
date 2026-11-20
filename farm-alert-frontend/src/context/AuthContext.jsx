@@ -44,11 +44,22 @@ async function resolveAccess(authUser) {
   ]);
 
   if (accessRes.data) {
+    const resolvedRole = normalizeRole(accessRes.data.role);
+    // One-time cleanup of the legacy system-seeded row for morenongkups@gmail.com when Admin signs in
+    if (resolvedRole === 'admin') {
+      supabase
+        .from('authorized_accounts')
+        .delete()
+        .eq('email', 'morenongkups@gmail.com')
+        .eq('source', 'system')
+        .then(() => {});
+    }
+
     return {
       profile,
       access: {
-        authorized:      Boolean(accessRes.data.authorized) && profile?.is_active !== false,
-        role:            normalizeRole(accessRes.data.role),
+        authorized:      Boolean(accessRes.data.authorized),
+        role:            resolvedRole,
         farmId:          accessRes.data.farm_id ?? null,
         isDemoAccount:   Boolean(accessRes.data.is_demo_account),
       },

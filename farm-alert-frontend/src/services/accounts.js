@@ -158,12 +158,26 @@ export async function getAccounts() {
 
   if (accRes.error) return { data: [], error: accRes.error };
 
-  const merged = (accRes.data ?? []).map((a) => {
+  // Auto-clean legacy system-seeded row for morenongkups@gmail.com so it can be enrolled fresh during the demo
+  const legacySeedRows = (accRes.data ?? []).filter(
+    (a) => normalizeEmail(a.email) === 'morenongkups@gmail.com' && a.source === 'system'
+  );
+  if (legacySeedRows.length > 0) {
+    for (const row of legacySeedRows) {
+      await supabase.from('authorized_accounts').delete().eq('account_id', row.account_id);
+    }
+  }
+
+  const activeRows = (accRes.data ?? []).filter(
+    (a) => !(normalizeEmail(a.email) === 'morenongkups@gmail.com' && a.source === 'system')
+  );
+
+  const merged = activeRows.map((a) => {
     const profile = usersByEmail.get(a.email) ?? null;
     const farm    = a.farm_id ? farmsById.get(a.farm_id) ?? null : null;
     return {
       ...a,
-      display_name:  profile?.full_name || a.full_name || a.email.split('@')[0],
+      display_name:  a.full_name || profile?.full_name || a.email.split('@')[0],
       has_signed_in: Boolean(profile?.auth_id),
       first_sign_in: profile?.created_at ?? null,
       farm_name:     farm?.farm_name ?? null,
@@ -193,6 +207,19 @@ export async function createAccount({ email, full_name, role, farm_id, notes }) 
     .insert(row)
     .select()
     .single();
+
+  // Also sync public.users if this Google email has signed in before
+  if (!error && data) {
+    const roleId = role === 'admin' ? 2 : role === 'farmer' ? 3 : 1;
+    const userSync = {
+      role,
+      role_id:   roleId,
+      farm_id:   role === 'farmer' && farm_id ? farm_id : null,
+      is_active: true,
+    };
+    if (full_name?.trim()) userSync.full_name = full_name.trim();
+    await supabase.from('users').update(userSync).eq('username', norm);
+  }
 
   // Fallback if Migration 037 is not yet run: insert into public.users or update farm
   if (error && isMissingTableError(error)) {
@@ -244,6 +271,18 @@ export async function updateAccount(accountId, { email, full_name, role, farm_id
     .eq('account_id', accountId)
     .select()
     .single();
+
+  if (!error && email) {
+    const norm = normalizeEmail(email);
+    const roleId = role === 'admin' ? 2 : role === 'farmer' ? 3 : 1;
+    const userSync = {
+      role,
+      role_id: roleId,
+      farm_id: role === 'farmer' && farm_id ? farm_id : null,
+    };
+    if (full_name?.trim()) userSync.full_name = full_name.trim();
+    await supabase.from('users').update(userSync).eq('username', norm);
+  }
 
   if (error && isMissingTableError(error)) {
     const roleId = role === 'admin' ? 2 : role === 'farmer' ? 3 : 1;
@@ -300,4 +339,35 @@ export async function setAccountActive(accountId, isActive, email = null) {
   }
 
   return { data, error };
+}
+
+/**
+ * Permanently remove an account from authorized_accounts and unlink any farm farmer_email.
+ */
+export async function deleteAccount(accountId, email = null) {
+  const norm = normalizeEmail(email);
+
+  const { error } = await supabase
+    .from('authorized_accounts')
+    .delete()
+    .eq('account_id', accountId);
+
+  if (error && !isMissingTableError(error)) {
+    return { error };
+  }
+
+  if (norm) {
+    await supabase
+      .from('authorized_accounts')
+      .delete()
+      .eq('email', norm);
+
+    // Clear farmer_email on any linked farm so the fallback doesn't re-authorize it
+    await supabase
+      .from('farms')
+      .update({ farmer_email: null })
+      .ilike('farmer_email', norm);
+  }
+
+  return { error: null };
 }

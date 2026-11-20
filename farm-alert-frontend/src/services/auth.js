@@ -6,7 +6,6 @@ import { supabase } from '../lib/supabase';
 export const AUTHORIZED_EMAILS = [
   'sanielken2@gmail.com',
   'mjhorcelt@gmail.com',
-  'morenongkups@gmail.com',
 ];
 
 export function isAuthorizedEmail(email) {
