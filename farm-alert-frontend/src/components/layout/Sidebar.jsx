@@ -7,8 +7,6 @@ import {
   FileText,
   Warning as AlertTriangle,
   MapTrifold as Map,
-  ChartBar as BarChart2,
-  Gear as Settings,
   MapPin,
   Users,
   SignOut as LogOut,
@@ -37,7 +35,6 @@ const NAV_ITEMS = [
   { to: '/compliance',         icon: ShieldCheck,     label: 'Biosecurity Compliance', roles: ['admin', 'cvo_staff'] },
   { to: '/settings/barangays', icon: MapPin,          label: 'Barangay Masterlist',    roles: ['admin'] },
   { to: '/settings/users',     icon: Users,           label: 'User Accounts',          roles: ['admin'] },
-  { to: '/settings',           icon: Settings,        label: 'System Settings',        roles: ['admin'], end: true },
   { to: '/logs',               icon: ClipboardList,   label: 'Audit Logs',             roles: ['admin'] },
 ];
 

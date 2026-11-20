@@ -16,7 +16,6 @@ import OutbreakAlerts from './pages/outbreaks/OutbreakAlerts';
 import Dashboard from './pages/dashboard/Dashboard';
 import DiseaseMap from './pages/map/DiseaseMap';
 import ComplianceLogs from './pages/compliance/ComplianceLogs';
-import SystemSettings from './pages/admin/SystemSettings';
 import BarangayManagement from './pages/admin/BarangayManagement';
 import UserManagement from './pages/admin/UserManagement';
 import AuditLogs from './pages/admin/AuditLogs';
@@ -83,15 +82,15 @@ function App() {
               <Route path="/analytics"             element={<Navigate to="/dashboard" replace />} />
 
               {/* Settings & Audit Logs — no longer behind AdminLayout (Phase 10 pivot) */}
-              <Route path="/settings"           element={<SystemSettings />} />
+              <Route path="/settings"           element={<Navigate to="/settings/users" replace />} />
               <Route path="/settings/barangays" element={<BarangayManagement />} />
               <Route path="/settings/users"     element={<UserManagement />} />
               <Route path="/logs"               element={<AuditLogs />} />
 
               {/* Legacy admin redirects — preserve deep-links from bookmarks/external refs */}
-              <Route path="/admin/settings" element={<Navigate to="/settings" replace />} />
+              <Route path="/admin/settings" element={<Navigate to="/settings/users" replace />} />
               <Route path="/admin/logs"     element={<Navigate to="/logs" replace />} />
-              <Route path="/admin"          element={<Navigate to="/settings" replace />} />
+              <Route path="/admin"          element={<Navigate to="/settings/users" replace />} />
 
               {/* Phase 4 sandbox — remove after verification */}
               <Route path="/ui-sandbox" element={<UiSandbox />} />
