@@ -6,7 +6,6 @@ import {
   Tractor,
   MapPin,
   CheckCircle as CheckCircle2,
-  Clock,
   Flask,
   ClipboardText as ClipboardList,
 } from '@phosphor-icons/react';
@@ -68,6 +67,7 @@ export default function FarmerPortal() {
   useRealtime('disease_reports', () => loadPortalData());
   useRealtime('outbreak_alerts', () => loadPortalData());
   useRealtime('farms',           () => loadPortalData());
+  useRealtime('pest_compliance_logs', () => loadPortalData());
 
   const selectedFarm = useMemo(
     () => farms.find((f) => f.farm_id === selectedFarmId) ?? farms[0] ?? null,
@@ -111,7 +111,7 @@ export default function FarmerPortal() {
     );
   }
 
-  const bioStatus = latestCompliance?.status || 'Not Yet Inspected';
+  const bioStatus = latestCompliance?.compliance_status || latestCompliance?.status || 'Not Yet Inspected';
   const bioCls =
     bioStatus === 'Compliant'
       ? styles.bioCompliant
