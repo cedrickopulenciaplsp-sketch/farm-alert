@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  Plus,
   MagnifyingGlass as Search,
   MapPin,
   PencilSimple as Edit2,
@@ -80,11 +79,6 @@ export default function BarangayManagement() {
     return { total, rural, urban, active };
   }, [barangays]);
 
-  function handleOpenCreate() {
-    setEditingBarangay(null);
-    setModalOpen(true);
-  }
-
   function handleOpenEdit(barangay) {
     setEditingBarangay(barangay);
     setModalOpen(true);
@@ -135,15 +129,6 @@ export default function BarangayManagement() {
             Manage San Pablo City barangays and official Barangay Hall GPS coordinates for automatic farm georeferencing.
           </p>
         </div>
-        <Button
-          id="add-barangay-btn"
-          variant="primary"
-          size="md"
-          onClick={handleOpenCreate}
-        >
-          <Plus size={16} weight="bold" aria-hidden="true" />
-          Add Barangay
-        </Button>
       </header>
 
       {/* ── KPI Summary Row ──────────────────────────────────────────────── */}
@@ -364,7 +349,7 @@ export default function BarangayManagement() {
         </Card>
       )}
 
-      {/* ── Add / Edit Barangay Modal ────────────────────────────────────── */}
+      {/* ── Edit Barangay Modal ──────────────────────────────────────────── */}
       <BarangayModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
