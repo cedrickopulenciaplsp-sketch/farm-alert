@@ -52,7 +52,7 @@ export async function getDashboardSummary() {
   const [farmsRes, activeReportsRes, outbreaksRes, mortalitiesRes] = await Promise.all([
     supabase.from('farms').select('*', { count: 'exact', head: true }),
     supabase.from('disease_reports').select('*', { count: 'exact', head: true }).neq('status', 'Resolved'),
-    supabase.from('outbreak_alerts').select('*', { count: 'exact', head: true }).eq('status', 'Active'),
+    supabase.from('outbreak_alerts').select('*', { count: 'exact', head: true }).neq('status', 'Resolved'),
     // Sum all mortalities from non-resolved reports
     supabase.from('disease_reports').select('mortalities').neq('status', 'Resolved'),
   ]);
@@ -78,7 +78,7 @@ export async function getActiveOutbreaks() {
   const { count, error } = await supabase
     .from('outbreak_alerts')
     .select('*', { count: 'exact', head: true })
-    .eq('status', 'Active');
+    .neq('status', 'Resolved');
   return { count: count || 0, error };
 }
 

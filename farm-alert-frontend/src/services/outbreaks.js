@@ -273,7 +273,7 @@ export async function getActiveOutbreakCount() {
   const { count, error } = await supabase
     .from('outbreak_alerts')
     .select('*', { count: 'exact', head: true })
-    .eq('status', 'Active');
+    .neq('status', 'Resolved');
 
   return { count: count ?? 0, error };
 }

@@ -14,7 +14,7 @@ export const dashboardService = {
       const { count: activeOutbreaks, error: outbreaksError } = await supabase
         .from('outbreak_alerts')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'Active');
+        .neq('status', 'Resolved');
       if (outbreaksError) throw outbreaksError;
 
       // 3. New Reports (This month)
@@ -62,7 +62,7 @@ export const dashboardService = {
       const { data, error } = await supabase
         .from('v_outbreaks_enriched')
         .select('*')
-        .eq('status', 'Active')
+        .neq('status', 'Resolved')
         .order('detected_at', { ascending: false });
 
       if (error) throw error;

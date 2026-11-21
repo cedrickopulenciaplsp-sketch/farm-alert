@@ -78,7 +78,7 @@ export function NotificationProvider({ children }) {
         supabase
           .from('v_outbreaks_enriched')
           .select('*')
-          .eq('status', 'Active')
+          .neq('status', 'Resolved')
           .order('date_triggered', { ascending: false }),
 
         // Recent Severe/Critical reports — use enriched view (has disease_name, barangay_name)
